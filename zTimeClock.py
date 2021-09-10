@@ -1041,16 +1041,23 @@ def display_period_totals(num):
     return_to_main_menu = Button(main_menu, text="Return to Main Menu", command=main_menu_function)
     return_to_main_menu.grid(row=3, column=5, pady=10)
 
-    # workbook = xl.Workbook("Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y"))
-    # sheet = workbook.add_worksheet()
-    # sheet.add_table("A:J", )
+    
 
-    # create_file = Button(main_menu, text="Create Excel Report From Data", font=("Arial", 10), pady=10).grid(row=1, column=9, command=lambda: create_report_file(label_dictionary))
+    create_file = Button(main_menu, text="Create Excel Report From Data", font=("Arial", 10), pady=10, command=lambda: create_report_file(displayed_period_range, label_dictionary)).grid(row=1, column=9)
 
     
 
     conn.commit()
     conn.close()
+    return
+
+def create_report_file(displayed_period_range, info_dictionary):
+    print(info_dictionary)
+    workbook = xl.Workbook("Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y"))
+    sheet = workbook.add_worksheet()
+    # sheet.add_table("A1:J40", info_dictionary)
+    sheet.add_table(0, 0, len(info_dictionary["ID"]), len(info_dictionary), info_dictionary)
+    
     return
 
 def period_totals_function():
