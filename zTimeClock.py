@@ -1052,11 +1052,31 @@ def display_period_totals(num):
     return
 
 def create_report_file(displayed_period_range, info_dictionary):
-    print(info_dictionary)
-    workbook = xl.Workbook("Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y"))
+    file_name = "Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y") + ".xlsx"
+
+    workbook = xl.Workbook(file_name)
     sheet = workbook.add_worksheet()
-    # sheet.add_table("A1:J40", info_dictionary)
-    sheet.add_table(0, 0, len(info_dictionary["ID"]), len(info_dictionary), info_dictionary)
+
+    info_list = []
+    data = []
+    
+    for value in info_dictionary.values():
+        print(value)
+        info_list.append(value)
+    
+    for i in range(len(info_list[0])):
+        sub_array = []
+        for j in range(len(info_list)):
+            sub_array.append(info_list[j][i])
+        data.append(sub_array)
+
+    columns = []
+    for label in info_dictionary.keys():
+        columns.append({"header": label})
+
+    test = sheet.add_table("A1:J" + str(len(info_dictionary["ID"])), {"data": data, "columns": columns})
+    workbook.close()
+    print(test)
     
     return
 
