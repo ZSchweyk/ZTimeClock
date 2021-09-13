@@ -17,6 +17,7 @@ from email.message import EmailMessage
 #from openpyxl import load_workbook
 import xlsxwriter as xl
 import json
+from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 
 program_files_path = ""
 database_file = program_files_path + "employee_time_clock.db"
@@ -1042,8 +1043,9 @@ def display_period_totals(num):
     return_to_main_menu.grid(row=3, column=5, pady=10)
 
     
-
-    create_file = Button(main_menu, text="Create Excel Report From Data", font=("Arial", 10), pady=10, command=lambda: create_report_file(displayed_period_range, label_dictionary)).grid(row=1, column=9)
+    file_name = "Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y")
+    create_file = Button(main_menu, text="Create Excel Report From Data", font=("Arial", 10), pady=10, command=lambda: create_excel_file_with_table(file_name, label_dictionary))
+    create_file.grid(row=1, column=9)
 
     
 
@@ -1051,34 +1053,53 @@ def display_period_totals(num):
     conn.close()
     return
 
-def create_report_file(displayed_period_range, info_dictionary):
-    file_name = "Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y") + ".xlsx"
+def create_excel_file_with_table(file_name, dictionary):
+    """
+    file_name is the name of the Excel file without the extension.
 
-    workbook = xl.Workbook(file_name)
-    sheet = workbook.add_worksheet()
-
-    info_list = []
+    The labels of the passed in dictionary will become the columns of the Excel table.
+    Expects that the values in the dictionary are lists. All values must have equally sized lists.
+    """
+    dict_values_to_list = []
+    for value in dictionary.values():
+        dict_values_to_list.append(value)
+    
     data = []
-    
-    for value in info_dictionary.values():
-        print(value)
-        info_list.append(value)
-    
-    for i in range(len(info_list[0])):
+    for i in range(len(dict_values_to_list[0])):
         sub_array = []
-        for j in range(len(info_list)):
-            sub_array.append(info_list[j][i])
+        for j in range(len(dict_values_to_list)):
+            sub_array.append(dict_values_to_list[j][i])
         data.append(sub_array)
 
     columns = []
-    for label in info_dictionary.keys():
+    for label in dictionary.keys():
         columns.append({"header": label})
 
-    test = sheet.add_table("A1:J" + str(len(info_dictionary["ID"])), {"data": data, "columns": columns})
-    workbook.close()
-    print(test)
-    
-    return
+    files = [("Excel File", "*.xlsx")]
+
+    file_name = asksaveasfilename(filetypes=files, defaultextension=files, initialfile=file_name)
+    try:
+        file_name = file_name[(every_index(file_name, "/")[-1] + 1):]
+        workbook = xl.Workbook(file_name)
+        sheet = workbook.add_worksheet()
+
+        abc = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+
+        sheet.add_table("A1:" + abc[len(columns) - 1] + str(len(data) + 1), {"data": data, "columns": columns})
+
+        workbook.close()
+
+        messagebox.showinfo("Successful", file_name + " has been saved!")
+    except TypeError:
+        pass
+
+def every_index(string, char):
+    result_list = []
+    for index, letter in enumerate(string):
+        if letter == char:
+            result_list.append(index)
+
+    return result_list
 
 def period_totals_function():
     conn = sqlite3.connect(database_file)
