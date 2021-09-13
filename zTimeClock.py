@@ -726,6 +726,7 @@ def assign_tasks_function():
 
 def assign_tasks__by_department():
     clear_frame(main_menu)
+    main_menu.config(text = main_menu["text"] + " > By Department")
     assign_tasks_by_department_label = Label(main_menu, text="Department: ", font=("Arial", 15), pady=10, padx=10)
     assign_tasks_by_department_label.grid(row=0, column=0, sticky="e")
 
@@ -844,6 +845,7 @@ def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, s
 
 def assign_tasks__by_employee():
     clear_frame(main_menu)
+    main_menu.config(text = main_menu["text"] + " > By Employee")
     Label(main_menu, text="Seperate entries labeled with \"(s)\" by commas and no spaces", font=("Arial", 8), pady=10, anchor=CENTER).grid(row=0, column=0, columnspan=2, sticky="ew")
 
     emp_label = Label(main_menu, text="Employee ID(s): ", font=("Arial", 15), pady=10, padx=10)
@@ -1121,6 +1123,10 @@ def period_totals_function():
 
     return
 
+def clear_entry(event, entry):
+    entry.delete(0, END)
+    entry.unbind('<Button-1>', event)
+
 def historical_totals_function():
     clear_frame(main_menu)
     main_menu.config(text="Historical Totals")
@@ -1129,10 +1135,12 @@ def historical_totals_function():
     period_count = 0
 
     start_date = Entry(main_menu, font=("Arial", 8))
-    start_date.grid(row=1, column=0)
+    start_date.grid(row=1, column=0, padx=10)
+    start_date.insert(0, "Start Date mm/dd/yyyy")
 
     end_date = Entry(main_menu, font=("Arial", 8))
-    end_date.grid(row=1, column=1)
+    end_date.grid(row=1, column=1, padx=10)
+    end_date.insert(0, "End Date mm/dd/yyyy")
 
     generate = Button(main_menu, text="Generate", font=("Arial", 8), pady=10, command=lambda: validate_grabArray_sendto_display_period_totals(start_date.get(), end_date.get()))
     generate.grid(row=1, column=2)
@@ -1151,7 +1159,8 @@ def validate_grabArray_sendto_display_period_totals(start, end):
 
 def employee_codes__add_new_employee_function():
     clear_frame(main_menu)
-    main_menu.config(text="Add New Employee")
+    main_menu.config(text = main_menu["text"] + " > Add New Employee")
+    #main_menu.config(text="Add New Employee")
 
     padding = 3
 
@@ -1244,7 +1253,7 @@ def add_new_employee(id, first, last, department, hourly_pay, ot_allowed, max_da
 
 def employee_codes__edit_function():
     clear_frame(main_menu)
-    main_menu.config(text="Edit")
+    main_menu.config(text = main_menu["text"] + " > Edit")
 
     id_label_widget = Label(main_menu, text="Enter Employee ID to Edit", font=("Arial", 15), pady=10)
     id_label_widget.grid(row=0, column=0, columnspan=2)
@@ -1521,7 +1530,7 @@ def employee_codes__delete_function():
     #global_confirmation_text
 
     clear_frame(main_menu)
-    main_menu.config(text="Delete")
+    main_menu.config(text = main_menu["text"] + " > Delete")
 
     id_label_widget = Label(main_menu, text="Enter Employee Id to Delete", font=("Arial", 15), pady=10)
     id_label_widget.grid(row=0, column=0, columnspan=2)
@@ -1583,7 +1592,7 @@ def employee_codes__view_function__view_employees():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text="View Employees")
+    main_menu.config(text = main_menu["text"] + " > View Employees")
 
     clear_frame(main_menu)
 
@@ -1634,7 +1643,7 @@ def employee_codes__view_function__view_timeclock_entries():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text="View Timeclock Entries", width=1000)
+    main_menu.config(text = main_menu["text"] + " > View Timeclock Entries")
 
     clear_frame(main_menu)
 
