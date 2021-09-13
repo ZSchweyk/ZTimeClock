@@ -947,21 +947,24 @@ def get_period_days(num):
 def next_previous_period(num):
     global period_count
     period_count += num
-    return display_period_totals(period_count)
+    return display_period_totals(get_period_days(period_count))
 
-def display_period_totals(num):
+def display_period_totals(period_days_input):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    displayed_period_range, period_days = get_period_days(num)
+    displayed_period_range, period_days = period_days_input
 
     Label(main_menu, text=displayed_period_range[0] + " - " + displayed_period_range[1], font=("Arial", 8, "bold"), pady=10).grid(row=1, column=5)
 
-    global next_period
-    if num == 0:
-        next_period.config(state=DISABLED)
-    else:
-        next_period.config(state=NORMAL)
+    try:
+        global next_period
+        if period_days_input == get_period_days(0):
+            next_period.config(state=DISABLED)
+        else:
+            next_period.config(state=NORMAL)
+    except:
+        pass
 
     # label_1 = Label(main_menu, text="", font=("Arial", 10), pady=10)
     # label_1.grid(row=2, column=0)
@@ -1099,9 +1102,6 @@ def every_index(string, char):
     return result_list
 
 def period_totals_function():
-    conn = sqlite3.connect(database_file)
-    c = conn.cursor()
-
     clear_frame(main_menu)
     main_menu.config(text="Period Totals")
 
@@ -1117,13 +1117,36 @@ def period_totals_function():
     
     next_period.config(state=DISABLED)
 
-    display_period_totals(0)
+    display_period_totals(get_period_days(0))
 
     return
 
 def historical_totals_function():
+    clear_frame(main_menu)
+    main_menu.config(text="Historical Totals")
+
+    global period_count
+    period_count = 0
+
+    start_date = Entry(main_menu, font=("Arial", 8))
+    start_date.grid(row=1, column=0)
+
+    end_date = Entry(main_menu, font=("Arial", 8))
+    end_date.grid(row=1, column=1)
+
+    generate = Button(main_menu, text="Generate", font=("Arial", 8), pady=10, command=lambda: validate_grabArray_sendto_display_period_totals(start_date.get(), end_date.get()))
+    generate.grid(row=1, column=2)
     return
 
+def validate_grabArray_sendto_display_period_totals(start, end):
+    is_valid = validate_timestamp(start, "%m/%d/%Y") and validate_timestamp(end, "%m/%d/%Y")
+    if is_valid:
+        period_days = tuple(getArrayOfDates(start, end, "%m/%d/%Y", "%m/%d/%y"))
+        display_period_totals(((period_days[0], period_days[-1]), period_days))
+    else:
+        messagebox.showerror("Invalid Entry", "Please enter start and end dates in the format of \"mm/dd/yyyy\"!")
+        return
+    
 
 
 def employee_codes__add_new_employee_function():
