@@ -19,7 +19,7 @@ import xlsxwriter as xl
 import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 
-program_files_path = ""
+program_files_path = ''
 database_file = program_files_path + "employee_time_clock.db"
 
 root = Tk()
@@ -29,9 +29,6 @@ height= root.winfo_height()
 root.geometry("%dx%d" % (1200, 773))
 root.resizable(width=False, height=False)
 root.title("SBCS (Chemtrol)")
-
-def disable_event():
-    pass
 
 def validate_timestamp(time_string, format):
     try:
@@ -148,7 +145,7 @@ def send_report_if_pay_day():
 
 # I'm not sure how to send a database file. It has a problem with the following line of code:
 # mime_type, mime_subtype = mime_type.split('/')
-# and says that it is NoneType. So instead
+# and says that it is NoneType.
 
     root.after(24*60*60*1000, send_report_if_pay_day)
     return
@@ -958,7 +955,7 @@ def display_period_totals(num):
 
     displayed_period_range, period_days = get_period_days(num)
 
-    Label(main_menu, text=displayed_period_range[0] + " - " + displayed_period_range[1], font=("Arial", 10), pady=10).grid(row=1, column=5)
+    Label(main_menu, text=displayed_period_range[0] + " - " + displayed_period_range[1], font=("Arial", 8, "bold"), pady=10).grid(row=1, column=5)
 
     global next_period
     if num == 0:
@@ -1037,14 +1034,14 @@ def display_period_totals(num):
         text = header + "\n"
         for elem in value:
             text += elem + "\n"
-        Label(main_menu, text=text, font=("Arial", 10), pady=10, padx=10).grid(row=2, column=counter)
+        Label(main_menu, text=text, font=("Arial", 8), pady=10, padx=10).grid(row=2, column=counter)
 
-    return_to_main_menu = Button(main_menu, text="Return to Main Menu", command=main_menu_function)
+    return_to_main_menu = Button(main_menu, text="Return to Main Menu", font=("Arial", 8), command=main_menu_function)
     return_to_main_menu.grid(row=3, column=5, pady=10)
 
     
     file_name = "Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y")
-    create_file = Button(main_menu, text="Create Excel Report From Data", font=("Arial", 10), pady=10, command=lambda: create_excel_file_with_table(file_name, label_dictionary))
+    create_file = Button(main_menu, text="Create Excel Report From Data", font=("Arial", 8), pady=10, command=lambda: create_excel_file_with_table(file_name, label_dictionary))
     create_file.grid(row=1, column=9)
 
     
@@ -1108,24 +1105,19 @@ def period_totals_function():
     clear_frame(main_menu)
     main_menu.config(text="Period Totals")
 
-    # Label(main_menu, text=)
-    # getPeriodFromDateString()
-
     global period_count
     period_count = 0
 
     global next_period
-    next_period = Button(main_menu, text="Next", font=("Arial", 10), pady=10, command=lambda: next_previous_period(1))
+    next_period = Button(main_menu, text="Next", font=("Arial", 8), pady=10, command=lambda: next_previous_period(1))
     next_period.grid(row=1, column=6)
 
-    previous_period = Button(main_menu, text="Previous", font=("Arial", 10), pady=10, command=lambda: next_previous_period(-1))
+    previous_period = Button(main_menu, text="Previous", font=("Arial", 8), pady=10, command=lambda: next_previous_period(-1))
     previous_period.grid(row=1, column=4)
     
     next_period.config(state=DISABLED)
 
     display_period_totals(0)
-
-    
 
     return
 
@@ -2065,7 +2057,7 @@ employee_task_label = Label(root, text="", font=("Arial", 13), wraplength=300, j
 employee_task_label.place(relx=.5, rely=.77, anchor=N)
 
 z_time_clock_label = Label(root, text="ZTimeClock Ver 1.01", font=("Arial", 10))
-z_time_clock_label.place(relx=.9, rely=.9, anchor=N)
+z_time_clock_label.place(relx=.945, rely=.97, anchor=N)
 
 
 
