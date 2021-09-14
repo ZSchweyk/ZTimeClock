@@ -19,6 +19,11 @@ import xlsxwriter as xl
 import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 
+class AdminInformation:
+    @staticmethod
+    def get_admin_password(self):
+        pass
+
 program_files_path = ''
 database_file = program_files_path + "employee_time_clock.db"
 
@@ -495,7 +500,7 @@ def enter():
         main_menu.place(relx=.5, rely=.425, anchor=N)
 
         global main_menu_buttons
-        main_menu_buttons = [["Employee Codes", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["This Period's Totals", period_totals_function], ["Historical Totals", historical_totals_function]]
+        main_menu_buttons = [["Employee Codes", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function]]
 
         global employee_codes_child_buttons
         employee_codes_child_buttons = [["Add New Employee", employee_codes__add_new_employee_function], ["Edit", employee_codes__edit_function], ["Delete", employee_codes__delete_function], ["View", employee_codes__view_function]]
@@ -714,20 +719,20 @@ def main_menu_function():
 def employee_codes_function():
     clear_frame(main_menu)
     #main_menu.config(text="Employee Codes")
-    fill_frame(main_menu, employee_codes_child_buttons, "Employee Codes", ["Main Menu", main_menu_function])
+    fill_frame(main_menu, employee_codes_child_buttons, "Main Menu > Employee Codes", ["Main Menu", main_menu_function])
     # return_to_main_menu = Button(main_menu, text="Return to Main Menu", command=lambda: fill_frame(main_menu, main_menu_buttons, "Main Menu"))
     # return_to_main_menu.grid(row=num_of_menu_items, column=0, columnspan=2)
     global_confirmation_text.set("")
     return
 
 def assign_tasks_function():
-    fill_frame(main_menu, [["Assign by Department", assign_tasks__by_department], ["Assign by Employee", assign_tasks__by_employee]], "Assign Tasks", ["Main Menu", main_menu_function])
+    fill_frame(main_menu, [["Assign by Department", assign_tasks__by_department], ["Assign by Employee", assign_tasks__by_employee]], "Main Menu > Assign Tasks", ["Main Menu", main_menu_function])
     return
 
 def assign_tasks__by_department():
     clear_frame(main_menu)
-    main_menu.config(text = main_menu["text"] + " > By Department")
-    assign_tasks_by_department_label = Label(main_menu, text="Department: ", font=("Arial", 15), pady=10, padx=10)
+    main_menu.config(text = "Main Menu > Assign Tasks > By Department")
+    assign_tasks_by_department_label = Label(main_menu, text="Department: ", font=("Arial", 15), pady=3, padx=10)
     assign_tasks_by_department_label.grid(row=0, column=0, sticky="e")
 
     #tkinter.ttk.Separator(main_menu, orient=VERTICAL).grid(row=0, column=1, rowspan=6, sticky="nsw", padx=10)
@@ -743,13 +748,13 @@ def assign_tasks__by_department():
 
     next_row = 0
     for department, strvar, counter in zip(departments, department_strvars, range(len(departments))):
-        Checkbutton(main_menu, text=department, variable=strvar, onvalue=department, offvalue="").grid(row=counter, column=1, sticky="w", pady=6)
+        Checkbutton(main_menu, text=department, variable=strvar, onvalue=department, offvalue="").grid(row=counter, column=1, sticky="w", pady=3)
         if counter == len(departments) - 1:
             next_row = counter + 1
 
     Label(main_menu, text="Seperate entries with (s) by commas and no spaces", font=("Arial", 8), pady=10, anchor=CENTER).grid(row=next_row, column=0, columnspan=2, sticky="ew")
 
-    exclude_label = Label(main_menu, text="ID(s) to Exclude: ", font=("Arial", 15), pady=10, padx=10)
+    exclude_label = Label(main_menu, text="ID(s) to Exclude: ", font=("Arial", 15), pady=3, padx=10)
     exclude_label.grid(row=next_row+1, column=0, sticky="e")
 
     exclude_entry_widget = Entry(main_menu)
@@ -759,23 +764,23 @@ def assign_tasks__by_department():
 
     #root.unbind("<Return>")
 
-    task_label = Label(main_menu, text="Task: ", font=("Arial", 15), pady=10, padx=10)
+    task_label = Label(main_menu, text="Task: ", font=("Arial", 15), pady=3, padx=10)
     task_label.grid(row=next_row+3, column=0, sticky="e")
 
     task_entry = Text(main_menu, width=15, height=2)
     task_entry.grid(row=next_row+3, column=1, sticky="w")
 
-    date_label = Label(main_menu, text="Date(s) mm/dd/yyyy: ", font=("Arial", 15), pady=10, padx=10)
+    date_label = Label(main_menu, text="Date(s) mm/dd/yyyy: ", font=("Arial", 15), pady=3, padx=10)
     date_label.grid(row=next_row+4, column=0, sticky="e")
 
     date_entry = Entry(main_menu)
     date_entry.grid(row=next_row+4, column=1, sticky="w")
 
     submit_button = Button(main_menu, text="Assign Tasks", command=lambda: assign_tasks__by_department_submit_button_function(department_strvars, exclude_entry_widget.get(), task_entry.get("1.0","end-1c"), date_entry.get()))
-    submit_button.grid(row=next_row+5, column=0, columnspan=2, pady=10)
+    submit_button.grid(row=next_row+5, column=0, columnspan=2, pady=3)
 
     return_to_employee_codes = Button(main_menu, text="Return to Assign Tasks", command=assign_tasks_function)
-    return_to_employee_codes.grid(row=next_row+6, column=0, columnspan=2, pady=10)
+    return_to_employee_codes.grid(row=next_row+6, column=0, columnspan=2, pady=3)
 
     return
 
@@ -845,7 +850,7 @@ def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, s
 
 def assign_tasks__by_employee():
     clear_frame(main_menu)
-    main_menu.config(text = main_menu["text"] + " > By Employee")
+    main_menu.config(text = "Main Menu > Assign Tasks > By Employee")
     Label(main_menu, text="Seperate entries labeled with \"(s)\" by commas and no spaces", font=("Arial", 8), pady=10, anchor=CENTER).grid(row=0, column=0, columnspan=2, sticky="ew")
 
     emp_label = Label(main_menu, text="Employee ID(s): ", font=("Arial", 15), pady=10, padx=10)
@@ -1105,7 +1110,7 @@ def every_index(string, char):
 
 def period_totals_function():
     clear_frame(main_menu)
-    main_menu.config(text="Period Totals")
+    main_menu.config(text="Main Menu > Period Totals")
 
     global period_count
     period_count = 0
@@ -1129,7 +1134,7 @@ def clear_entry(event, entry):
 
 def historical_totals_function():
     clear_frame(main_menu)
-    main_menu.config(text="Historical Totals")
+    main_menu.config(text="Main Menu > Historical Totals")
 
     global period_count
     period_count = 0
@@ -1582,7 +1587,7 @@ def employee_codes__delete_function__delete_button(id):
     return
 
 def employee_codes__view_function():
-    fill_frame(main_menu, [["View Employees", employee_codes__view_function__view_employees], ["View Timeclock Entries", employee_codes__view_function__view_timeclock_entries]], "View", ["Employee Codes", employee_codes_function])
+    fill_frame(main_menu, [["Employees", employee_codes__view_function__view_employees], ["Timeclock Entries", employee_codes__view_function__view_timeclock_entries]], "Main Menu > Employee Codes > View", ["Employee Codes", employee_codes_function])
     # return_to_main_menu = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
     # return_to_main_menu.grid(row=num_of_menu_items, column=0, columnspan=2, pady=10)
     return
@@ -1592,7 +1597,7 @@ def employee_codes__view_function__view_employees():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text = main_menu["text"] + " > View Employees")
+    main_menu.config(text = "Main Menu > Employee Codes > View > Employees")
 
     clear_frame(main_menu)
 
@@ -1643,7 +1648,7 @@ def employee_codes__view_function__view_timeclock_entries():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text = main_menu["text"] + " > View Timeclock Entries")
+    main_menu.config(text = "Main Menu > Employee Codes > View > Timeclock Entries")
 
     clear_frame(main_menu)
 
