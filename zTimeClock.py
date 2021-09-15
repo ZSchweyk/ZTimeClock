@@ -19,13 +19,25 @@ import xlsxwriter as xl
 import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 
+
+program_files_path = ""
+database_file = program_files_path + "employee_time_clock.db"
+
+
 class AdminInformation:
     @staticmethod
-    def get_admin_password(self):
-        pass
+    def select(field_property):
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+        field_value = c.execute("SELECT FieldValue FROM admin_information WHERE FieldProperty = @0", (field_property,)).fetchone()[0]
+        conn.commit()
+        conn.close()
+        if field_value is None:
+            return ""
+        else:
+            return field_value
 
-program_files_path = ''
-database_file = program_files_path + "employee_time_clock.db"
+
 
 root = Tk()
 root.iconbitmap(program_files_path + "ChemtrolImage.ico")
@@ -146,7 +158,7 @@ def send_report_if_pay_day():
     Sincerely,
     ZTimeClock
         """
-        send_email("zschweyk@gmail.com", "Gmail1215!", "mrtaquito04@gmail.com", body, "ZTimeClock Pay Period Report for Chemtrol", filename)
+        send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), "mrtaquito04@gmail.com", body, "ZTimeClock Pay Period Report for Chemtrol", filename)
 
 # I'm not sure how to send a database file. It has a problem with the following line of code:
 # mime_type, mime_subtype = mime_type.split('/')
@@ -281,7 +293,7 @@ def enter():
 
 
 
-    if id_field.get() != "admin":
+    if id_field.get() != AdminInformation.select("AdminPassword"):
         emp_record = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = '" + id_field.get() + "'").fetchone()
         if emp_record is not None:
             name = str(emp_record[0]) + " " + str(emp_record[1])
