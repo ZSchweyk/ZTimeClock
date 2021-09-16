@@ -18,9 +18,11 @@ from email.message import EmailMessage
 import xlsxwriter as xl
 import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
+import os
 
 
-program_files_path = ""
+
+program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 
@@ -96,12 +98,13 @@ def send_email(sender, password, recipient, body, subject, file_path):
 
     if file_path != "":
         mime_type, _ = mimetypes.guess_type(file_path)
+        print(mime_type)
         mime_type, mime_subtype = mime_type.split('/')
         with open(file_path, 'rb') as file:
             message.add_attachment(file.read(),
             maintype=mime_type,
             subtype=mime_subtype,
-            filename=file_path)
+            filename=file_path.split("\\")[-1])
 
     mail_server = smtplib.SMTP_SSL('smtp.gmail.com')
     mail_server.set_debuglevel(1)
@@ -127,38 +130,63 @@ def is_this_a_pay_day(date_in, format):
 
 def send_report_if_pay_day():
     today = datetime.today()
-    todays_date_as_string = today.strftime("%m/%d/%y")
     last_day_of_month = monthrange(today.year, today.month)[1]
 
-    if today.day == 15 or today.day == last_day_of_month:
-        final_list = []
-        end_of_pay_period = todays_date_as_string
+    if not today.day == 15 or today.day == last_day_of_month or True:
+        # final_list = []
+        master_dict = {
+            "ID": [],
+            "FLast": [],
+            "Total Pay": [],
+            "Total Hours": [],
+            "Regular Hours": [],
+            "Overtime Hours": [],
+            "Double Time Hours": [],
+            "Regular Pay": [],
+            "Overtime Pay": [],
+            "Double Time Pay": []
+        }
+        beginning_of_pay_period = ""
+        end_of_pay_period = today.strftime("%m/%d/%y")
+
         if today.day == 15:
             all_emp_ids = get_all_emp_ids()
             beginning_of_pay_period = f"{str(today.month)}/01/{str(today.year)[2:4]}"
-            for emp_id in all_emp_ids:
-                final_list.append({"EmpID": str(emp_id[0]), "FLast": emp_id[1][0] + emp_id[2]} | calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0])))
         else:
             all_emp_ids = get_all_emp_ids()
             beginning_of_pay_period = f"{str(today.month)}/16/{str(today.year)[2:4]}"
-            for emp_id in all_emp_ids:
-                final_list.append({"EmpID": str(emp_id[0]), "FLast": emp_id[1][0] + emp_id[2]} | calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0])))
 
-        json_string = json.dumps(final_list, indent=4)
-        filename = program_files_path + "z_time_clock_report.json"
-        jsonFile = open(filename, "w")
-        jsonFile.write(json_string)
-        jsonFile.close()
-        body = """Time Clock Report,
+        for emp_id in all_emp_ids:
+            emp_dict = calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0]))
+            for key, value in emp_dict.items():
+                master_dict[key].append(value)
+            
+            # final_list.append({"EmpID": str(emp_id[0]), "FLast": emp_id[1][0] + emp_id[2]} | calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0])))
 
-    Below is the ZTimeClock report for this pay period. Please reply to this email for any questions.
+        period_1 = datetime.strptime(get_period_days(0)[0][1], "%m/%d/%y").strftime("%m%d%y")
+        period_2 = datetime.strptime(get_period_days(0)[0][1], "%m/%d/%y").strftime("%m/%d/%y")
+        complete_file_path = program_files_path + period_1 + "_Pay_Period_Report.xlsx"
+        print(master_dict)
+        CreateExcelFile.create_excel_file(complete_file_path, master_dict)
 
-    Happy Payrolling :)
+        # json_string = json.dumps(final_list, indent=4)
+        # filename = program_files_path + "z_time_clock_report.json"
+        # jsonFile = open(filename, "w")
+        # jsonFile.write(json_string)
+        # jsonFile.close()
+        body = f"""Time Clock Report,
 
-    Sincerely,
-    ZTimeClock
+Below is the ZTimeClock report for this pay period, {period_2}. Please reply to this email for any questions.
+
+Happy Payrolling :)
+
+Sincerely,
+ZTimeClock
         """
-        send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), "mrtaquito04@gmail.com", body, "ZTimeClock Pay Period Report for Chemtrol", filename)
+        subject = f"ZTimeClock {period_2} Pay Period Report for Chemtrol"
+        send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), "mrtaquito04@gmail.com", body, subject, complete_file_path)
+
+        os.remove(complete_file_path)
 
 # I'm not sure how to send a database file. It has a problem with the following line of code:
 # mime_type, mime_subtype = mime_type.split('/')
@@ -171,7 +199,7 @@ def get_all_emp_ids():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    ids = c.execute("SELECT ID, FirstName, LastName FROM employees").fetchall()
+    ids = c.execute("SELECT ID, FirstName, LastName FROM employees ORDER BY LastName").fetchall()
 
     conn.commit()
     conn.close()
@@ -934,11 +962,14 @@ def get_period_days(num):
             day = "16"
     else:
         if num >= 0:
+            print("first")
             additional_months = int((num + 1) / 2)
         elif num / 2 != int(num / 2):
-            additional_months = int((num + 1) / 2 - 1)
-        else:
+            print("second")
             additional_months = int((num + 1) / 2)
+        else:
+            print("third")
+            additional_months = int((num + 1) / 2 - 1)
 
         if num % 2 == 0:
             day = "16"
@@ -985,39 +1016,24 @@ def display_period_totals(period_days_input):
     except:
         pass
 
-    # label_1 = Label(main_menu, text="", font=("Arial", 10), pady=10)
-    # label_1.grid(row=2, column=0)
+    all_ids = get_all_emp_ids()
 
-    # label_2 = Label(main_menu, text="", font=("Arial", 10), pady=10)
-    # label_2.grid(row=2, column=1)
-
-    all_ids = c.execute("SELECT ID, FirstName, LastName FROM employees;").fetchall()
-
-    # id_column = "ID\n---------------\n"
-    # flast_column = "FLast\n---------------\n"
-
-    # regular_hours = "RegHours\n---------------\n"
-    # regular_pay = "RegPay\n---------------\n"
-    # overtime_hours = "OvertimeHours\n---------------\n"
-    # overtime_pay = "OvertimePay\n---------------\n"
-    # double_time_hours = "DoubleTimeHours\n---------------\n"
-    # double_time_pay = "DoubleTimePay\n---------------\n"
-    # total_hours = "TotalHours\n---------------\n"
-    # total_pay = "TotalPay\n---------------\n"
-
-    label_headers = ["ID\n---------------\n",
-                     "FLast\n---------------\n",
-                     "TotalPay\n---------------\n",
-                     "TotalHours\n---------------\n",
-                     "RegHours\n---------------\n",
-                     "OvertimeHours\n---------------\n",
-                     "DoubleTimeHours\n---------------\n",
-                     "RegPay\n---------------\n",
-                     "OvertimePay\n---------------\n",
-                     "DoubleTimePay\n---------------\n"
-                     ]
+    label_headers = [
+        "ID\n---------------\n",
+        "FLast\n---------------\n",
+        "TotalPay\n---------------\n",
+        "TotalHours\n---------------\n",
+        "RegHours\n---------------\n",
+        "OvertimeHours\n---------------\n",
+        "DoubleTimeHours\n---------------\n",
+        "RegPay\n---------------\n",
+        "OvertimePay\n---------------\n",
+        "DoubleTimePay\n---------------\n"
+    ]
 
     label_dictionary = {
+        "ID": [],
+        "FLast": [],
         "Total Pay": [],
         "Total Hours": [],
         "Regular Hours": [],
@@ -1028,28 +1044,12 @@ def display_period_totals(period_days_input):
         "Double Time Pay": []
     }
 
-    another_two_fields = {
-        "ID": [],
-        "FLast": []
-    }
-
     for record in all_ids:
         id = record[0]
-        fname = record[1]
-        lname = record[2]
-
-        another_two_fields["ID"].append(str(id))
-        another_two_fields["FLast"].append(fname[0] + lname)
         
         dictionary_info = calculate_employee_pay(period_days[0], period_days[-1], "%m/%d/%y", str(id))
         for key, value in dictionary_info.items():
             label_dictionary[key].append(str(value))
-            
-
-    # label_1.config(text=id_column)
-    # label_2.config(text=flast_column)
-     
-    label_dictionary = {**another_two_fields, **label_dictionary}
 
 
     for counter, value, header in zip(range(len(label_dictionary)), label_dictionary.values(), label_headers):
@@ -1061,9 +1061,20 @@ def display_period_totals(period_days_input):
     return_to_main_menu = Button(main_menu, text="Return to Main Menu", font=("Arial", 8), command=main_menu_function)
     return_to_main_menu.grid(row=3, column=5, pady=10)
 
-    
-    file_name = "Employee_Period_Totals_" + datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y")
-    create_file = Button(main_menu, text="Create Excel Report From Data", font=("Arial", 8), pady=10, command=lambda: create_excel_file_with_table(file_name, label_dictionary))
+    period_1 = datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m%d%y")
+    period_2 = datetime.strptime(displayed_period_range[1], "%m/%d/%y").strftime("%m/%d/%y")
+    file_name = program_files_path + period_1 + "Pay_Period_Report.xlsx"
+    body = f"""Time Clock Report,
+
+Below is the ZTimeClock report for the following pay period, {period_2}. Please reply to this email for any questions.
+
+Happy Payrolling :)
+
+Sincerely,
+ZTimeClock
+    """
+    subject = f"ZTimeClock {period_2} Pay Period Report for Chemtrol"
+    create_file = Button(main_menu, text="Generate Excel Report and Email Myself", font=("Arial", 8), pady=10, command=lambda: CreateExcelFile.create_excel_file(file_name, label_dictionary, email_report_bool = True, sender_address = AdminInformation.select("EmailAddress"), sender_pswd = AdminInformation.select("EmailAddressPassword"), receiver_address = "mrtaquito04@gmail.com", subject = subject, body = body))
     create_file.grid(row=1, column=9)
 
     
@@ -1072,33 +1083,35 @@ def display_period_totals(period_days_input):
     conn.close()
     return
 
-def create_excel_file_with_table(file_name, dictionary):
-    """
-    file_name is the name of the Excel file without the extension.
+class CreateExcelFile:
+    @staticmethod
+    def create_excel_file(complete_file_path, dictionary, email_report_bool = False, sender_address = False, sender_pswd = False, receiver_address = False, subject = False, body = False):
+        """
+        file_name is the name of the Excel file WITH the extension.
 
-    The labels of the passed in dictionary will become the columns of the Excel table.
-    Expects that the values in the dictionary are lists. All values must have equally sized lists.
-    """
-    dict_values_to_list = []
-    for value in dictionary.values():
-        dict_values_to_list.append(value)
-    
-    data = []
-    for i in range(len(dict_values_to_list[0])):
-        sub_array = []
-        for j in range(len(dict_values_to_list)):
-            sub_array.append(dict_values_to_list[j][i])
-        data.append(sub_array)
+        The labels of the passed in dictionary will become the columns of the Excel table.
+        Expects that the values in the dictionary are lists. All values must have equally sized lists.
+        """
+        dict_values_to_list = []
+        for value in dictionary.values():
+            dict_values_to_list.append(value)
+        
+        data = []
+        for i in range(len(dict_values_to_list[0])):
+            sub_array = []
+            for j in range(len(dict_values_to_list)):
+                sub_array.append(dict_values_to_list[j][i])
+            data.append(sub_array)
 
-    columns = []
-    for label in dictionary.keys():
-        columns.append({"header": label})
+        columns = []
+        for label in dictionary.keys():
+            columns.append({"header": label})
 
-    files = [("Excel File", "*.xlsx")]
+        # first_char_of_filename = CreateExcelFile.every_index(complete_file_path, "\\")[-1] + 1
+        splitted = complete_file_path.split("\\")
 
-    file_name = asksaveasfilename(filetypes=files, defaultextension=files, initialfile=file_name)
-    try:
-        file_name = file_name[(every_index(file_name, "/")[-1] + 1):]
+        file_name = splitted[-1]
+        file_path = "\\".join(splitted[0:len(splitted) - 1])
         workbook = xl.Workbook(file_name)
         sheet = workbook.add_worksheet()
 
@@ -1107,18 +1120,76 @@ def create_excel_file_with_table(file_name, dictionary):
         sheet.add_table("A1:" + abc[len(columns) - 1] + str(len(data) + 1), {"data": data, "columns": columns})
 
         workbook.close()
+        
+        complete_file_path = os.path.join(file_path, file_name)
+        
+        if email_report_bool:
+            print(complete_file_path)
+            send_email(sender_address, sender_pswd, receiver_address, body, subject, complete_file_path)
+            os.remove(complete_file_path)
 
-        messagebox.showinfo("Successful", file_name + " has been saved!")
-    except TypeError:
-        pass
 
-def every_index(string, char):
-    result_list = []
-    for index, letter in enumerate(string):
-        if letter == char:
-            result_list.append(index)
+    # @staticmethod
+    # def create_excel_file_with_table(file_name, dictionary):
+    #     """
+    #     file_name is the name of the Excel file without the extension. Include full file path using the character "\\"
 
-    return result_list
+    #     The labels of the passed in dictionary will become the columns of the Excel table.
+    #     Expects that the values in the dictionary are lists. All values must have equally sized lists.
+    #     """
+    #     dict_values_to_list = []
+    #     for value in dictionary.values():
+    #         dict_values_to_list.append(value)
+        
+    #     data = []
+    #     for i in range(len(dict_values_to_list[0])):
+    #         sub_array = []
+    #         for j in range(len(dict_values_to_list)):
+    #             sub_array.append(dict_values_to_list[j][i])
+    #         data.append(sub_array)
+
+    #     columns = []
+    #     for label in dictionary.keys():
+    #         columns.append({"header": label})
+
+    #     files = [("Excel File", "*.xlsx")]
+
+    #     splitted = file_name.split("\\")
+    #     file_name = splitted[-1]
+
+    #     entered_complete_file_name = asksaveasfilename(filetypes=files, defaultextension=files, initialfile=file_name, initialdir=program_files_path)
+        
+    #         # if (CreateExcelFile.every_index(file_name, "/")[-1] + 1) != "DNE":
+
+    #     splitted = entered_complete_file_name.split("/")
+    #     entered_file_name = splitted[-1]
+    #     entered_file_path = "/".join(splitted[0:len(splitted) - 1]) + "/"
+
+    #     workbook = xl.Workbook(entered_file_name)
+    #     sheet = workbook.add_worksheet()
+
+    #     abc = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+
+    #     sheet.add_table("A1:" + abc[len(columns) - 1] + str(len(data) + 1), {"data": data, "columns": columns})
+
+    #     workbook.close()
+
+    #     os.path.join(entered_file_path, entered_file_name)
+
+    #     messagebox.showinfo("Successful", f"{entered_file_name} has been saved in {entered_file_path}!")
+
+
+    # @staticmethod
+    # def every_index(string, char):
+    #     result_list = []
+    #     for index, letter in enumerate(string):
+    #         if letter == char:
+    #             result_list.append(index)
+    #     if len(result_list) == 0:
+    #         return "DNE"
+    #     return result_list
+
+
 
 def period_totals_function():
     clear_frame(main_menu)
@@ -1899,8 +1970,10 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
 
     array_of_hours_per_day = calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[1]
 
-    ot_allowed = c.execute("SELECT OTAllowed FROM employees WHERE ID = ?", (id,)).fetchone()
-    hourly_pay = c.execute("SELECT HourlyPay FROM employees WHERE ID = ?", (id,)).fetchone()
+    ot_allowed = c.execute("SELECT OTAllowed FROM employees WHERE ID = @0", (id,)).fetchone()
+    hourly_pay = c.execute("SELECT HourlyPay FROM employees WHERE ID = @0", (id,)).fetchone()
+
+    first, last = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (id,)).fetchone()
     conn.commit()
     conn.close()
 
@@ -1943,6 +2016,8 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     #returned_array = [total_pay, [regular_hours, overtime_hours, double_time_hours], [regular_pay, overtime_pay, double_time_pay]]
 
     dictionary = {
+        "ID": id,
+        "FLast": first[0] + last,
         "Regular Hours": regular_hours,
         "Regular Pay": regular_pay,
         "Overtime Hours": overtime_hours,
@@ -1950,7 +2025,7 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
         "Double Time Hours": double_time_hours,
         "Double Time Pay": double_time_pay,
         "Total Hours": total_hours,
-        "Total Pay": total_pay,
+        "Total Pay": total_pay
     }
 
     return dictionary
