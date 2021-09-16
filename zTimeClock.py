@@ -132,7 +132,7 @@ def send_report_if_pay_day():
     today = datetime.today()
     last_day_of_month = monthrange(today.year, today.month)[1]
 
-    if not today.day == 15 or today.day == last_day_of_month or True:
+    if (today.day == 15 or today.day == last_day_of_month) and int(datetime.now().strftime("%H")) >= 18:
         # final_list = []
         master_dict = {
             "ID": [],
@@ -192,7 +192,7 @@ ZTimeClock
 # mime_type, mime_subtype = mime_type.split('/')
 # and says that it is NoneType.
 
-    root.after(24*60*60*1000, send_report_if_pay_day)
+    root.after(60*60*1000, send_report_if_pay_day)
     return
 
 def get_all_emp_ids():
@@ -540,7 +540,7 @@ def enter():
         main_menu.place(relx=.5, rely=.425, anchor=N)
 
         global main_menu_buttons
-        main_menu_buttons = [["Employee Codes", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function]]
+        main_menu_buttons = [["Employees", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function]]
 
         global employee_codes_child_buttons
         employee_codes_child_buttons = [["Add New Employee", employee_codes__add_new_employee_function], ["Edit", employee_codes__edit_function], ["Delete", employee_codes__delete_function], ["View", employee_codes__view_function]]
@@ -745,7 +745,7 @@ def fill_frame(frame, button_names_and_funcs, frame_header, return_to_array):
         menu_item.grid(row=i-1, column=1, pady=15)
     #["text", function]
     if return_to_array != None:
-        return_to_menu = Button(frame, text="Return to " + return_to_array[0], command=return_to_array[1], bg="red")
+        return_to_menu = Button(frame, text="Return to " + return_to_array[0], command=return_to_array[1])
         return_to_menu.grid(row=num_of_menu_items, column=0, columnspan=2, pady=10)
 
 def clear_frame(frame):
@@ -759,7 +759,7 @@ def main_menu_function():
 def employee_codes_function():
     clear_frame(main_menu)
     #main_menu.config(text="Employee Codes")
-    fill_frame(main_menu, employee_codes_child_buttons, "Main Menu > Employee Codes", ["Main Menu", main_menu_function])
+    fill_frame(main_menu, employee_codes_child_buttons, "Main Menu > Employees", ["Main Menu", main_menu_function])
     # return_to_main_menu = Button(main_menu, text="Return to Main Menu", command=lambda: fill_frame(main_menu, main_menu_buttons, "Main Menu"))
     # return_to_main_menu.grid(row=num_of_menu_items, column=0, columnspan=2)
     global_confirmation_text.set("")
@@ -962,13 +962,10 @@ def get_period_days(num):
             day = "16"
     else:
         if num >= 0:
-            print("first")
             additional_months = int((num + 1) / 2)
         elif num / 2 != int(num / 2):
-            print("second")
             additional_months = int((num + 1) / 2)
         else:
-            print("third")
             additional_months = int((num + 1) / 2 - 1)
 
         if num % 2 == 0:
@@ -1127,6 +1124,7 @@ class CreateExcelFile:
             print(complete_file_path)
             send_email(sender_address, sender_pswd, receiver_address, body, subject, complete_file_path)
             os.remove(complete_file_path)
+            messagebox.showinfo("Successful", "Report has been sent!")
 
 
     # @staticmethod
@@ -1222,16 +1220,23 @@ def historical_totals_function():
     global period_count
     period_count = 0
 
-    start_date = Entry(main_menu, font=("Arial", 8))
-    start_date.grid(row=1, column=0, padx=10)
+    start_date = Entry(main_menu, font=("Arial", 8), width=18)
+    start_date.grid(row=1, column=0, columnspan=2, padx=5)
     start_date.insert(0, "Start Date mm/dd/yyyy")
 
-    end_date = Entry(main_menu, font=("Arial", 8))
-    end_date.grid(row=1, column=1, padx=10)
+    spacer = Label(main_menu, text = "", font=("Arial", 8), width=5)
+    spacer.grid(row=1, column=1, columnspan=2, padx=5)
+
+    end_date = Entry(main_menu, font=("Arial", 8), width=18)
+    end_date.grid(row=1, column=2, columnspan=2, padx=5)
     end_date.insert(0, "End Date mm/dd/yyyy")
 
     generate = Button(main_menu, text="Generate", font=("Arial", 8), pady=10, command=lambda: validate_grabArray_sendto_display_period_totals(start_date.get(), end_date.get()))
-    generate.grid(row=1, column=2)
+    generate.grid(row=1, column=4, padx=5)
+
+    
+
+    display_period_totals(get_period_days(0))
     return
 
 def validate_grabArray_sendto_display_period_totals(start, end):
@@ -1305,7 +1310,7 @@ def employee_codes__add_new_employee_function():
 
     root.bind("<Return>", lambda event=None: add_to_database.invoke())
 
-    return_to_employee_codes = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
+    return_to_employee_codes = Button(main_menu, text="Return to Employees", command=employee_codes_function)
     return_to_employee_codes.grid(row=8, column=0, columnspan=2, pady=padding)
     
     return
@@ -1358,7 +1363,7 @@ def employee_codes__edit_function():
 
     root.bind("<Return>", lambda event=None: edit_button.invoke())
 
-    return_to_employee_codes = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
+    return_to_employee_codes = Button(main_menu, text="Return to Employees", command=employee_codes_function)
     return_to_employee_codes.grid(row=4, column=0, columnspan=2, pady=10)
 
     return
@@ -1482,7 +1487,7 @@ def employee_codes__edit__edit_button(id, return_button):
         edit_button = Button(main_menu, text="Edit", command=lambda: employee_codes__edit__edit_button(id_entry_widget.get(), return_to_employee_codes))
         edit_button.grid(row=2, column=0, columnspan=2)
 
-        return_to_employee_codes = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
+        return_to_employee_codes = Button(main_menu, text="Return to Employees", command=employee_codes_function)
         return_to_employee_codes.grid(row=3, column=0, columnspan=2, pady=10)
 
         messagebox.showerror("Invalid ID", f"ID \"{id}\" does not exist. Please try again.")
@@ -1631,7 +1636,7 @@ def employee_codes__delete_function():
 
     root.bind("<Return>", lambda event=None: delete_button.invoke())
 
-    return_to_employee_codes = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
+    return_to_employee_codes = Button(main_menu, text="Return to Employees", command=employee_codes_function)
     return_to_employee_codes.grid(row=3, column=0, columnspan=2, pady=10)
     return
 
@@ -1670,7 +1675,7 @@ def employee_codes__delete_function__delete_button(id):
     return
 
 def employee_codes__view_function():
-    fill_frame(main_menu, [["Employees", employee_codes__view_function__view_employees], ["Timeclock Entries", employee_codes__view_function__view_timeclock_entries]], "Main Menu > Employee Codes > View", ["Employee Codes", employee_codes_function])
+    fill_frame(main_menu, [["Employees", employee_codes__view_function__view_employees], ["Timeclock Entries", employee_codes__view_function__view_timeclock_entries]], "Main Menu > Employees > View", ["Employees", employee_codes_function])
     # return_to_main_menu = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
     # return_to_main_menu.grid(row=num_of_menu_items, column=0, columnspan=2, pady=10)
     return
@@ -1680,7 +1685,7 @@ def employee_codes__view_function__view_employees():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text = "Main Menu > Employee Codes > View > Employees")
+    main_menu.config(text = "Main Menu > Employees > View > Employees")
 
     clear_frame(main_menu)
 
@@ -1731,7 +1736,7 @@ def employee_codes__view_function__view_timeclock_entries():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text = "Main Menu > Employee Codes > View > Timeclock Entries")
+    main_menu.config(text = "Main Menu > Employees > View > Timeclock Entries")
 
     clear_frame(main_menu)
 
