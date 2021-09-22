@@ -22,7 +22,7 @@ import os
 
 
 
-program_files_path = "C:\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 
@@ -1288,8 +1288,34 @@ def resolve_requests():
     return
 
 def display_individual_request(requests, increment):
-    # clear_frame(main_menu)
     global global_index
+    global previous_request
+    global next_request
+    # if global_index + increment < 0 or global_index + increment > len(requests) - 1:
+    #     return
+    global_index += increment
+    clear_frame(main_menu)
+
+    
+
+    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1))
+    previous_request.grid(row=0, column=0)
+    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1))
+    next_request.grid(row=0, column=2)
+
+    
+
+    # if increment == -1 and global_index >= 1:
+    #     previous_request.config(state=DISABLED)
+    #     return
+    # elif increment == 1 and global_index <= len(requests) - 2:
+    #     next_request.config(state=DISABLED)
+    #     return
+    
+    # global_index += increment
+    # previous_request.config(state=NORMAL)
+    # next_request.config(state=NORMAL)
+
 
     # if global_index - increment < 0:
     #     previous_request.config(state=DISABLED)
@@ -1301,7 +1327,7 @@ def display_individual_request(requests, increment):
     # previous_request.config(state=NORMAL)
     # next_request.config(state=NORMAL)
 
-    global_index += increment
+    
 
     #                  [Row, empID, ClockIn, RequestTimeStamp]
     employee_request = [value[global_index] for value in requests.values()]
@@ -1313,19 +1339,38 @@ def display_individual_request(requests, increment):
 
     Label(main_menu, text=first_name + " " + last_name, font=("Arial", 20, "bold"), pady=5).grid(row=1, column=1)
     Label(main_menu, text=f"Employee ID: \"{employee_request[1]}\"", font=("Arial", 15), pady=5).grid(row=2, column=1)
-    Label(main_menu, text="", font=("Arial", 15), pady=5).grid(row=3, column=1)
 
     clock_in_timestamp = datetime.strptime(employee_request[2], "%Y-%m-%d %H:%M:%S")
     clock_in_date = clock_in_timestamp.strftime("%m/%d/%y")
     clock_in_time = clock_in_timestamp.strftime("%I:%M:%S %p")
     clock_in_weekday = getWeekDayFromDate(clock_in_date, "%m/%d/%y")
 
-    Label(main_menu, text=f"{clock_in_weekday}, {clock_in_date}", font=("Arial", 15), pady=5).grid(row=4, column=1)
+    requested_clock_out_timestamp = datetime.strptime(employee_request[3], "%Y-%m-%d %H:%M:%S") if employee_request[3] is not None else "None"
+    requested_clock_out_time = requested_clock_out_timestamp.strftime("%I:%M:%S %p") if type(requested_clock_out_timestamp) == datetime else "None"
 
+    Label(main_menu, text=f"{clock_in_weekday}, {clock_in_date}", font=("Arial", 15), pady=5).grid(row=3, column=1)
+
+    Label(main_menu, text="", font=("Arial", 15), pady=5).grid(row=4, column=1)
+
+
+    Label(main_menu, text="Clock In ", font=("Arial", 15), pady=5).grid(row=5, column=0)
+    Label(main_menu, text=f"{clock_in_time} ", font=("Arial", 15), pady=5).grid(row=6, column=0)
+
+    Label(main_menu, text="Clock Out", font=("Arial", 15), pady=5).grid(row=5, column=1)
+    admin_clock_out = Entry(main_menu, font=("Arial", 15), width=11)
+    admin_clock_out.grid(row=6, column=1)
+    admin_clock_out.insert(0, f"{requested_clock_out_time}")
+    Button(main_menu, text="Commit Change", font=("Arial", 8), pady=10, command=lambda: commit_request()).grid(row=7, column=1)
+
+    Label(main_menu, text=" Request ", font=("Arial", 15), pady=5).grid(row=5, column=2)
+    Label(main_menu, text=f"{requested_clock_out_time}", font=("Arial", 15), pady=5).grid(row=6, column=2)
 
     conn.commit()
     conn.close()
 
+    return
+
+def commit_request():
     return
 
 
