@@ -22,7 +22,7 @@ import os
 
 
 
-program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 
@@ -540,7 +540,7 @@ def enter():
         main_menu.place(relx=.5, rely=.425, anchor=N)
 
         global main_menu_buttons
-        main_menu_buttons = [["Employees", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function]]
+        main_menu_buttons = [["Employees", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function], ["Resolve Requests", resolve_requests]]
 
         global employee_codes_child_buttons
         employee_codes_child_buttons = [["Add New Employee", employee_codes__add_new_employee_function], ["Edit", employee_codes__edit_function], ["Delete", employee_codes__delete_function], ["View", employee_codes__view_function]]
@@ -1247,7 +1247,86 @@ def validate_grabArray_sendto_display_period_totals(start, end):
     else:
         messagebox.showerror("Invalid Entry", "Please enter start and end dates in the format of \"mm/dd/yyyy\"!")
         return
+
+def get_requests():
+    conn = sqlite3.connect(database_file)
+    c = conn.cursor()
+    requests = c.execute("SELECT row, empID, ClockIn, Request FROM time_clock_entries WHERE ClockOut = 'FORGOT' ORDER BY EmpID ASC").fetchall()
+    row = []
+    empID = []
+    ClockIn = []
+    Request = []
+    for record in requests:
+        row.append(record[0])
+        empID.append(record[1])
+        ClockIn.append(record[2])
+        Request.append(record[3])
+    conn.commit()
+    conn.close()
+    return {
+        "Row": row,
+        "empID": empID,
+        "ClockIn": ClockIn,
+        "Request": Request
+        }
+
+def resolve_requests():
+    clear_frame(main_menu)
+    global global_index
+    global previous_request
+    global next_request
+    global_index = 0
     
+    requests = get_requests()
+
+    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1))
+    previous_request.grid(row=0, column=0)
+    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1))
+    next_request.grid(row=0, column=2)
+
+    display_individual_request(requests, 0)
+    return
+
+def display_individual_request(requests, increment):
+    # clear_frame(main_menu)
+    global global_index
+
+    # if global_index - increment < 0:
+    #     previous_request.config(state=DISABLED)
+    #     return
+    # elif global_index + increment > len(requests) - 1:
+    #     next_request.config(state=DISABLED)
+    #     return
+    
+    # previous_request.config(state=NORMAL)
+    # next_request.config(state=NORMAL)
+
+    global_index += increment
+
+    #                  [Row, empID, ClockIn, RequestTimeStamp]
+    employee_request = [value[global_index] for value in requests.values()]
+
+    conn = sqlite3.connect(database_file)
+    c = conn.cursor()
+
+    first_name, last_name = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (employee_request[1],)).fetchone()
+
+    Label(main_menu, text=first_name + " " + last_name, font=("Arial", 20, "bold"), pady=5).grid(row=1, column=1)
+    Label(main_menu, text=f"Employee ID: \"{employee_request[1]}\"", font=("Arial", 15), pady=5).grid(row=2, column=1)
+    Label(main_menu, text="", font=("Arial", 15), pady=5).grid(row=3, column=1)
+
+    clock_in_timestamp = datetime.strptime(employee_request[2], "%Y-%m-%d %H:%M:%S")
+    clock_in_date = clock_in_timestamp.strftime("%m/%d/%y")
+    clock_in_time = clock_in_timestamp.strftime("%I:%M:%S %p")
+    clock_in_weekday = getWeekDayFromDate(clock_in_date, "%m/%d/%y")
+
+    Label(main_menu, text=f"{clock_in_weekday}, {clock_in_date}", font=("Arial", 15), pady=5).grid(row=4, column=1)
+
+
+    conn.commit()
+    conn.close()
+
+    return
 
 
 def employee_codes__add_new_employee_function():
