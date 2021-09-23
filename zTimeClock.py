@@ -1272,6 +1272,7 @@ def get_requests():
 
 def resolve_requests():
     clear_frame(main_menu)
+    main_menu.config(text="Main Menu > Resolve Requests")
     global global_index
     global previous_request
     global next_request
@@ -1279,63 +1280,39 @@ def resolve_requests():
     
     requests = get_requests()
 
-    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1))
-    previous_request.grid(row=0, column=0)
-    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1))
-    next_request.grid(row=0, column=2)
-
     display_individual_request(requests, 0)
     return
 
 def display_individual_request(requests, increment):
-    global global_index
-    global previous_request
-    global next_request
-    # if global_index + increment < 0 or global_index + increment > len(requests) - 1:
-    #     return
-    global_index += increment
     clear_frame(main_menu)
+    global global_index
 
-    
-
-    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1))
+    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1), width=6)
     previous_request.grid(row=0, column=0)
-    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1))
+    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1), width=6)
     next_request.grid(row=0, column=2)
 
-    
-
-    # if increment == -1 and global_index >= 1:
-    #     previous_request.config(state=DISABLED)
-    #     return
-    # elif increment == 1 and global_index <= len(requests) - 2:
-    #     next_request.config(state=DISABLED)
-    #     return
-    
-    # global_index += increment
-    # previous_request.config(state=NORMAL)
-    # next_request.config(state=NORMAL)
+    if global_index + increment == len(requests["Row"]) - 1:
+        next_request.config(state=DISABLED)
+        
+    elif global_index + increment == 0:
+        previous_request.config(state=DISABLED)
 
 
-    # if global_index - increment < 0:
-    #     previous_request.config(state=DISABLED)
-    #     return
-    # elif global_index + increment > len(requests) - 1:
-    #     next_request.config(state=DISABLED)
-    #     return
-    
-    # previous_request.config(state=NORMAL)
-    # next_request.config(state=NORMAL)
-
-    
+    global_index += increment
 
     #                  [Row, empID, ClockIn, RequestTimeStamp]
     employee_request = [value[global_index] for value in requests.values()]
+
+    Label(main_menu, text=f"{global_index + 1} of {len(requests['Row'])}", font=("Arial", 20, "bold"), pady=5).grid(row=0, column=1)
 
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
     first_name, last_name = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (employee_request[1],)).fetchone()
+
+    conn.commit()
+    conn.close()
 
     Label(main_menu, text=first_name + " " + last_name, font=("Arial", 20, "bold"), pady=5).grid(row=1, column=1)
     Label(main_menu, text=f"Employee ID: \"{employee_request[1]}\"", font=("Arial", 15), pady=5).grid(row=2, column=1)
@@ -1360,17 +1337,35 @@ def display_individual_request(requests, increment):
     admin_clock_out = Entry(main_menu, font=("Arial", 15), width=11)
     admin_clock_out.grid(row=6, column=1)
     admin_clock_out.insert(0, f"{requested_clock_out_time}")
-    Button(main_menu, text="Commit Change", font=("Arial", 8), pady=10, command=lambda: commit_request()).grid(row=7, column=1)
+    Label(main_menu, text="", font=("Arial", 8)).grid(row=7, column=1)
+    Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], admin_clock_out.get(), first_name, last_name, employee_request[1])).grid(row=8, column=1)
 
     Label(main_menu, text=" Request ", font=("Arial", 15), pady=5).grid(row=5, column=2)
     Label(main_menu, text=f"{requested_clock_out_time}", font=("Arial", 15), pady=5).grid(row=6, column=2)
 
-    conn.commit()
-    conn.close()
+    Label(main_menu, text="", font=("Arial", 8)).grid(row=9, column=1)
+    Button(main_menu, text="Return to Main Menu", font=("Arial", 8), command=main_menu_function).grid(row=10, column=1)
 
     return
 
-def commit_request():
+def commit_request(row, admin_request, first, last, id):
+    """Commit the admin's request to resolve an employee's mistake of forgetting to clock out on the same day."""
+    # [Row, empID, ClockIn, RequestTimeStamp]
+    # employee_request
+
+    if validate_timestamp(admin_request, "%I:%M:%S %p"):
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+
+        formatted_admin_request = datetime.strptime(admin_request, "%I:%M:%S %p").strftime("%Y-%m-%d %H:%M:%S")
+
+        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE Row = @1", (formatted_admin_request, row,))
+
+        conn.commit()
+        conn.close()
+        messagebox.showinfo("Successful!", f"The clock out time for the following employee:\n\"{first} {last}\" (id = \"{id}\")\n has been changed to \"{admin_request}\".")
+    else:
+        messagebox.showerror("Invalid Timestamp", "Please re-enter the timestamp in the format of \"HH:MM:SS am/pm\". Here is an example: \"03:47:29 pm\"")
     return
 
 
