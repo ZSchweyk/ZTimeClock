@@ -1279,17 +1279,22 @@ def resolve_requests():
     global_index = 0
     
     requests = get_requests()
+    all_entries_and_btns = []
+    for i in range(len(requests["Row"])):
+        all_entries_and_btns.append([Entry(main_menu, font=("Arial", 15), width=11), Button(main_menu, text="Commit Change", font=("Arial", 8))])
 
-    display_individual_request(requests, 0)
+    display_individual_request(requests, 0, all_entries_and_btns)
     return
 
-def display_individual_request(requests, increment):
+def display_individual_request(requests, increment, all_entries_and_btns):
     clear_frame(main_menu)
     global global_index
 
-    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1), width=6)
+    # requests = get_requests()
+
+    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1, all_entries_and_btns), width=6)
     previous_request.grid(row=0, column=0)
-    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1), width=6)
+    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1, all_entries_and_btns), width=6)
     next_request.grid(row=0, column=2)
 
     if global_index + increment == len(requests["Row"]) - 1:
@@ -1334,11 +1339,16 @@ def display_individual_request(requests, increment):
     Label(main_menu, text=f"{clock_in_time} ", font=("Arial", 15), pady=5).grid(row=6, column=0)
 
     Label(main_menu, text="Clock Out", font=("Arial", 15), pady=5).grid(row=5, column=1)
-    admin_clock_out = Entry(main_menu, font=("Arial", 15), width=11)
-    admin_clock_out.grid(row=6, column=1)
-    admin_clock_out.insert(0, f"{requested_clock_out_time}")
+    # admin_clock_out = Entry(main_menu, font=("Arial", 15), width=11)
+    # admin_clock_out.grid(row=6, column=1)
+    # admin_clock_out.insert(0, f"{requested_clock_out_time}")
+    all_entries_and_btns[global_index][0].grid(row=6, column=1)
+    all_entries_and_btns[global_index][0].insert(0, f"{requested_clock_out_time}")
     Label(main_menu, text="", font=("Arial", 8)).grid(row=7, column=1)
-    Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], admin_clock_out.get(), first_name, last_name, employee_request[1])).grid(row=8, column=1)
+    # commit_btn = Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], admin_clock_out.get(), first_name, last_name, employee_request[1], admin_clock_out, commit_btn))
+    # commit_btn.grid(row=8, column=1)
+    all_entries_and_btns[global_index][1].config(command=lambda: commit_request(employee_request[0], all_entries_and_btns[global_index][0].get(), first_name, last_name, employee_request[1], all_entries_and_btns[global_index][0], all_entries_and_btns[global_index][1]))
+    all_entries_and_btns[global_index][1].grid(row=8, column=1)
 
     Label(main_menu, text=" Request ", font=("Arial", 15), pady=5).grid(row=5, column=2)
     Label(main_menu, text=f"{requested_clock_out_time}", font=("Arial", 15), pady=5).grid(row=6, column=2)
@@ -1348,7 +1358,7 @@ def display_individual_request(requests, increment):
 
     return
 
-def commit_request(row, admin_request, first, last, id):
+def commit_request(row, admin_request, first, last, id, entry, btn):
     """Commit the admin's request to resolve an employee's mistake of forgetting to clock out on the same day."""
     # [Row, empID, ClockIn, RequestTimeStamp]
     # employee_request
@@ -1357,13 +1367,19 @@ def commit_request(row, admin_request, first, last, id):
         conn = sqlite3.connect(database_file)
         c = conn.cursor()
 
-        formatted_admin_request = datetime.strptime(admin_request, "%I:%M:%S %p").strftime("%Y-%m-%d %H:%M:%S")
+        formatted_admin_request = datetime.strptime(admin_request, "%I:%M:%S %p").strftime("%H:%M:%S")
 
-        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE Row = @1", (formatted_admin_request, row,))
+        clock_in = c.execute("SELECT ClockIn FROM time_clock_entries WHERE Row = @0", (row,)).fetchone()[0]
+        print(clock_in)
+        ymd = datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+
+        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE Row = @1", (ymd + " " + formatted_admin_request, row,))
 
         conn.commit()
         conn.close()
         messagebox.showinfo("Successful!", f"The clock out time for the following employee:\n\"{first} {last}\" (id = \"{id}\")\n has been changed to \"{admin_request}\".")
+        entry.config(state = DISABLED)
+        btn.config(state = DISABLED)
     else:
         messagebox.showerror("Invalid Timestamp", "Please re-enter the timestamp in the format of \"HH:MM:SS am/pm\". Here is an example: \"03:47:29 pm\"")
     return
