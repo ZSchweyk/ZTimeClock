@@ -1279,27 +1279,30 @@ def resolve_requests():
     global_index = 0
     
     requests = get_requests()
-    all_entries_and_btns = []
-    for i in range(len(requests["Row"])):
-        all_entries_and_btns.append([Entry(main_menu, font=("Arial", 15), width=11), Button(main_menu, text="Commit Change", font=("Arial", 8))])
+    # all_entries_and_btns = []
+    # for i in range(len(requests["Row"])):
+    #     all_entries_and_btns.append([Entry(main_menu, font=("Arial", 15), width=11), Button(main_menu, text="Commit Change", font=("Arial", 8))])
 
-    display_individual_request(requests, 0, all_entries_and_btns)
+    display_individual_request(requests, 0)
     return
 
-def display_individual_request(requests, increment, all_entries_and_btns):
+def display_individual_request(requests, increment):
     clear_frame(main_menu)
     global global_index
 
     # requests = get_requests()
 
-    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1, all_entries_and_btns), width=6)
+    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1), width=6)
     previous_request.grid(row=0, column=0)
-    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1, all_entries_and_btns), width=6)
+    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1), width=6)
     next_request.grid(row=0, column=2)
+
+    if len(requests["Row"]) == 1:
+        next_request.config(state=DISABLED)
+        previous_request.config(state=DISABLED)
 
     if global_index + increment == len(requests["Row"]) - 1:
         next_request.config(state=DISABLED)
-        
     elif global_index + increment == 0:
         previous_request.config(state=DISABLED)
 
@@ -1307,6 +1310,11 @@ def display_individual_request(requests, increment, all_entries_and_btns):
     global_index += increment
 
     #                  [Row, empID, ClockIn, RequestTimeStamp]
+    if len(requests["Row"]) == 0:
+        resolved_all_requests()
+        return
+    elif len(requests["Row"]) == 1:
+        global_index = 0
     employee_request = [value[global_index] for value in requests.values()]
 
     Label(main_menu, text=f"{global_index + 1} of {len(requests['Row'])}", font=("Arial", 20, "bold"), pady=5).grid(row=0, column=1)
@@ -1339,16 +1347,16 @@ def display_individual_request(requests, increment, all_entries_and_btns):
     Label(main_menu, text=f"{clock_in_time} ", font=("Arial", 15), pady=5).grid(row=6, column=0)
 
     Label(main_menu, text="Clock Out", font=("Arial", 15), pady=5).grid(row=5, column=1)
-    # admin_clock_out = Entry(main_menu, font=("Arial", 15), width=11)
-    # admin_clock_out.grid(row=6, column=1)
-    # admin_clock_out.insert(0, f"{requested_clock_out_time}")
-    all_entries_and_btns[global_index][0].grid(row=6, column=1)
-    all_entries_and_btns[global_index][0].insert(0, f"{requested_clock_out_time}")
+    admin_clock_out = Entry(main_menu, font=("Arial", 15), width=11)
+    admin_clock_out.grid(row=6, column=1)
+    admin_clock_out.insert(0, f"{requested_clock_out_time}")
+    # all_entries_and_btns[global_index][0].grid(row=6, column=1)
+    # all_entries_and_btns[global_index][0].insert(0, f"{requested_clock_out_time}")
     Label(main_menu, text="", font=("Arial", 8)).grid(row=7, column=1)
-    # commit_btn = Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], admin_clock_out.get(), first_name, last_name, employee_request[1], admin_clock_out, commit_btn))
-    # commit_btn.grid(row=8, column=1)
-    all_entries_and_btns[global_index][1].config(command=lambda: commit_request(employee_request[0], all_entries_and_btns[global_index][0].get(), first_name, last_name, employee_request[1], all_entries_and_btns[global_index][0], all_entries_and_btns[global_index][1]))
-    all_entries_and_btns[global_index][1].grid(row=8, column=1)
+    commit_btn = Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], admin_clock_out.get(), first_name, last_name, employee_request[1]))
+    commit_btn.grid(row=8, column=1)
+    # all_entries_and_btns[global_index][1].config(command=lambda: commit_request(employee_request[0], all_entries_and_btns[global_index][0].get(), first_name, last_name, employee_request[1], all_entries_and_btns[global_index][0], all_entries_and_btns[global_index][1]))
+    # all_entries_and_btns[global_index][1].grid(row=8, column=1)
 
     Label(main_menu, text=" Request ", font=("Arial", 15), pady=5).grid(row=5, column=2)
     Label(main_menu, text=f"{requested_clock_out_time}", font=("Arial", 15), pady=5).grid(row=6, column=2)
@@ -1358,7 +1366,7 @@ def display_individual_request(requests, increment, all_entries_and_btns):
 
     return
 
-def commit_request(row, admin_request, first, last, id, entry, btn):
+def commit_request(row, admin_request, first, last, id):
     """Commit the admin's request to resolve an employee's mistake of forgetting to clock out on the same day."""
     # [Row, empID, ClockIn, RequestTimeStamp]
     # employee_request
@@ -1378,12 +1386,23 @@ def commit_request(row, admin_request, first, last, id, entry, btn):
         conn.commit()
         conn.close()
         messagebox.showinfo("Successful!", f"The clock out time for the following employee:\n\"{first} {last}\" (id = \"{id}\")\n has been changed to \"{admin_request}\".")
-        entry.config(state = DISABLED)
-        btn.config(state = DISABLED)
+        requests = get_requests()
+        global global_index
+        if len(requests["Row"]) == 0:
+            resolved_all_requests()
+        else:
+            if global_index - 1 <= 0:
+                display_individual_request(requests, 0)
+            else:
+                display_individual_request(requests, -1)
     else:
         messagebox.showerror("Invalid Timestamp", "Please re-enter the timestamp in the format of \"HH:MM:SS am/pm\". Here is an example: \"03:47:29 pm\"")
     return
 
+def resolved_all_requests():
+    clear_frame(main_menu)
+    main_menu_function()
+    messagebox.showinfo("All Requests Successfully Resolved!", "There are no more employee requests. You have successfully resolved all of them.")
 
 def employee_codes__add_new_employee_function():
     clear_frame(main_menu)
