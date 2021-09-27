@@ -98,7 +98,6 @@ def send_email(sender, password, recipient, body, subject, file_path):
 
     if file_path != "":
         mime_type, _ = mimetypes.guess_type(file_path)
-        print(mime_type)
         mime_type, mime_subtype = mime_type.split('/')
         with open(file_path, 'rb') as file:
             message.add_attachment(file.read(),
@@ -166,7 +165,6 @@ def send_report_if_pay_day():
         period_1 = datetime.strptime(get_period_days(0)[0][1], "%m/%d/%y").strftime("%m%d%y")
         period_2 = datetime.strptime(get_period_days(0)[0][1], "%m/%d/%y").strftime("%m/%d/%y")
         complete_file_path = program_files_path + period_1 + "_Pay_Period_Report.xlsx"
-        print(master_dict)
         CreateExcelFile.create_excel_file(complete_file_path, master_dict)
 
         # json_string = json.dumps(final_list, indent=4)
@@ -923,7 +921,7 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
         messagebox.showerror("Empty field(s)!", "No tasks were assigned. 'Task', 'Date', or 'Department' fields were blank.")
         return
 
-    conn = sqlite3.connect(database_file)
+    conn = sqlite3.connect("employee_time_clock.db")
     c = conn.cursor()
 
     date_array = date_string.split(",")
@@ -932,16 +930,66 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
     all_ids = c.execute("SELECT ID FROM employees;").fetchall()
     
     print(all_ids)
+    successful_ids = []
+    unsuccessful_ids = []
     for single_id in id_array:
-        print(single_id)
-        if str(single_id) in all_ids:
-            print("Exists")
+        all_types = (int, str)
+        for type in all_types:
+            try:
+                if (type(single_id),) in all_ids:
+                    successful_ids.append(type(single_id))
+                else:
+                    unsuccessful_ids.append(type(single_id))
+                break
+            except:
+                pass
+    
+    successful_dates = []
+    unsuccessful_dates = []
+    for single_date in date_array:
+        if validate_timestamp(single_date, "%m/%d/%Y"):
+            old_date = single_date.split("/")
+            if len(old_date[0]) < 2:
+                old_date[0] = "0" + old_date[0]
+            if len(old_date[1]) < 2:
+                old_date[1] = "0" + old_date[1]
+            single_date = "/".join(old_date)
+            successful_dates.append(single_date)
         else:
-            print("DNE")
+            unsuccessful_dates.append(single_date)
 
+
+    print("Successful Ids:", successful_ids)
+    print("Unsuccessful Ids:", unsuccessful_ids)
+
+    successful = "Successful:\n"
+    successful_over_written = "\tOver-written:\n"
+    successful_updated = "\tNew:\n"
+    unsuccessful = "Unsuccessful:\n"
+    unsuccessful_ids_str = "\tIDs:\n"
+    unsuccessful_dates_str = "\tDates:\n"
+
+    for single_id in successful_ids:
+        for single_date in successful_dates:
+            task_from_table = c.execute("SELECT task_id, task FROM employee_tasks WHERE employee_id = @0 AND task_date = @1;", (single_id, single_date,)).fetchone()
+            
+            name = c.execute(f"SELECT FirstName, LastName FROM employees WHERE ID = @0;", (single_id,)).fetchone()
+            if task_from_table != None:
+                c.execute("UPDATE employee_tasks SET task = @0 WHERE task_id = @1;", (task, task_from_table[0],))
+                successful_over_written += f"\t\t\"{name[0]} {name[1]}\" task > \"{task_from_table[1]}\" on \"{single_date}\" < over-written.\n"
+            else:
+                c.execute("INSERT INTO employee_tasks(employee_id, task_date, task) VALUES(@0, @1, @2);", (single_id, single_date, task,))
+                successful_updated += f"\t\t\"{name[0]} {name[1]}\" > task added on \"{single_date}\"\n"
+    
+    for id in unsuccessful_ids:
+        unsuccessful_ids_str += f"\t\t\"{str(id)}\"\n"
+    for date in unsuccessful_dates:
+        unsuccessful_dates_str += f"\t\t\"{date}\"\n"
 
     conn.commit()
     conn.close()
+    message = successful + successful_over_written + successful_updated + unsuccessful + unsuccessful_ids_str + unsuccessful_dates_str
+    messagebox.showinfo("Report", message)
     return
 
 def get_period_days(num):
@@ -1353,7 +1401,7 @@ def display_individual_request(requests, increment):
     # all_entries_and_btns[global_index][0].grid(row=6, column=1)
     # all_entries_and_btns[global_index][0].insert(0, f"{requested_clock_out_time}")
     Label(main_menu, text="", font=("Arial", 8)).grid(row=7, column=1)
-    commit_btn = Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], admin_clock_out.get(), first_name, last_name, employee_request[1]))
+    commit_btn = Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], clock_in_timestamp.strftime("%I:%M:%S %p"), admin_clock_out.get(), first_name, last_name, employee_request[1]))
     commit_btn.grid(row=8, column=1)
     # all_entries_and_btns[global_index][1].config(command=lambda: commit_request(employee_request[0], all_entries_and_btns[global_index][0].get(), first_name, last_name, employee_request[1], all_entries_and_btns[global_index][0], all_entries_and_btns[global_index][1]))
     # all_entries_and_btns[global_index][1].grid(row=8, column=1)
@@ -1366,19 +1414,21 @@ def display_individual_request(requests, increment):
 
     return
 
-def commit_request(row, admin_request, first, last, id):
+def commit_request(row, employee_clock_in, admin_request, first, last, id):
     """Commit the admin's request to resolve an employee's mistake of forgetting to clock out on the same day."""
     # [Row, empID, ClockIn, RequestTimeStamp]
     # employee_request
 
     if validate_timestamp(admin_request, "%I:%M:%S %p"):
+        if (datetime.strptime(admin_request, "%I:%M:%S %p") - datetime.strptime(employee_clock_in, "%I:%M:%S %p")).seconds <= 0:
+            messagebox.showerror("Invalid Timestamp", "Please enter a timestamp after the clock in time!")
+            return
         conn = sqlite3.connect(database_file)
         c = conn.cursor()
 
         formatted_admin_request = datetime.strptime(admin_request, "%I:%M:%S %p").strftime("%H:%M:%S")
 
         clock_in = c.execute("SELECT ClockIn FROM time_clock_entries WHERE Row = @0", (row,)).fetchone()[0]
-        print(clock_in)
         ymd = datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
 
         c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE Row = @1", (ymd + " " + formatted_admin_request, row,))
