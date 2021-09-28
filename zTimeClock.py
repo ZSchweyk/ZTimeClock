@@ -48,7 +48,7 @@ root.iconbitmap(program_files_path + "ChemtrolImage.ico")
 width= root.winfo_width()
 height= root.winfo_height()
 # 1200, 773
-root.geometry("%dx%d" % (1200, 850))
+root.geometry("%dx%d" % (1200, 1000))
 root.resizable(width=False, height=False)
 root.title("SBCS (Chemtrol)")
 
