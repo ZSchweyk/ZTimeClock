@@ -22,12 +22,13 @@ from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 import os
 
 
-
+# Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 program_files_path = "C:\\Programming\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
-
+# A class that handles selecting admin information such as email, password, admin usernmane ... etc.
 class AdminInformation:
+    # Method that selects a certain field value from a field name (property).
     @staticmethod
     def select(field_property):
         conn = sqlite3.connect(database_file)
@@ -41,7 +42,7 @@ class AdminInformation:
             return field_value
 
 
-
+# Sets up the TKinter GUI main window.
 root = Tk()
 root.iconbitmap(program_files_path + "ChemtrolImage.ico")
 width= root.winfo_width()
@@ -50,6 +51,7 @@ root.geometry("%dx%d" % (1200, 773))
 root.resizable(width=False, height=False)
 root.title("SBCS (Chemtrol)")
 
+# A standalone function that checks if a given timestamp in a given format is valid. Returns a boolean.
 def validate_timestamp(time_string, format):
     try:
         datetime.strptime(time_string, format)
@@ -58,6 +60,8 @@ def validate_timestamp(time_string, format):
     else:
         return True
 
+# This function inserts an employee's clock out request into the "Request" column in the database if they forget to clock out on the same day they clocked in at.
+# It also handles validating the entered timestamp as well.
 def insert_request(emp_id, time_string, format, clocked_in_time):
     if validate_timestamp(time_string, format) :
         conn = sqlite3.connect(database_file)
@@ -88,7 +92,7 @@ def insert_request(emp_id, time_string, format, clocked_in_time):
         
     return
 
-#root.config(bg="white")
+# Sends an email from a gmail account, and provides the option to include a file to attach to the email. If the file_path parameter is an emtpy string, no file will be attached.
 def send_email(sender, password, recipient, body, subject, file_path):
     #Make file_path = "" if you don't want to send an attachment.
     message = EmailMessage()
@@ -113,7 +117,7 @@ def send_email(sender, password, recipient, body, subject, file_path):
     mail_server.quit()
 
     
-
+# Checks if a given date is a payday. Note: 15th or last day of the month = end_of_pay_period. It will return True if the date is a weekday and the end_of_pay_period, a Friday but the end_of_pay_period is on the following weekend (1 or 2 days after it), or a Thursday and the end_of_pay_period is a Saturday.
 def is_this_a_pay_day(date_in, format):
     date_in = datetime.strptime(date_in, format)
     last_day_of_month = monthrange(date_in.year, date_in.month)[1]
@@ -128,6 +132,7 @@ def is_this_a_pay_day(date_in, format):
         else:
             return False
 
+# This function checks every hour that the program is open if the given date is a pay day using is_this_a_pay_day. If it is, it sends an email with a Excel File Report attached to the admin.
 def send_report_if_pay_day():
     today = datetime.today()
     last_day_of_month = monthrange(today.year, today.month)[1]
@@ -194,6 +199,7 @@ ZTimeClock
     root.after(60*60*1000, send_report_if_pay_day)
     return
 
+# Fetches all employee ids from the database. This is often useful for looping through every single employee.
 def get_all_emp_ids():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -204,6 +210,7 @@ def get_all_emp_ids():
     conn.close()
     return ids
 
+# This functions displays a specific greeting based on the time of day.
 def greeting_time():
     global day_time_greeting
     string = ""
@@ -218,20 +225,20 @@ def greeting_time():
     day_time_greeting.config(text=string)
     day_time_greeting.after(1000, greeting_time)
 
-
+# Subtracts two timestamps as strings in the following format, "%Y-%m-%d %H:%M:%S", and returns the difference.
 def subtract_time(t2, t1):
     d1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S").timestamp()
     d2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S").timestamp()
     return d2 - d1
 
+# Adds a list of timestamps in the format of "%H:%M:%S" and returns the sum.
 def add_time_stamps(array):
     d1 = datetime.strptime(array[0], "%H:%M:%S")
     for str in range(1, len(array)):
         d1 += datetime.strptime(str, "%H:%M:%S")
     return d1
 
-
-
+# Formats a given number of seconds to hh:mm:ss, and returns the result as a string.
 def format_seconds_to_hhmmss(seconds):
     hours = seconds // (60*60)
     seconds %= (60*60)
@@ -239,6 +246,7 @@ def format_seconds_to_hhmmss(seconds):
     seconds %= 60
     return "%02i:%02i:%02i" % (hours, minutes, seconds)
 
+# Fetches the current time, date, and day of the week, and displays that on the screen. This function waits every 1 second until it calls itself again, as the displayed time changes every second.
 def clock():
     hour = time.strftime("%I")
     minute = time.strftime("%M")
@@ -250,6 +258,7 @@ def clock():
     day_of_week.config(text=day[:3] + " " + current_date)
     program_clock.after(1000, clock)
 
+# Grabs all the week days up until and including the weekday of the passed in date.
 def getWeekDays(todays_date, format):
     array_of_week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     week_day = datetime.strptime(todays_date, format).weekday()
@@ -261,6 +270,7 @@ def getWeekDays(todays_date, format):
         result_array.append([array_of_week_days[i], day_of_week[5:7] + "/" + day_of_week[8:10] + "/" + day_of_week[0:4]])
     return result_array
 
+# Creates and returns list of dates in the interval [start, end], both inclusive, as a string array.
 def getArrayOfDates(start, end, entered_format, result_format):
     start_date = datetime.strptime(start, entered_format)
     end_date = datetime.strptime(end, entered_format)
@@ -270,12 +280,14 @@ def getArrayOfDates(start, end, entered_format, result_format):
         result_array.append(start_date.strftime(result_format))
     return result_array
 
+# Adds/subtracts a given number of dates to a specific date.
 def add_subtract_days(todays_date, format, num_of_days):
     today = datetime.strptime(todays_date, format)
     new_date = str(today + timedelta(days=num_of_days))
     new_date = new_date[5:7] + "/" + new_date[8:10] + "/" + new_date[0:4]
     return new_date
 
+# Grabs today's weekday and date, and returns a 2 element list containing the weekday and date respectively.
 def getTodaysWeekDayAndDate():
     today = datetime.strptime(str(datetime.now().date()), "%Y-%m-%d")
     array_of_week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -286,17 +298,21 @@ def getTodaysWeekDayAndDate():
     result = [week_day, todays_date]
     return result
 
+# Returns the weekday of a specific date as a string.
 def getWeekDayFromDate(entered_date, format):
     array_of_week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     week_day = datetime.strptime(entered_date, format).weekday()
     return array_of_week_days[week_day]
 
+# Returns a date in another specified format.
 def change_date_format(entered_date, input_format, output_format):
     initial_format = datetime.strptime(entered_date, input_format)
     new_format = initial_format.strftime(output_format)
     return new_format
 
-
+# This function is enabled when an employee (or admin) clicks the submit button to clock in or clock out. It serves as the main function to display all the employee
+# and admin info that pops up on the screen. Also, this function deals with the logic to clock in or clock out, or display the message that an employee forgot to clock out
+# and modifies the database accordingly. It also selects a random greeting message every time an employee clocks out or in.
 def enter():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -551,6 +567,8 @@ def enter():
         conn.commit()
         conn.close()
 
+# This function fetches and displays an employees task based on the global variable (date) defined in the enter function. The idea of this function is that when an
+# employee toggles between certain days, the displayed task will also change accordingly.
 def fetch_and_display_task(id):
     task = selectTask(id, str(current_date_mm_dd_yy), "%Y-%m-%d")
     if current_date_mm_dd_yy == datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date():
@@ -561,6 +579,8 @@ def fetch_and_display_task(id):
     employee_task_label.config(text=task)
     return
 
+# Calculuates and displays the period totals for an employee. The period total calculation depends on the number of total hours an employee was clocked in for, and also
+# takes into account their daily lunch breaks.
 def calculate_and_display_period_totals_for_employees(id):
     dates = getPeriodFromDateString(str(current_date_mm_dd_yy), "%Y-%m-%d")
     current_period_dates = getPeriodDays()
@@ -595,7 +615,7 @@ def calculate_and_display_period_totals_for_employees(id):
     period_days.config(text=displayed_dates)
     period_daily_hours.config(text=displayed_daily_hours)
 
-
+# This function toggles to the previous day that an employee sees, and displays that day's totals.
 def previous_day_totals():
     # conn = sqlite3.connect(database_file)
     # c = conn.cursor()
@@ -644,6 +664,7 @@ def previous_day_totals():
     calculate_and_display_period_totals_for_employees(entered_id)
     return
 
+# This function toggles to the next day that an employee sees, and displays that day's totals.
 def next_day_totals():
     global entered_id
     calculate_and_display_day_totals(1, entered_id)
@@ -651,6 +672,10 @@ def next_day_totals():
     calculate_and_display_period_totals_for_employees(entered_id)
     return
 
+# This function deals with a specific part of the information that an employee sees when they clock in or out. It calculates and displays a specific day's hourly totals
+# accounting for breaks, and also gives a break down of exactly all of their clock in and out times. It also displays whether or not an employee forgot to clock out at
+# the end of a certain day. In the calculations, if a employee forgot to clock out, the duration for that record (clock in and clock out) will equal 0. This will be
+# modified once the admin changes this through the main menu.
 def calculate_and_display_day_totals(num_added_days, id):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -709,8 +734,7 @@ def calculate_and_display_day_totals(num_added_days, id):
     return
 
 
-#clear([id_label_widget, first_name_label_widget, last_name_label_widget, deparment_label_widget], [commit_changes], False, None)
-
+# This function clears the contents of label, button, and entry widgets. It is mainly used to clear the screen between employees.
 def clear(all_labels, all_buttons, bool, reset_commands):
     #all_labels = [greeting, time_in, time_out, time_duration, employee_list_label, employee_hours_label]
 
@@ -732,6 +756,8 @@ def clear(all_labels, all_buttons, bool, reset_commands):
     clear_frame(main_menu)
     main_menu.place_forget()
 
+# This function fills the labelframe (a widget that contains other widgets) in a certain format. It mainly allows me to easily and quickly create a menu or submenu with
+# any number of buttons. It also deals with the function that each button is linked with.
 def fill_frame(frame, button_names_and_funcs, frame_header, return_to_array):
     clear_frame(frame)
     frame.config(text=frame_header)
@@ -747,14 +773,19 @@ def fill_frame(frame, button_names_and_funcs, frame_header, return_to_array):
         return_to_menu = Button(frame, text="Return to " + return_to_array[0], command=return_to_array[1])
         return_to_menu.grid(row=num_of_menu_items, column=0, columnspan=2, pady=10)
 
+# Clears the main_menu frame that the admin sees. This happens when the admin goes through the main menu.
 def clear_frame(frame):
     for widget in frame.winfo_children():
         widget.destroy()
 
+# A function that returns and displays all the buttons in the main menu, as well as all the functions each button is linked to. This is necessary because lots of other
+# sub menu options contain a button that allows the admin to go back to the main menu, and that return button is linked to this function.
 def main_menu_function():
     fill_frame(main_menu, main_menu_buttons, "Main Menu", None)
     return
 
+# Returns and displays all the buttons in the employee codes button within the main_menu. Basically, a function here is necessary because the "employee codes" button 
+# acts as a folder for other buttons, and must be referred to later.
 def employee_codes_function():
     clear_frame(main_menu)
     #main_menu.config(text="Employee Codes")
@@ -764,10 +795,14 @@ def employee_codes_function():
     global_confirmation_text.set("")
     return
 
+# Fills the main menu with buttons related to assigning tasks. Because the "assign tasks" option is a folder for other buttons, it is helpful to create a function for it
+# to call later.
 def assign_tasks_function():
     fill_frame(main_menu, [["Assign by Department", assign_tasks__by_department], ["Assign by Employee", assign_tasks__by_employee]], "Main Menu > Assign Tasks", ["Main Menu", main_menu_function])
     return
 
+# This function displays the screen that the admin sees when assigning tasks to employees by their department. It contains checkboxes, buttons, entries, and more, and
+# sends all that info to another function to deal with inserting/updating employee tasks.
 def assign_tasks__by_department():
     clear_frame(main_menu)
     main_menu.config(text = "Main Menu > Assign Tasks > By Department")
@@ -823,6 +858,9 @@ def assign_tasks__by_department():
 
     return
 
+# This function funnels all the input from the assign_tasks__by_department() function and updates the database to reflect those changes. Note: employees are only allowed to have
+# one task per day, so if the admin attempts to assign another task for a specific employee on a given day, this function makes sure that that employee only has 
+# one task for that day. In this case, this function will overide that employee's previous task with the new task.
 def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, single_task_string, date_string):
 
     if single_task_string == "" or date_string == "" or all(var.get() == "" for var in strvars):
@@ -887,6 +925,7 @@ def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, s
     conn.close()
     return
 
+# Returns the screen that the admin sees when assigning tasks by employee. It has entry, button, and label widgets in order to do so.
 def assign_tasks__by_employee():
     clear_frame(main_menu)
     main_menu.config(text = "Main Menu > Assign Tasks > By Employee")
@@ -917,6 +956,8 @@ def assign_tasks__by_employee():
     return_to_employee_codes.grid(row=5, column=0, columnspan=2, pady=10)
     return
 
+# Funnels all the info collected from the screen, which was created by the assign_tasks__by_employee() function, and updates the database. It only allows employees to have
+# one task per day, so if necessary, it will overide certain tasks if the admin says so.
 def assign_tasks__by_employee_submit_button(id_string, task, date_string):
     if task == "" or date_string == "" or id_string == "":
         messagebox.showerror("Empty field(s)!", "No tasks were assigned. 'Task', 'Date', or 'Department' fields were blank.")
@@ -993,6 +1034,14 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
     messagebox.showinfo("Report", message)
     return
 
+# This function returns the period days of a certain period. It passes in a number and generates the period days, both displayed and calculated as a tuple.
+# For instance, if the argument = 0, it will fetch the period days of today's period. If the argument = 1, it will fetch the period days of the period after the current one.
+# Negative numbers do the same thing, except they go back periods. This function is useful for when the admin toggles between the reports and summaries of certain
+# periods. Note: there is a difference between displayed and calculated period days. Calculated period days are strictly all the days between either the 1st - 15th or the 16th - last_day_of_month.
+# This is used in all the calculations for period totals, both for employees and the admin. Displayed period days are similar to the calculated period days, however, they 
+# take into account for whether or not the last day of the period is a weekday or not. If the last day of the period lands on a weekend, the displayed period days will
+# end at the last weekday before the end of the period. The displayed period days are useful when displaying the period days in a report, and the calculated period days are useful when
+# looping through every single day in a period from the 1st - 15th or the 16th - last_day_of_month to do payroll calculations.
 def get_period_days(num):
     today = datetime.today()
     day = ""
@@ -1040,11 +1089,14 @@ def get_period_days(num):
     
     return ((datetime.strptime(beginning_of_period, "%m/%d/%Y").strftime("%m/%d/%y") , end_of_period.strftime("%m/%d/%y")), tuple(getArrayOfDates(beginning_of_period, end_of_period.strftime("%m/%d/%Y")[:3] + last_day_of_calculated_period_days + end_of_period.strftime("%m/%d/%Y")[5:], "%m/%d/%Y", "%m/%d/%y")))
 
+# This function allows the admin to toggle between periods to view the payroll information for all the employees.
 def next_previous_period(num):
     global period_count
     period_count += num
     return display_period_totals(get_period_days(period_count))
 
+# Displays the payroll totals for a given range of dates. Loops through each employee's timeclock entries for every single date and performs calculations. This also creates
+# an excel file report with the same information.
 def display_period_totals(period_days_input):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -1129,6 +1181,8 @@ ZTimeClock
     conn.close()
     return
 
+# A class to create excel files in different formats. Although there is only one method here, more can be created if necessary depending the different formats the
+# admin prefers.
 class CreateExcelFile:
     @staticmethod
     def create_excel_file(complete_file_path, dictionary, email_report_bool = False, sender_address = False, sender_pswd = False, receiver_address = False, subject = False, body = False):
@@ -1237,7 +1291,7 @@ class CreateExcelFile:
     #     return result_list
 
 
-
+# The main period totals function that allows the admin to see each and every period's totals.
 def period_totals_function():
     clear_frame(main_menu)
     main_menu.config(text="Main Menu > Period Totals")
@@ -1258,10 +1312,12 @@ def period_totals_function():
 
     return
 
+# Clears the entry of an entry widget.
 def clear_entry(event, entry):
     entry.delete(0, END)
     entry.unbind('<Button-1>', event)
 
+# Very similar to the period totals function, but allows the admin to enter any specific range of dates (inclusive).
 def historical_totals_function():
     clear_frame(main_menu)
     main_menu.config(text="Main Menu > Historical Totals")
@@ -1288,6 +1344,7 @@ def historical_totals_function():
     display_period_totals(get_period_days(0))
     return
 
+# Validates and grabs the array of dates that the admin specified in historical_totals_function() and displays and generates a report for that range of dates.
 def validate_grabArray_sendto_display_period_totals(start, end):
     is_valid = validate_timestamp(start, "%m/%d/%Y") and validate_timestamp(end, "%m/%d/%Y")
     if is_valid:
@@ -1297,6 +1354,7 @@ def validate_grabArray_sendto_display_period_totals(start, end):
         messagebox.showerror("Invalid Entry", "Please enter start and end dates in the format of \"mm/dd/yyyy\"!")
         return
 
+# Grabs all the requests that employees make when they forget to clock out on the same day they clocked in at.
 def get_requests():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -1319,6 +1377,7 @@ def get_requests():
         "Request": Request
         }
 
+# The parent function for the admin to resolve employee requests.
 def resolve_requests():
     clear_frame(main_menu)
     main_menu.config(text="Main Menu > Resolve Requests")
@@ -1335,6 +1394,7 @@ def resolve_requests():
     display_individual_request(requests, 0)
     return
 
+# Displays a single employee's request, and allows the admin to modify their request and commit changes.
 def display_individual_request(requests, increment):
     clear_frame(main_menu)
     global global_index
@@ -1415,14 +1475,15 @@ def display_individual_request(requests, increment):
 
     return
 
+# This function makes commits to the database based on the information funneled from display_individual_request().
 def commit_request(row, employee_clock_in, admin_request, first, last, id):
     """Commit the admin's request to resolve an employee's mistake of forgetting to clock out on the same day."""
     # [Row, empID, ClockIn, RequestTimeStamp]
     # employee_request
 
     if validate_timestamp(admin_request, "%I:%M:%S %p"):
-        if (datetime.strptime(admin_request, "%I:%M:%S %p") - datetime.strptime(employee_clock_in, "%I:%M:%S %p")).seconds <= 0:
-            messagebox.showerror("Invalid Timestamp", "Please enter a timestamp after the clock in time!")
+        if datetime.strptime(admin_request, "%I:%M:%S %p").time() < datetime.strptime(employee_clock_in, "%I:%M:%S %p").time():
+            messagebox.showerror("Invalid Timestamp", "Please enter a timestamp after or equal to the clock in time!")
             return
         conn = sqlite3.connect(database_file)
         c = conn.cursor()
@@ -1450,11 +1511,13 @@ def commit_request(row, employee_clock_in, admin_request, first, last, id):
         messagebox.showerror("Invalid Timestamp", "Please re-enter the timestamp in the format of \"HH:MM:SS am/pm\". Here is an example: \"03:47:29 pm\"")
     return
 
+# This function simply displays that the admin finished resolving all the employee requests and sends the admin back to the main_menu.
 def resolved_all_requests():
     clear_frame(main_menu)
     main_menu_function()
     messagebox.showinfo("All Requests Successfully Resolved!", "There are no more employee requests. You have successfully resolved all of them.")
 
+# The screen that allows the admin to add a new employee.
 def employee_codes__add_new_employee_function():
     clear_frame(main_menu)
     main_menu.config(text = main_menu["text"] + " > Add New Employee")
@@ -1520,6 +1583,7 @@ def employee_codes__add_new_employee_function():
     
     return
 
+# Grabs the information that the admin enters to create a new employee and updates the database accordingly.
 def add_new_employee(id, first, last, department, hourly_pay, ot_allowed, max_daily_hours):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -1549,6 +1613,7 @@ def add_new_employee(id, first, last, department, hourly_pay, ot_allowed, max_da
     messagebox.showinfo("Successful!", result)
     #label_widget.config(text=result)
 
+# The screen that allows the admin to edit the information of a certain employee.
 def employee_codes__edit_function():
     clear_frame(main_menu)
     main_menu.config(text = main_menu["text"] + " > Edit")
@@ -1573,6 +1638,7 @@ def employee_codes__edit_function():
 
     return
 
+# A sub-sub button within the main_menu that allows the admin to edit information of a specific employee.
 def employee_codes__edit__edit_button(id, return_button):
     return_button.grid_forget()
     #confirmation_message.config(text="")
@@ -1718,6 +1784,7 @@ def employee_codes__edit__edit_button(id, return_button):
     conn.close()
     return
 
+# This function funnels in information from employee_codes__edit_function(), (whatever info the admin modifies), and commits those changes to the database.
 def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first, new_last, new_department, new_hourly_pay, new_ot_allowed, new_max_daily_hours):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -1823,6 +1890,7 @@ def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first,
     
     return
 
+# The screen that the admin can delete employees from.
 def employee_codes__delete_function():
 
     #global_confirmation_text
@@ -1845,7 +1913,7 @@ def employee_codes__delete_function():
     return_to_employee_codes.grid(row=3, column=0, columnspan=2, pady=10)
     return
 
-
+# Deletes the specific employee entered by the admin from employee_codes__delete_function()
 def employee_codes__delete_function__delete_button(id):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -1879,13 +1947,14 @@ def employee_codes__delete_function__delete_button(id):
     conn.close()
     return
 
+# The admin screen where employees and all their information can be viewed. This creates another sub-menu with the option of viewing employee info and viewing timeclock entry info.
 def employee_codes__view_function():
     fill_frame(main_menu, [["Employees", employee_codes__view_function__view_employees], ["Timeclock Entries", employee_codes__view_function__view_timeclock_entries]], "Main Menu > Employees > View", ["Employees", employee_codes_function])
     # return_to_main_menu = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
     # return_to_main_menu.grid(row=num_of_menu_items, column=0, columnspan=2, pady=10)
     return
 
-
+# The admin screen where employee information can be viewed.
 def employee_codes__view_function__view_employees():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -1937,6 +2006,7 @@ def employee_codes__view_function__view_employees():
     conn.close()
     return
 
+# The admin screen where timeclock entry info can be viewed. The scrollbar was especially hard!
 def employee_codes__view_function__view_timeclock_entries():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -2024,7 +2094,7 @@ def employee_codes__view_function__view_timeclock_entries():
 
 
 
-
+# Selects an employee's task on a given date.
 def selectTask(emp_id, task_date, format):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -2036,6 +2106,7 @@ def selectTask(emp_id, task_date, format):
     else:
         return "You don't have any tasks!"
 
+# Grabs the current period's date range (for calculation use).
 def getPeriodDays():
     result_str = []
     current_date = time.strftime("%x")
@@ -2055,6 +2126,7 @@ def getPeriodDays():
             result_str.append(month + "/" + str(i) + "/" + year)
     return result_str
 
+# Returns an array of dates in a period depending on what period a given date is in.
 def getPeriodFromDateString(date_string, format):
     result_array_of_str_dates = []
     date = str(datetime.strptime(date_string, format).strftime("%m/%d/%y"))
@@ -2106,7 +2178,8 @@ def getPeriodFromDateString(date_string, format):
     
 
     
-        
+# Grabs an employees raw employee hours for a certain date. It simply subtracts the clock in timestamp from the clock out timestamp in the database. If an employee forgot
+# to clock out, it make the duration for that record 0.
 def getRawTotalEmployeeHours(entered_date, format, id):
     #Other commented version: getRawTotalEmployeeHours(start, end, id):
     conn = sqlite3.connect(database_file)
@@ -2129,7 +2202,7 @@ def getRawTotalEmployeeHours(entered_date, format, id):
     conn.close()
     return employee_hours
 
-
+# Grabs the result from getRawTotalEmployeeHours(), calculates an employee's total break time for the day, and contains logic to return an employee's total hours for the day accounting for breaks.
 def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
 
     conn = sqlite3.connect(database_file)
@@ -2163,6 +2236,7 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
     else:
         return total_period_hours
 
+# Uses the result from getTotalDailyHoursAccountingForBreaks() in order to calculate an employee's total paid employee hours in a specific range of dates.
 def calculateTotalPaidEmpHours(start_date, end_date, entered_format, id):
     dates = getArrayOfDates(start_date, end_date, entered_format, "%Y-%m-%d")
     total_break_hours = 0
@@ -2173,7 +2247,7 @@ def calculateTotalPaidEmpHours(start_date, end_date, entered_format, id):
     return total_break_hours, array_of_total_hours_per_day
 
 
-
+# Calculates employee pay, accounting for regular, overtime, and double time hours, and returns the result as a dictionary.
 def calculate_employee_pay(start_date, end_date, entered_format, id):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -2300,7 +2374,7 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
 
 
 
-    
+# Clears the text of a widget.
 def clear_widget_text(widget):
     widget['text'] = ""
 
@@ -2309,7 +2383,7 @@ def clear_widget_text(widget):
 global_confirmation_text = StringVar()
 
 
-#Setup
+# The static main screen.
 day_of_week = Label(root, text="", font=("Arial", 25), fg="blue", pady=45)
 day_of_week.place(relx=.175, rely=0.0, anchor=N)
 
@@ -2495,7 +2569,7 @@ historical_totals_button = Button(root)
 # employee_start_date = Entry(root, text="", font=("Arial", 10))
 # employee_end_date = Entry(root, text="", font=("Arial", 10))
 
-
+# Creates the mainloop of the application to constantly check for input events like clicking a button or entering text in a entry widget.
 root.mainloop()
 
 #[start_date_label, end_date_label, greeting, time_in, time_out, time_duration, employee_list_label, employee_hours_label], [employee_hours_button, employee_start_date, employee_end_date]
