@@ -47,7 +47,8 @@ root = Tk()
 root.iconbitmap(program_files_path + "ChemtrolImage.ico")
 width= root.winfo_width()
 height= root.winfo_height()
-root.geometry("%dx%d" % (1200, 773))
+# 1200, 773
+root.geometry("%dx%d" % (1200, 850))
 root.resizable(width=False, height=False)
 root.title("SBCS (Chemtrol)")
 
@@ -109,6 +110,7 @@ def send_email(sender, password, recipient, body, subject, file_path):
             maintype=mime_type,
             subtype=mime_subtype,
             filename=file_path.split("\\")[-1])
+        
 
     mail_server = smtplib.SMTP_SSL('smtp.gmail.com')
     mail_server.set_debuglevel(1)
@@ -188,7 +190,7 @@ Sincerely,
 ZTimeClock
         """
         subject = f"ZTimeClock {period_2} Pay Period Report for Chemtrol"
-        send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), "mrtaquito04@gmail.com", body, subject, complete_file_path)
+        send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), AdminInformation.select("EmailAddress"), body, subject, complete_file_path)
 
         os.remove(complete_file_path)
 
@@ -1172,7 +1174,7 @@ Sincerely,
 ZTimeClock
     """
     subject = f"ZTimeClock {period_2} Pay Period Report for Chemtrol"
-    create_file = Button(main_menu, text="Generate Excel Report and Email Myself", font=("Arial", 8), pady=10, command=lambda: CreateExcelFile.create_excel_file(file_name, label_dictionary, email_report_bool = True, sender_address = AdminInformation.select("EmailAddress"), sender_pswd = AdminInformation.select("EmailAddressPassword"), receiver_address = "mrtaquito04@gmail.com", subject = subject, body = body))
+    create_file = Button(main_menu, text="Generate Excel Report and Email Myself", font=("Arial", 8), pady=10, command=lambda: CreateExcelFile.create_excel_file(file_name, label_dictionary, email_report_bool = True, sender_address = AdminInformation.select("EmailAddress"), sender_pswd = AdminInformation.select("EmailAddressPassword"), receiver_address = AdminInformation.select("EmailAddress"), subject = subject, body = body))
     create_file.grid(row=1, column=9)
 
     
