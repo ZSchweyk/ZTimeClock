@@ -1227,7 +1227,12 @@ class CreateExcelFile:
         
         if email_report_bool:
             print(complete_file_path)
-            send_email(sender_address, sender_pswd, receiver_address, body, subject, complete_file_path)
+            try:
+                send_email(sender_address, sender_pswd, receiver_address, body, subject, complete_file_path)
+            except:
+                send_email(sender_address, sender_pswd, receiver_address, body, subject, "")
+                messagebox.showinfo("Error!", "Could not attach file.")
+                return
             os.remove(complete_file_path)
             messagebox.showinfo("Successful", "Report has been sent!")
 
