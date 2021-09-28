@@ -1,3 +1,4 @@
+
 from ast import Index
 from sqlite3.dbapi2 import Error, PARSE_DECLTYPES
 from tkinter import *
@@ -22,7 +23,7 @@ import os
 
 
 
-program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\Programming\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 
