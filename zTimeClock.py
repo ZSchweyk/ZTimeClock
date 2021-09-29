@@ -324,7 +324,7 @@ def enter():
     global time_out
     global time_duration
     global button
-    button.config(text="Clear", command=lambda: clear([greeting, time_in, time_out, time_duration, day_total, period_total, period_days, period_daily_hours, employee_task_header_label, employee_task_label, enter_actual_clock_out_time_label], [forward, backward, enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None))
+    button.config(text="Finish", command=lambda: clear([greeting, time_in, time_out, time_duration, day_total, period_total, period_days, period_daily_hours, employee_task_header_label, employee_task_label, enter_actual_clock_out_time_label], [forward, backward, enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None))
 
     
     #Add the following as parameters to the clear function above.
@@ -2398,7 +2398,10 @@ program_clock = Label(root, text="", font=("Arial", 25), fg="blue", pady=45)
 program_clock.place(relx=.825, rely=0.0, anchor=N)
 
 day_time_greeting = Label(root, text="", font=("Arial", 25), fg="blue")
-day_time_greeting.place(relx=0.5, rely=0.189, anchor=N)
+day_time_greeting.place(relx=0.5, rely=0.13, anchor=N)
+
+Label(root, text="1. Enter ID and press \"Enter\"", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
+Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
 
 clock()
 #root.after(1000, clock)
