@@ -23,7 +23,7 @@ import os
 
 
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
-program_files_path = "C:\\Programming\\ZTimeClock\\"
+program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
@@ -1186,14 +1186,9 @@ ZTimeClock
 # A class to create excel files in different formats. Although there is only one method here, more can be created if necessary depending the different formats the
 # admin prefers.
 class CreateExcelFile:
-    @staticmethod
-    def create_excel_file(complete_file_path, dictionary, email_report_bool = False, sender_address = False, sender_pswd = False, receiver_address = False, subject = False, body = False):
-        """
-        file_name is the name of the Excel file WITH the extension.
 
-        The labels of the passed in dictionary will become the columns of the Excel table.
-        Expects that the values in the dictionary are lists. All values must have equally sized lists.
-        """
+    @staticmethod
+    def dict_to_list(dictionary):
         dict_values_to_list = []
         for value in dictionary.values():
             dict_values_to_list.append(value)
@@ -1208,6 +1203,46 @@ class CreateExcelFile:
         columns = []
         for label in dictionary.keys():
             columns.append({"header": label})
+        
+        return data, columns
+    
+    def create_excel_file_with_multiple_sheets(complete_file_path, array_of_dicts, sheet_names):
+        if len(array_of_dicts) != len(sheet_names):
+            return
+        splitted = complete_file_path.split("\\")
+
+        file_name = splitted[-1]
+        file_path = "\\".join(splitted[0:len(splitted) - 1])
+
+        workbook = xl.Workbook(file_name)
+
+        for dictionary in array_of_dicts:
+            # Create a subsheet and fill it with the data from the dictionary.
+            pass
+
+
+
+
+
+
+
+
+
+
+        complete_file_path = os.path.join(file_path, file_name)
+
+        os.remove(complete_file_path)
+
+
+
+    def create_excel_file(complete_file_path, dictionary, email_report_bool = False, sender_address = False, sender_pswd = False, receiver_address = False, subject = False, body = False):
+        """
+        file_name is the name of the Excel file WITH the extension.
+
+        The labels of the passed in dictionary will become the columns of the Excel table.
+        Expects that the values in the dictionary are lists. All values must have equally sized lists.
+        """
+        data, columns = CreateExcelFile.dict_to_list(dictionary)
 
         # first_char_of_filename = CreateExcelFile.every_index(complete_file_path, "\\")[-1] + 1
         splitted = complete_file_path.split("\\")
@@ -1230,8 +1265,7 @@ class CreateExcelFile:
             try:
                 send_email(sender_address, sender_pswd, receiver_address, body, subject, complete_file_path)
             except:
-                send_email(sender_address, sender_pswd, receiver_address, body, subject, "")
-                messagebox.showinfo("Error!", "Could not attach file.")
+                messagebox.showinfo("Error!", "Could not attach file due to an unexpected error.")
                 return
             os.remove(complete_file_path)
             messagebox.showinfo("Successful", "Report has been sent!")
