@@ -598,7 +598,7 @@ def enter():
         main_menu.place(relx=.5, rely=.425, anchor=N)
 
         global main_menu_buttons
-        main_menu_buttons = [["Employees", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function], ["Resolve Requests", resolve_requests]]
+        main_menu_buttons = [["Employees", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function], ["Resolve Requests", resolve_requests], ["Send Copy of DB", send_copy_of_db]]
 
         global employee_codes_child_buttons
         employee_codes_child_buttons = [["Add New Employee", employee_codes__add_new_employee_function], ["Edit", employee_codes__edit_function], ["Delete", employee_codes__delete_function], ["View", employee_codes__view_function]]
@@ -1222,6 +1222,31 @@ ZTimeClock
 
     conn.commit()
     conn.close()
+    return
+
+
+def send_copy_of_db():
+    copy_of_db_as_dict_array, array_of_sheet_names = get_database_copy()
+    CreateExcelFile.create_excel_file_with_multiple_sheets(program_files_path + "Copy_Of_Database.xlsx", copy_of_db_as_dict_array, array_of_sheet_names)
+    
+    current_time = datetime.now().strftime("%m/%d/%Y at %I:%M:%S %p")
+
+    body = f"""Time Clock Report,
+
+Below is an identical copy of the ZTimeClock database for Chemtrol's Employee Timeclock System, as of {current_time}. Please reply to this email for any questions.
+
+Good luck :)
+
+Sincerely,
+ZTimeClock
+        """
+    subject = f"ZTimeClock Copy of Chemtrol's Employee Timeclock Database as of {current_time}"
+    send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), AdminInformation.select("EmailAddress"), body, subject, program_files_path + "Copy_Of_Database.xlsx")
+
+    os.remove(program_files_path + "Copy_Of_Database.xlsx")
+
+    messagebox.showinfo("Successful!", "An email containing an identical copy of the database has been sent to yourself.")
+
     return
 
 # A class to create excel files in different formats. Although there is only one method here, more can be created if necessary depending the different formats the
