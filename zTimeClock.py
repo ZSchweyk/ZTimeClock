@@ -47,8 +47,8 @@ root = Tk()
 root.iconbitmap(program_files_path + "ChemtrolImage.ico")
 width= root.winfo_width()
 height= root.winfo_height()
-# 1200, 773
-root.geometry("%dx%d" % (1200, 1000))
+# 1200, 1000
+root.geometry("%dx%d" % (1200, 773))
 root.resizable(width=False, height=False)
 root.title("SBCS (Chemtrol)")
 
@@ -134,6 +134,45 @@ def is_this_a_pay_day(date_in, format):
         else:
             return False
 
+def get_database_copy():
+    conn = sqlite3.connect(database_file)
+    c = conn.cursor()
+
+    array_of_dicts = []
+    array_of_sheet_names = []
+
+    tables_and_columns = {
+        "employees": ["ID", "FirstName", "LastName", "Department", "HourlyPay", "OTAllowed", "MaxDailyHours"],
+        "time_clock_entries": ["row", "empID", "ClockIn", "ClockOut", "Request"],
+        "employee_tasks": ["task_id", "employee_id", "task_date", "task"],
+        "admin_information": ["FieldProperty", "FieldValue"]
+    }
+
+    for table_name, table_columns in tables_and_columns.items():
+        array_of_sheet_names.append(table_name)
+        table_dict = {}
+        for column in table_columns:
+            column_values = [value[0] for value in c.execute(f"SELECT {column} FROM {table_name}")]
+            table_dict[column] = column_values
+        array_of_dicts.append(table_dict)
+        # array_of_dicts.append(dict())
+
+    conn.commit()
+    conn.close()
+
+    
+    return array_of_dicts, array_of_sheet_names
+
+
+# CreateExcelFile.create_excel_file_with_multiple_sheets(program_files_path + "CopyOfDatabase.xlsx", array_of_dicts, array_of_sheet_names)
+
+# send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), AdminInformation.select("EmailAddress"), "Hello Zeyn,\n\nThis message should have an excel file attached that is an exact copy of the database.\n\nSincerely,\nZeyn", "testing copy of database", program_files_path + "CopyOfDatabase.xlsx")
+
+
+def merge_2_dicts(dict1, dict2):
+    res = {**dict1, **dict2}
+    return res
+
 # This function checks every hour that the program is open if the given date is a pay day using is_this_a_pay_day. If it is, it sends an email with a Excel File Report attached to the admin.
 def send_report_if_pay_day():
     today = datetime.today()
@@ -141,7 +180,7 @@ def send_report_if_pay_day():
 
     if (today.day == 15 or today.day == last_day_of_month) and int(datetime.now().strftime("%H")) >= 18:
         # final_list = []
-        master_dict = {
+        report_dict = [{
             "ID": [],
             "FLast": [],
             "Total Pay": [],
@@ -152,7 +191,7 @@ def send_report_if_pay_day():
             "Regular Pay": [],
             "Overtime Pay": [],
             "Double Time Pay": []
-        }
+        }]
         beginning_of_pay_period = ""
         end_of_pay_period = today.strftime("%m/%d/%y")
 
@@ -166,14 +205,16 @@ def send_report_if_pay_day():
         for emp_id in all_emp_ids:
             emp_dict = calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0]))
             for key, value in emp_dict.items():
-                master_dict[key].append(value)
+                report_dict[0][key].append(value)
             
             # final_list.append({"EmpID": str(emp_id[0]), "FLast": emp_id[1][0] + emp_id[2]} | calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0])))
 
         period_1 = datetime.strptime(get_period_days(0)[0][1], "%m/%d/%y").strftime("%m%d%y")
         period_2 = datetime.strptime(get_period_days(0)[0][1], "%m/%d/%y").strftime("%m/%d/%y")
-        complete_file_path = program_files_path + period_1 + "_Pay_Period_Report.xlsx"
-        CreateExcelFile.create_excel_file(complete_file_path, master_dict)
+        complete_file_path = program_files_path + period_1 + "_Pay_Period_Report_and_DB_Copy.xlsx"
+
+        copy_of_db_as_dict_array, array_of_sheet_names = get_database_copy()
+        CreateExcelFile.create_excel_file_with_multiple_sheets(complete_file_path, report_dict + copy_of_db_as_dict_array, [f"{period_1}_Pay_Period_Report"] + array_of_sheet_names)
 
         # json_string = json.dumps(final_list, indent=4)
         # filename = program_files_path + "z_time_clock_report.json"
@@ -182,7 +223,7 @@ def send_report_if_pay_day():
         # jsonFile.close()
         body = f"""Time Clock Report,
 
-Below is the ZTimeClock report for this pay period, {period_2}. Please reply to this email for any questions.
+Below is the ZTimeClock report for this pay period, {period_2}, and an identical copy of the database as of {datetime.now().strftime("%m/%d/%Y at %I:%M:%S %p")}. Please reply to this email for any questions.
 
 Happy Payrolling :)
 
@@ -1206,6 +1247,7 @@ class CreateExcelFile:
         
         return data, columns
     
+    @staticmethod
     def create_excel_file_with_multiple_sheets(complete_file_path, array_of_dicts, sheet_names):
         if len(array_of_dicts) != len(sheet_names):
             return
@@ -1216,11 +1258,19 @@ class CreateExcelFile:
 
         workbook = xl.Workbook(file_name)
 
+        sheet_name_counter = 0
         for dictionary in array_of_dicts:
+            data, columns = CreateExcelFile.dict_to_list(dictionary)
             # Create a subsheet and fill it with the data from the dictionary.
-            pass
+            sheet = workbook.add_worksheet(sheet_names[sheet_name_counter])
+            sheet_name_counter += 1
 
+            abc = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
 
+            sheet.add_table("A1:" + abc[len(columns) - 1] + str(len(data) + 2), {"data": data, "columns": columns})
+
+        
+        workbook.close()
 
 
 
@@ -1231,7 +1281,6 @@ class CreateExcelFile:
 
         complete_file_path = os.path.join(file_path, file_name)
 
-        os.remove(complete_file_path)
 
 
 
