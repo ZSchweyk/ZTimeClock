@@ -24,8 +24,8 @@ import os
 
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
-# C:\\Users\\Windows\\Setup
-program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
+# C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
+program_files_path = "C:\\Users\\Windows\\Setup\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
@@ -2522,7 +2522,7 @@ program_clock.place(relx=.825, rely=0.0, anchor=N)
 day_time_greeting = Label(root, text="", font=("Arial", 25), fg="blue")
 day_time_greeting.place(relx=0.5, rely=0.13, anchor=N)
 
-Label(root, text="Log in or out with your Employee ID, then\nhit the Enter Key/Clear Button to clear the screen after viewing", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
+Label(root, text="Log in/out with your Employee ID, then\n\nhit the Clear Button/Enter Key to clear the screen after viewing", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
 # Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
 
 clock()
