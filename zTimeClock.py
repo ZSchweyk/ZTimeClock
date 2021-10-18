@@ -23,6 +23,8 @@ import os
 
 
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
+# End string with "\\"
+# C:\\Users\\Windows\\Setup
 program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
@@ -47,8 +49,8 @@ root = Tk()
 root.iconbitmap(program_files_path + "ChemtrolImage.ico")
 width= root.winfo_width()
 height= root.winfo_height()
-# 1200, 1000
-root.geometry("%dx%d" % (1200, 773))
+# 1200, 773
+root.geometry("%dx%d" % (1200, 1000))
 root.resizable(width=False, height=False)
 root.title("SBCS (Chemtrol)")
 
@@ -353,6 +355,7 @@ def change_date_format(entered_date, input_format, output_format):
     new_format = initial_format.strftime(output_format)
     return new_format
 
+
 # This function is enabled when an employee (or admin) clicks the submit button to clock in or clock out. It serves as the main function to display all the employee
 # and admin info that pops up on the screen. Also, this function deals with the logic to clock in or clock out, or display the message that an employee forgot to clock out
 # and modifies the database accordingly. It also selects a random greeting message every time an employee clocks out or in.
@@ -365,7 +368,7 @@ def enter():
     global time_out
     global time_duration
     global button
-    button.config(text="Finish", command=lambda: clear([greeting, time_in, time_out, time_duration, day_total, period_total, period_days, period_daily_hours, employee_task_header_label, employee_task_label, enter_actual_clock_out_time_label], [forward, backward, enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None))
+    button.config(text="Clear", command=lambda: clear([greeting, time_in, time_out, time_duration, day_total, period_total, period_days, period_daily_hours, employee_task_header_label, employee_task_label, enter_actual_clock_out_time_label], [forward, backward, enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None))
 
     
     #Add the following as parameters to the clear function above.
@@ -375,16 +378,28 @@ def enter():
     
     #root.bind("<Return>", lambda event=None: button.invoke())
     root.bind("<Return>", lambda event=None: button.invoke())
-      
-
+    
+        
 
 
     if id_field.get() != AdminInformation.select("AdminPassword"):
-        emp_record = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = '" + id_field.get() + "'").fetchone()
-        if emp_record is not None:
+        global entered_id
+        if len(id_field.get()) != 0:
+            if id_field.get()[0] == "e":
+                entered_id = "E" + id_field.get()[1:]
+            elif id_field.get()[0] != "E":
+                entered_id = "E" + id_field.get()
+            else:
+                entered_id = id_field.get()
+        else:
+            entered_id = ""
+
+        
+        emp_record = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (entered_id,)).fetchone()
+        if emp_record is not None and len(id_field.get()) != 0:
             name = str(emp_record[0]) + " " + str(emp_record[1])
 
-            time_clock_entries_record = c.execute("SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id_field.get() + "' ORDER BY row DESC LIMIT 1;").fetchone()
+            time_clock_entries_record = c.execute("SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;").fetchone()
 
             inOrOut = ""
             greeting_text = []
@@ -393,7 +408,7 @@ def enter():
                 #Clocked IN
                 inOrOut = "In"
                 greeting_text = ["Welcome", "Greetings", "Hello", "Have a great day", "Have a productive day", "Have a fun work day"]
-                c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES('" + str(id_field.get()) + "', DateTime('now', 'localtime'));")
+                c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES('" + str(entered_id) + "', DateTime('now', 'localtime'));")
                 conn.commit()
             elif time_clock_entries_record[1] is not None and time_clock_entries_record[2] == None:
                 #Clocked OUT
@@ -418,7 +433,7 @@ def enter():
                     enter_actual_clock_out_time_entry.delete(0, "end")
                     enter_actual_clock_out_time_entry.place(relx=.46, rely=.65, anchor=N)
 
-                    actual_clock_out_time_submit_button.config(command=lambda: insert_request(id_field.get(), enter_actual_clock_out_time_entry.get(), "%I:%M:%S %p", clocked_in_time.strftime("%H:%M:%S")))
+                    actual_clock_out_time_submit_button.config(command=lambda: insert_request(entered_id, enter_actual_clock_out_time_entry.get(), "%I:%M:%S %p", clocked_in_time.strftime("%H:%M:%S")))
                     actual_clock_out_time_submit_button.place(relx=.55, rely=.6375)
 
                     # button.config(state=DISABLED)
@@ -534,7 +549,7 @@ def enter():
 
             global current_date_mm_dd_yy
             current_date_mm_dd_yy = datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date()
-            calculate_and_display_day_totals(0, id_field.get())
+            calculate_and_display_day_totals(0, entered_id)
 
 
 
@@ -554,8 +569,7 @@ def enter():
 
             
             greeting.config(text=greeting_text[rand] + "\n" + name + "\n\nYou are clocked " + inOrOut, fg="green")
-            global entered_id
-            entered_id = id_field.get()
+            
             
             # day_total.config(text="Today's Total - " + format_seconds_to_hhmmss(total_seconds))
             
@@ -2508,8 +2522,8 @@ program_clock.place(relx=.825, rely=0.0, anchor=N)
 day_time_greeting = Label(root, text="", font=("Arial", 25), fg="blue")
 day_time_greeting.place(relx=0.5, rely=0.13, anchor=N)
 
-Label(root, text="1. Enter ID and press \"Enter\"", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
-Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
+Label(root, text="Log in or out with your Employee ID, then\nhit the Enter Key/Clear Button to clear the screen after viewing", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
+# Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
 
 clock()
 #root.after(1000, clock)
