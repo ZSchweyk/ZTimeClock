@@ -20,12 +20,14 @@ import xlsxwriter as xl
 import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 import os
+import sys
+sys.stderr = sys.stdout
 
 
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = "C:\\Users\\Windows\\Setup\\"
+program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
@@ -1263,7 +1265,7 @@ ZTimeClock
 
     return
 
-# A class to create excel files in different formats. Although there is only one method here, more can be created if necessary depending the different formats the
+# A class to create excel files in different formats. Although there is only one method here, more can be created if necessary depending on the different formats the
 # admin prefers.
 class CreateExcelFile:
 
@@ -1295,7 +1297,7 @@ class CreateExcelFile:
         file_name = splitted[-1]
         file_path = "\\".join(splitted[0:len(splitted) - 1])
 
-        workbook = xl.Workbook(file_name)
+        workbook = xl.Workbook(file_path + "\\" + file_name)
 
         sheet_name_counter = 0
         for dictionary in array_of_dicts:
@@ -1318,7 +1320,7 @@ class CreateExcelFile:
 
 
 
-        complete_file_path = os.path.join(file_path, file_name)
+        os.path.join(file_path, file_name)
 
 
 
@@ -1337,7 +1339,7 @@ class CreateExcelFile:
 
         file_name = splitted[-1]
         file_path = "\\".join(splitted[0:len(splitted) - 1])
-        workbook = xl.Workbook(file_name)
+        workbook = xl.Workbook(complete_file_path)
         sheet = workbook.add_worksheet()
 
         abc = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
@@ -1346,10 +1348,9 @@ class CreateExcelFile:
 
         workbook.close()
         
-        complete_file_path = os.path.join(file_path, file_name)
+        os.path.join(file_path, file_name)
         
         if email_report_bool:
-            print(complete_file_path)
             try:
                 send_email(sender_address, sender_pswd, receiver_address, body, subject, complete_file_path)
             except:
