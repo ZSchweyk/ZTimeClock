@@ -441,14 +441,11 @@ def enter():
                 #Clocked OUT
                 inOrOut = "Out"
                 greeting_text = ["Goodbye", "Have a nice day", "See you later", "Have a wonderful day", "Thank you for your great work"]
-                #c.execute("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = " + str(time_clock_entries_record[0]) + ";")
 
                 if time_clock_entries_record[1][:10] == getTodaysWeekDayAndDate()[1]:
                     c.execute("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = " + str(time_clock_entries_record[0]) + ";")
                     conn.commit()
                 else:
-                    #c.execute("UPDATE time_clock_entries SET ClockOut = '" + str(time_clock_entries_record[1]) + "' WHERE row = '" + str(time_clock_entries_record[0]) + "';")
-                    #c.execute("UPDATE time_clock_entries SET ClockOut = '" + "FORGOT" + "' WHERE row = '" + str(time_clock_entries_record[0]) + "';")
 
                     rand = random.randint(0, len(greeting_text)-1)
                     conn.commit()
@@ -456,120 +453,16 @@ def enter():
 
                     clocked_in_time = datetime.strptime(time_clock_entries_record[1][11:], "%H:%M:%S")
 
-                    #enter_actual_clock_out_time_label.config(text="Enter the time you clocked out at in the following format \"HH:MM:SS am/pm\", in order to be able to clock in again. Your request will be sent to management for approval.", wraplength=700)
                     enter_actual_clock_out_time_entry.delete(0, "end")
                     enter_actual_clock_out_time_entry.place(relx=.46, rely=.65, anchor=N)
 
                     actual_clock_out_time_submit_button.config(command=lambda: insert_request(entered_id, enter_actual_clock_out_time_entry.get(), "%I:%M:%S %p", clocked_in_time.strftime("%H:%M:%S")))
-                    actual_clock_out_time_submit_button.place(relx=.55, rely=.6375)
-
-                    # button.config(state=DISABLED)
-                    # root.protocol("WM_DELETE_WINDOW", disable_event)
-                    
+                    actual_clock_out_time_submit_button.place(relx=.55, rely=.6375)                    
                     
                     return greeting.config(text=name + ",\nyou forgot to clock out after your last clock in on " + getWeekDayFromDate(time_clock_entries_record[1][:10], "%Y-%m-%d") + ", " + datetime.strptime(time_clock_entries_record[1][:10], "%Y-%m-%d").strftime("%m/%d/%Y") + " at " + clocked_in_time.strftime("%I:%M:%S %p") + ".\n\nEnter the time you clocked out at in the following format \"HH:MM:SS am/pm\", in order to be able to clock in again. Your request will be sent to management for approval.", fg="red")
-
-            # inOrOut = ""
-            # in_greeting = ["Welcome", "Greetings", "Hello", "Have a great day", "Have a productive day", "Have a fun work day"]
-            # out_greeting = ["Goodbye", "Have a nice day", "See you later", "Have a wonderful day", "Thank you for your great work"]
-            # greeting_text = []
-
-            # time_clock_entries_record = c.execute("SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id_field.get() + "';").fetchall()
-            # if len(time_clock_entries_record) == 0:
-            #     #CLocked In
-            #     inOrOut = "In"
-            #     greeting_text = in_greeting
-            #     c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES(" + str(id_field.get()) + ", DateTime('now', 'localtime'));")
-            #     print("Entered if")
-            # else:
-            #     for i in range(len(time_clock_entries_record)):
-            #         row = time_clock_entries_record[i][0]
-            #         clock_in = time_clock_entries_record[i][1]
-            #         clock_out = time_clock_entries_record[i][2]
-
                     
-
-                    
-            #         if clock_in is None and clock_out is not None and clock_out[:10] == getTodaysWeekDayAndDate()[1]:
-            #             #Clocked In. This if statement only executes when the admin manually enters a datetime for ClockOut, but leaves ClockIn blank.
-            #             inOrOut = "In"
-            #             greeting_text = in_greeting
-            #             c.execute("UPDATE time_clock_entries SET ClockIn = DateTime('now', 'localtime') WHERE row = " + str(row) + ";")
-            #             break
-            #         elif clock_in is not None and clock_out is None and clock_in[:10] == getTodaysWeekDayAndDate()[1]:
-            #             #Clocked Out
-            #             inOrOut = "Out"
-            #             greeting_text = out_greeting
-            #             c.execute("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = " + str(row) + ";")
-            #             break
-            #         elif clock_in is not None and clock_out is not None and i == len(time_clock_entries_record) - 1:
-            #             #Clocked In
-            #             inOrOut = "In"
-            #             greeting_text = in_greeting
-            #             c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES(" + id_field.get() + ", DateTime('now', 'localtime'));")
-            #             break
-                        
-
-                    
-            # conn.commit()
-                    
-
-
-
-
 
             rand = random.randint(0, len(greeting_text)-1)
-            #greeting.config(text=greeting_text[rand] + " " + name + ", you have been clocked " + inOrOut + "!\nToday's history:")
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            # time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + str(id_field.get()) + "' AND ClockIn LIKE '%" + str(date.today()) + "%';").fetchall()
-
-            # print_time_in_records = ""
-            # print_time_out_records = ""
-            # print_duration_records = ""
-            # total_seconds = 0
-            # #times_array = []
-            # for record in time_in_out_records:
-            #     print_time_in_records += datetime.strptime(record[0][11:], "%H:%M:%S").strftime("%I:%M:%S %p") + "\n"
-                
-            #     if record[1] is not None:
-            #         print_time_out_records += datetime.strptime(record[1][11:], "%H:%M:%S").strftime("%I:%M:%S %p") + "\n"
-            #         t1 = datetime.strptime(record[1], "%Y-%m-%d %H:%M:%S").timestamp()
-            #         t2 = datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").timestamp()
-            #         total_seconds += t1 - t2
-            #         diff = format_seconds_to_hhmmss(t1 - t2)
-            #         print_duration_records += diff + "\n"
-                    
-
-            #         #t2 = record[1]
-            #         #t1 = record[0]
-            #         #time_difference = subtract_time(t2, t1)
-            #         #times_array.append(str(time_difference))
-            #         #print_duration_records += str(time_difference) + "\n"
-            #     else:
-            #         print_time_out_records += "\n"
-
-            # time_in.config(text="\nTime In\n-----------\n" + print_time_in_records)
-
-            # time_out.config(text="\nTime Out\n-----------\n" + print_time_out_records)
-
-            # #time_duration.config(text="\nDuration\n-----------\n" + print_duration_records + "\nDay Total " + format_seconds_to_hhmmss(total_seconds))
-            # time_duration.config(text="\nDuration\n-----------\n" + print_duration_records)
-            # #time_duration.config(text="Duration\n-----------\n" + print_duration_records + "\nDay Total " + add_time_stamps(times_array))
-
-            # forward.place(relx=.3, rely=.17, anchor=N)
-            # backward.place(relx=.2, rely=.17, anchor=N)
 
             forward.place(relx=.52, rely=.6, anchor=N)
             backward.place(relx=.48, rely=.6, anchor=N)
@@ -578,53 +471,13 @@ def enter():
             current_date_mm_dd_yy = datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date()
             calculate_and_display_day_totals(0, entered_id)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
             greeting.config(text=greeting_text[rand] + "\n" + name + "\n\nYou are clocked " + inOrOut, fg="green")
-            
-            
-            # day_total.config(text="Today's Total - " + format_seconds_to_hhmmss(total_seconds))
-            
-            # dates = getPeriodDays()
-            # displayed_dates = "Date\n-----------\n"
-            # displayed_daily_hours = "Total Hours\n-----------\n"
-            # period_hours_sum = 0
-            # for adate in dates:
-            #     displayed_dates += adate + "\n"
-            #     #period_hours_sum += getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())
-            #     #displayed_daily_hours += str(getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())) + "\n"
-            #     period_hours_sum += getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", entered_id)
-            #     displayed_daily_hours += str(getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", entered_id)) + "\n"
-
-            # period_total.config(text="Period's Total Hours - " + str(round(period_hours_sum, 3)))
-            # period_days.config(text=displayed_dates)
-            # period_daily_hours.config(text=displayed_daily_hours)
 
             calculate_and_display_period_totals_for_employees(entered_id)
 
-
             #Retreive task from database table and display it on the screen
-            # employee_task_header_label.config(text="Your Task")
-            # today = datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").strftime("%m/%d/%Y")
-            # employee_task_label.config(text=selectTask(id_field.get(), today, "%m/%d/%Y"))
             fetch_and_display_task(entered_id)
             
-
             id_field.delete(0, END)
         else:
             greeting.config(text="Incorrect Password", fg="red")
