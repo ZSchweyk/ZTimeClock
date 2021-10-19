@@ -15,6 +15,10 @@ from typing import AsyncContextManager
 import smtplib
 import mimetypes
 from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 #from openpyxl import load_workbook
 import xlsxwriter as xl
 import json
@@ -121,6 +125,27 @@ def send_email(sender, password, recipient, body, subject, file_path):
     mail_server.login(sender, password)
     mail_server.send_message(message)
     mail_server.quit()
+
+def send_email_with_db_attachment(sender, password, recipient, body, subject, file_path):
+    data = MIMEMultipart()
+    data["From"] = sender
+    data["To"] = recipient
+    data["Subject"] = subject
+    data.attach(MIMEText(body, 'plain'))
+    attachment = open(file_path, "rb")
+    p = MIMEBase('application', 'octet-stream')
+    p.set_payload((attachment).read())
+    encoders.encode_base64(p)
+    p.add_header('Content-Disposition', "attachment; filename= %s" % file_path.split("\\")[-1])
+    data.attach(p)
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+    s.starttls()
+    s.login(sender, password)
+    text = data.as_string()
+    s.sendmail(sender, recipient, text)
+    s.quit()
+    return
+    
 
     
 # Checks if a given date is a payday. Note: 15th or last day of the month = end_of_pay_period. It will return True if the date is a weekday and the end_of_pay_period, a Friday but the end_of_pay_period is on the following weekend (1 or 2 days after it), or a Thursday and the end_of_pay_period is a Saturday.
@@ -1022,7 +1047,7 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
         messagebox.showerror("Empty field(s)!", "No tasks were assigned. 'Task', 'Date', or 'Department' fields were blank.")
         return
 
-    conn = sqlite3.connect("employee_time_clock.db")
+    conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
     date_array = date_string.split(",")
@@ -1243,7 +1268,7 @@ ZTimeClock
 
 def send_copy_of_db():
     copy_of_db_as_dict_array, array_of_sheet_names = get_database_copy()
-    CreateExcelFile.create_excel_file_with_multiple_sheets(program_files_path + "Copy_Of_Database.xlsx", copy_of_db_as_dict_array, array_of_sheet_names)
+    # CreateExcelFile.create_excel_file_with_multiple_sheets(program_files_path + "Copy_Of_Database.xlsx", copy_of_db_as_dict_array, array_of_sheet_names)
     
     current_time = datetime.now().strftime("%m/%d/%Y at %I:%M:%S %p")
 
@@ -1257,9 +1282,9 @@ Sincerely,
 ZTimeClock
         """
     subject = f"ZTimeClock Copy of Chemtrol's Employee Timeclock Database as of {current_time}"
-    send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), AdminInformation.select("EmailAddress"), body, subject, program_files_path + "Copy_Of_Database.xlsx")
+    send_email_with_db_attachment(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), AdminInformation.select("EmailAddress"), body, subject, database_file)
 
-    os.remove(program_files_path + "Copy_Of_Database.xlsx")
+    # os.remove(program_files_path + "Copy_Of_Database.xlsx")
 
     messagebox.showinfo("Successful!", "An email containing an identical copy of the database has been sent to yourself.")
 
