@@ -775,7 +775,7 @@ def calculate_and_display_day_totals(num_added_days, id):
 
     current_date_mm_dd_yy += timedelta(days=num_added_days)
 
-    time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "' AND ClockIn LIKE '%" + str(current_date_mm_dd_yy) + "%';").fetchall()
+    time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = @0 AND ClockIn LIKE @1;", (id, '%' + current_date_mm_dd_yy.strftime("%Y-%m-%d") + '%',)).fetchall()
 
     print_time_in_records = ""
     print_time_out_records = ""
@@ -2385,11 +2385,11 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
 
     if total_period_hours >= 8:
         if total_break_hours >= .5:
-            return total_period_hours
+            return round(total_period_hours, 3)
         else:
-            return total_period_hours - (.5 - total_break_hours)
+            return round(total_period_hours - (.5 - total_break_hours), 3)
     else:
-        return total_period_hours
+        return round(total_period_hours, 3)
 
 # Uses the result from getTotalDailyHoursAccountingForBreaks() in order to calculate an employee's total paid employee hours in a specific range of dates.
 def calculateTotalPaidEmpHours(start_date, end_date, entered_format, id):
