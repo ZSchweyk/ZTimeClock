@@ -2247,8 +2247,9 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
     
     
     # total_break_hours = round(total_break_seconds / 3600, 3)
-    total_break_hours = total_break_seconds / 3600
-
+    # print("Total Break Seconds:", total_break_seconds)
+    total_break_hours = round(total_break_seconds / 3600, 4)
+    # print("Total Break Hours:", total_break_hours)
     if total_period_hours >= 8:
         if total_break_hours >= .5:
             return total_period_hours
@@ -2322,8 +2323,8 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     total_hours = round(calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0], 2)
     
     # Uncomment the following to check if total_hours is correct.
-    if total_hours != round(regular_hours + overtime_hours + double_time_hours, 2):
-        print("ID", id, ":", "WRONG Hours")
+    # if total_hours != round(regular_hours + overtime_hours + double_time_hours, 2):
+    #     print("ID", id, ":", "WRONG Hours")
 
     #returned_array = [total_pay, [regular_hours, overtime_hours, double_time_hours], [regular_pay, overtime_pay, double_time_pay]]
 
