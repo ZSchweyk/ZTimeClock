@@ -31,7 +31,7 @@ sys.stderr = sys.stdout
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\Programming\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
@@ -2197,7 +2197,6 @@ def getRawTotalEmployeeHours(entered_date, format, id):
 
     total_seconds = 0
     for record in time_in_out_records:
-        t1 = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f").timestamp()
         t0 = datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").timestamp()        
         if record[1] is not None:
             if record[1] == "FORGOT":
@@ -2205,6 +2204,10 @@ def getRawTotalEmployeeHours(entered_date, format, id):
                 continue
             else:
                 t1 = datetime.strptime(record[1], "%Y-%m-%d %H:%M:%S").timestamp()
+        else:
+            # t1 = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f").timestamp()
+            #t1 = t0
+            continue   
         total_seconds += t1 - t0
     employee_hours = round(total_seconds / 3600, 3)
     conn.close()
@@ -2213,46 +2216,57 @@ def getRawTotalEmployeeHours(entered_date, format, id):
 # Grabs the result from getRawTotalEmployeeHours(), calculates an employee's total break time for the day, and contains logic to return an employee's total hours for the day accounting for breaks.
 def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
 
+    total_period_hours = getRawTotalEmployeeHours(entered_date, format, id)
+
+    formatted_entered_date = str(datetime.strptime(entered_date, format).strftime("%Y-%m-%d"))
+
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    total_period_hours = getRawTotalEmployeeHours(entered_date, format, id)
+    time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "' AND ClockIn LIKE '%" + formatted_entered_date + "%';").fetchall()
 
-    time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "' AND ClockIn LIKE '%" + str(datetime.strptime(entered_date, format).strftime("%Y-%m-%d")) + "%';").fetchall()
+    conn.close()
 
-    # (ClockIn, ClockOut)
-    # (ClockIn, ClockOut)
-    # (ClockIn, ClockOut)
-    # (ClockIn, ClockOut)
-    # (ClockIn, ClockOut)
-
-    total_break_hours = 0
+    total_break_seconds = 0
     for record in range(len(time_in_out_records)):
         if record < len(time_in_out_records) - 1:
             out_to_lunch = datetime.strptime(time_in_out_records[record][1], "%Y-%m-%d %H:%M:%S").timestamp()
             back_from_lunch = datetime.strptime(time_in_out_records[record+1][0], "%Y-%m-%d %H:%M:%S").timestamp()
-            total_break_hours += back_from_lunch - out_to_lunch
+            total_break_seconds += back_from_lunch - out_to_lunch
+
+    # total_break_seconds = 0
+    # previous_record = None
+    # for rec_num, record in enumerate(time_in_out_records):
+    #     previous_record = record
+    #     if rec_num == 0:
+    #         continue
+    #     clock_out = datetime.strptime(previous_record[1], "%Y-%m-%d %H:%M:%S").timestamp()
+    #     clock_in = datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").timestamp()
+    #     total_break_seconds += clock_in - clock_out
+        
     
-    conn.close()
-    total_break_hours = round(total_break_hours / 3600, 3)
+    
+    # total_break_hours = round(total_break_seconds / 3600, 3)
+    total_break_hours = total_break_seconds / 3600
 
     if total_period_hours >= 8:
         if total_break_hours >= .5:
-            return round(total_period_hours, 3)
+            return total_period_hours
         else:
-            return round(total_period_hours - (.5 - total_break_hours), 3)
+            return total_period_hours - (.5 - total_break_hours)
     else:
-        return round(total_period_hours, 3)
+        return total_period_hours
 
 # Uses the result from getTotalDailyHoursAccountingForBreaks() in order to calculate an employee's total paid employee hours in a specific range of dates.
 def calculateTotalPaidEmpHours(start_date, end_date, entered_format, id):
     dates = getArrayOfDates(start_date, end_date, entered_format, "%Y-%m-%d")
-    total_break_hours = 0
+    total_range_hours = 0
     array_of_total_hours_per_day = []
     for single_date in dates:
-        total_break_hours += getTotalDailyHoursAccountingForBreaks(single_date, "%Y-%m-%d", id)
-        array_of_total_hours_per_day.append(getTotalDailyHoursAccountingForBreaks(single_date, "%Y-%m-%d", id))
-    return total_break_hours, array_of_total_hours_per_day
+        day_hours_accounting_for_breaks = getTotalDailyHoursAccountingForBreaks(single_date, "%Y-%m-%d", id)
+        total_range_hours += day_hours_accounting_for_breaks
+        array_of_total_hours_per_day.append(day_hours_accounting_for_breaks)
+    return total_range_hours, array_of_total_hours_per_day
 
 
 # Calculates employee pay, accounting for regular, overtime, and double time hours, and returns the result as a dictionary.
@@ -2294,16 +2308,22 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
         #total_pay += hourly_pay * total_employee_hours
         regular_hours = calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0]
 
-    regular_pay = round(hourly_pay * regular_hours, 2)
+    regular_hours = round(regular_hours, 2)
+    overtime_hours = round(overtime_hours, 2)
+    double_time_hours = round(double_time_hours, 2)
+
+    hourly_pay = round(hourly_pay, 2)
+
+    regular_pay = round(regular_hours * hourly_pay, 2)
     overtime_pay = round(hourly_pay * 1.5 * overtime_hours, 2)
     double_time_pay = round(hourly_pay * 2 * double_time_hours, 2)
 
-    regular_hours = round(regular_hours, 3)
-    overtime_hours = round(overtime_hours, 3)
-    double_time_hours = round(double_time_hours, 3)
-
     total_pay = round(regular_pay + overtime_pay + double_time_pay, 2)
-    total_hours = round(calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0], 3)
+    total_hours = round(calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0], 2)
+    
+    # Uncomment the following to check if total_hours is correct.
+    if total_hours != round(regular_hours + overtime_hours + double_time_hours, 2):
+        print("ID", id, ":", "WRONG Hours")
 
     #returned_array = [total_pay, [regular_hours, overtime_hours, double_time_hours], [regular_pay, overtime_pay, double_time_pay]]
 
