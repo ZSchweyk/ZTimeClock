@@ -31,7 +31,7 @@ sys.stderr = sys.stdout
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
@@ -80,7 +80,7 @@ def insert_request(emp_id, time_string, format, clocked_in_time):
         clock_in = datetime.strptime(clocked_in_time, "%H:%M:%S")
 
         if clock_out.time() >= clock_in.time():
-            formatted_time = datetime.strptime(time_string, format).strftime("%H:%M:%S")
+            formatted_time = clock_out.strftime("%H:%M:%S")
             max_row = c.execute(f"SELECT row, ClockIn, Request FROM time_clock_entries WHERE empID = '{emp_id}' ORDER BY row DESC LIMIT 1;").fetchone()
             c.execute(f"UPDATE time_clock_entries SET ClockOut = 'FORGOT', Request = '{max_row[1][:10]} {formatted_time}' WHERE row = '{max_row[0]}';")
             conn.commit()
@@ -95,9 +95,9 @@ def insert_request(emp_id, time_string, format, clocked_in_time):
             #     replaced = datetime.strptime(max_row[2][11:], "%H:%M:%S").strftime("%I:%M:%S %p")
             #     messagebox.showinfo("Successful", f"Your timestamp request of \"{time_string}\" has been replaced by your previous request of \"{replaced}\", and has been sent to management for approval.")
         else:
-            messagebox.showerror("Clock Out < Clock In", "Entry must be greater than or equal to your clock in timestamp.")
+            messagebox.showerror("Error", "Please type in a time greater than or equal to your Clock In timestamp.")
     else:
-        messagebox.showerror("Wrong Time Format", "Enter timestamp in the format of \"HH:MM:SS am/pm\"")
+        messagebox.showerror("Wrong Time Format", "Enter timestamp in the format of \"HH:MM am/pm\"")
         
     return
 
@@ -454,12 +454,15 @@ def enter():
                     clocked_in_time = datetime.strptime(time_clock_entries_record[1][11:], "%H:%M:%S")
 
                     enter_actual_clock_out_time_entry.delete(0, "end")
-                    enter_actual_clock_out_time_entry.place(relx=.46, rely=.65, anchor=N)
+                    enter_actual_clock_out_time_entry.focus_set()
+                    enter_actual_clock_out_time_entry.place(relx=.50, rely=.64, anchor=N)
 
-                    actual_clock_out_time_submit_button.config(command=lambda: insert_request(entered_id, enter_actual_clock_out_time_entry.get(), "%I:%M:%S %p", clocked_in_time.strftime("%H:%M:%S")))
-                    actual_clock_out_time_submit_button.place(relx=.55, rely=.6375)                    
+                    actual_clock_out_time_submit_button.config(command=lambda: insert_request(entered_id, enter_actual_clock_out_time_entry.get(), "%I:%M %p", clocked_in_time.strftime("%H:%M:%S")))
+                    actual_clock_out_time_submit_button.place(relx=.46, rely=.67)
+
+                    root.bind("<Return>", lambda event=None: actual_clock_out_time_submit_button.invoke())                  
                     
-                    return greeting.config(text=name + ",\nyou forgot to clock out after your last clock in on " + getWeekDayFromDate(time_clock_entries_record[1][:10], "%Y-%m-%d") + ", " + datetime.strptime(time_clock_entries_record[1][:10], "%Y-%m-%d").strftime("%m/%d/%Y") + " at " + clocked_in_time.strftime("%I:%M:%S %p") + ".\n\nEnter the time you clocked out at in the following format \"HH:MM:SS am/pm\", in order to be able to clock in again. Your request will be sent to management for approval.", fg="red")
+                    return greeting.config(text=name + "\n\n" + getWeekDayFromDate(time_clock_entries_record[1][:10], "%Y-%m-%d") + " " + datetime.strptime(time_clock_entries_record[1][:10], "%Y-%m-%d").strftime("%m/%d/%y") + "\nwas your last Clock In and you forgot to Clock Out on that day.\nfue su último reloj de entrada y se olvidó de marcar el reloj de salida ese día.\n\nPlease enter the time you clocked out on that day in this format\nIngrese la hora a la que marcó ese día en este formato\n\n HH:MM am/pm\n\n\n\n\n\n\nYour request will be sent to management for approval.\nSu solicitud se enviará a la gerencia para su aprobación.", fg="red")
                     
 
             rand = random.randint(0, len(greeting_text)-1)
@@ -2422,7 +2425,7 @@ program_clock.place(relx=.825, rely=0.0, anchor=N)
 day_time_greeting = Label(root, text="", font=("Arial", 25), fg="blue")
 day_time_greeting.place(relx=0.5, rely=0.13, anchor=N)
 
-Label(root, text="Log in/out with your Employee ID, then\n\nhit the Clear Button/Enter Key to clear the screen after viewing", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
+Label(root, text="Enter your Employee ID and hit the Enter Key to Log In/Out,\n\nthen hit the Clear Button to clear the screen after viewing", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
 # Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
 
 clock()
@@ -2442,13 +2445,13 @@ id_field_label.place(relx=0.39, rely=.28, anchor=N)
 
 id_field = Entry(root, font=("Arial", 20), show="\u2022")
 id_field.place(relx=.50, rely=.289, width=200, height=28, anchor=N)
-
+id_field.focus_set()
 
 button = Button(root, text="Enter", command=enter, font=("Arial", 15))
 button.place(relx=.6, rely=.28)
 root.bind("<Return>", lambda event=None: button.invoke())
 
-greeting = Label(root, text="", font=("Arial", 18), wraplength=700)
+greeting = Label(root, text="", font=("Arial", 18))
 greeting.place(relx=.5, rely=.36, anchor=N)
 
 #rely = .35
