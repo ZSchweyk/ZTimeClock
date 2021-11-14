@@ -444,8 +444,10 @@ def enter():
                 
                 # If time just clocked in is on payday, then automatically clock them out.
                 if is_this_a_pay_day(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
-                    
-                    pass
+                    clock_in = c.execute("SELECT ClockIn FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (id_field.get())).fetchall()
+                    clock_out = datetime.strptime(clock_in[11:], "%H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(id_field.get()))
+                    c.execute("UPDATE time_clock_entries SET ClockOut = @0", (clock_out.strftime("%H:%M:%S")))
+                    greeting.config(text=name + "\nYou have been logged out at " + clock_out.strftime("%H:%M:%S") + " for a period total hours of " + str(employee_max_hours_allowed_on_payday(id_field.get())) + "\nPlease end your shift at that time and happy pay day." )
 
 
 
@@ -532,6 +534,28 @@ def fetch_and_display_task(id):
 
     employee_task_label.config(text=task)
     return
+
+
+def employee_max_hours_allowed_on_payday(id):
+    current_period_dates = getPeriodDays()
+    emp_worked_hours_for_period = sum([getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", id) for adate in current_period_dates])
+    conn = sqlite3.connect(database_file)
+    c = conn.cursor()
+    max_daily_hours_allowed = c.execute("SELECT MaxDailyHours FROM employees WHERE ID = @0", (id)).fetchall()
+    conn.commit()
+    conn.close()
+    total_period_hours_allowed = max_daily_hours_allowed * sum([datetime.strptime(adate, "%m/%d/%y").isoweekday() < 6 for adate in current_period_dates])
+    total_hours_possible_on_payday = total_period_hours_allowed - emp_worked_hours_for_period
+    if total_hours_possible_on_payday >= max_daily_hours_allowed:
+        return max_daily_hours_allowed
+    else:
+        return total_hours_possible_on_payday
+    
+
+    
+
+
+
 
 # Calculuates and displays the period totals for an employee. The period total calculation depends on the number of total hours an employee was clocked in for, and also
 # takes into account their daily lunch breaks.
