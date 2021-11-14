@@ -207,7 +207,7 @@ def send_report_if_pay_day():
     today = datetime.today()
     last_day_of_month = monthrange(today.year, today.month)[1]
 
-    if (today.day == 15 or today.day == last_day_of_month) and int(datetime.now().strftime("%H")) >= 18:
+    if (today.day == 15 or today.day == last_day_of_month) and int(datetime.now().strftime("%H")) >= 9:
         # final_list = []
         report_dict = [{
             "ID": [],
@@ -233,8 +233,9 @@ def send_report_if_pay_day():
 
         for emp_id in all_emp_ids:
             emp_dict = calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0]))
-            for key, value in emp_dict.items():
-                report_dict[0][key].append(value)
+            if emp_dict["Total Hours"] != 0:
+                for key, value in emp_dict.items():
+                    report_dict[0][key].append(value)
             
             # final_list.append({"EmpID": str(emp_id[0]), "FLast": emp_id[1][0] + emp_id[2]} | calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0])))
 
@@ -1086,8 +1087,9 @@ def display_period_totals(period_days_input):
         id = record[0]
         
         dictionary_info = calculate_employee_pay(period_days[0], period_days[-1], "%m/%d/%y", str(id))
-        for key, value in dictionary_info.items():
-            label_dictionary[key].append(str(value))
+        if dictionary_info["Total Hours"] != 0:
+            for key, value in dictionary_info.items():
+                label_dictionary[key].append(str(value))
 
 
     for counter, value, header in zip(range(len(label_dictionary)), label_dictionary.values(), label_headers):
