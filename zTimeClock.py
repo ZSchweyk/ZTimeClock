@@ -2212,7 +2212,7 @@ def getRawTotalEmployeeHours(entered_date, format, id):
             #t1 = t0
             continue   
         total_seconds += t1 - t0
-    employee_hours = round(total_seconds / 3600, 3)
+    employee_hours = total_seconds / 3600
     conn.close()
     return employee_hours
 
@@ -2251,7 +2251,7 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
     
     # total_break_hours = round(total_break_seconds / 3600, 3)
     # print("Total Break Seconds:", total_break_seconds)
-    total_break_hours = round(total_break_seconds / 3600, 4)
+    total_break_hours = total_break_seconds / 3600
     # print("Total Break Hours:", total_break_hours)
     if total_period_hours >= 8:
         if total_break_hours >= .5:
