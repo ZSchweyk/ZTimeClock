@@ -31,7 +31,7 @@ sys.stderr = sys.stdout
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = "C:\\Programming\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
@@ -2442,6 +2442,7 @@ id_field_label.place(relx=0.39, rely=.28, anchor=N)
 
 id_field = Entry(root, font=("Arial", 20), show="\u2022")
 id_field.place(relx=.50, rely=.289, width=200, height=28, anchor=N)
+
 
 button = Button(root, text="Enter", command=enter, font=("Arial", 15))
 button.place(relx=.6, rely=.28)
