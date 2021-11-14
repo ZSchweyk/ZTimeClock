@@ -432,12 +432,25 @@ def enter():
             inOrOut = ""
             greeting_text = []
             
+            # if the record is full with clock in and clock out timestamps, then add to db a new record that clocks them in.
             if time_clock_entries_record is None or (time_clock_entries_record[1] is not None and time_clock_entries_record[2] is not None):
                 #Clocked IN
                 inOrOut = "In"
                 greeting_text = ["Welcome", "Greetings", "Hello", "Have a great day", "Have a productive day", "Have a fun work day"]
                 c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES('" + str(entered_id) + "', DateTime('now', 'localtime'));")
                 conn.commit()
+
+                # If they already clocked in on payday, and the program automaticaly clocked them out, prevent them from clockin in again.
+                
+                # If time just clocked in is on payday, then automatically clock them out.
+                if is_this_a_pay_day(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
+                    
+                    pass
+
+
+
+
+
             elif time_clock_entries_record[1] is not None and time_clock_entries_record[2] == None:
                 #Clocked OUT
                 inOrOut = "Out"
