@@ -25,13 +25,16 @@ import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 import os
 import sys
-sys.stderr = sys.stdout
+sys.stderr = sys.stdout  
+
+def passable():
+    pass
 
 
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = "C:\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\Programming\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
@@ -89,7 +92,7 @@ def insert_request(emp_id, time_string, format, clocked_in_time):
             messagebox.showinfo("Thank You", f"Your timestamp request of \"{time_string}\" has been sent to management for approval.")
             clear([greeting, enter_actual_clock_out_time_label], [enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None)
             id_field.delete(0, "end")
-            button.config(command=enter) 
+            button.config(command=enter)
 
             # else:
             #     replaced = datetime.strptime(max_row[2][11:], "%H:%M:%S").strftime("%I:%M:%S %p")
@@ -431,26 +434,45 @@ def enter():
 
             inOrOut = ""
             greeting_text = []
-            
+            flag = True
             # if the record is full with clock in and clock out timestamps, then add to db a new record that clocks them in.
             if time_clock_entries_record is None or (time_clock_entries_record[1] is not None and time_clock_entries_record[2] is not None):
                 #Clocked IN
                 inOrOut = "In"
                 greeting_text = ["Welcome", "Greetings", "Hello", "Have a great day", "Have a productive day", "Have a fun work day"]
+                if is_this_a_pay_day(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
+                    period_last_record = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (entered_id,)).fetchone()
+                    if is_this_a_pay_day(datetime.strptime(period_last_record[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d"), "%Y-%m-%d"):
+                        greeting.config(text=name + "\n\nPeriod ended and payroll has been processed.\n\nPlease end your shift at " + datetime.strptime(period_last_record[1], "%Y-%m-%d %H:%M:%S").strftime("%I:%M:%S %p"))
+                        return
+                    
                 c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES('" + str(entered_id) + "', DateTime('now', 'localtime'));")
                 conn.commit()
-
                 # If they already clocked in on payday, and the program automaticaly clocked them out, prevent them from clockin in again.
                 
                 # If time just clocked in is on payday, then automatically clock them out.
                 if is_this_a_pay_day(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
-                    clock_in = c.execute("SELECT ClockIn FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (id_field.get())).fetchall()
-                    clock_out = datetime.strptime(clock_in[11:], "%H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(id_field.get()))
-                    c.execute("UPDATE time_clock_entries SET ClockOut = @0", (clock_out.strftime("%H:%M:%S")))
-                    greeting.config(text=name + "\nYou have been logged out at " + clock_out.strftime("%H:%M:%S") + " for a period total hours of " + str(employee_max_hours_allowed_on_payday(id_field.get())) + "\nPlease end your shift at that time and happy pay day." )
+                    conn = sqlite3.connect(database_file)
+                    c = conn.cursor()
+                    clock_in = c.execute("SELECT ClockIn, row FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (entered_id,)).fetchone()
+                    if employee_max_hours_allowed_on_payday(entered_id) >= 8:
+                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id) + .5)
+                    else:
+                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id))
 
+                    if clock_out.day != datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").day:
+                        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d") + " 23:59:59", clock_in[1]))
+                        conn.commit()
+                        print("Next Day!")
+                        return
+                    c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (clock_out.strftime("%Y-%m-%d %H:%M:%S"), clock_in[1]))
+                    conn.commit()
 
+                    greeting.config(text=name + "\n\nHappy Payday\n\nThe system logged you In AND Out today\nfor the max period hours possible.\n\nPLEASE END YOUR SHIFT AT " + clock_out.strftime("%I:%M:%S %p"), fg="green")
 
+                    conn.close()             
+                    flag = False
+                    
 
 
             elif time_clock_entries_record[1] is not None and time_clock_entries_record[2] == None:
@@ -490,7 +512,8 @@ def enter():
             current_date_mm_dd_yy = datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date()
             calculate_and_display_day_totals(0, entered_id)
 
-            greeting.config(text=greeting_text[rand] + "\n" + name + "\n\nYou are clocked " + inOrOut, fg="green")
+            if flag:
+                greeting.config(text=greeting_text[rand] + "\n" + name + "\n\nYou're clocked " + inOrOut, fg="green")
 
             calculate_and_display_period_totals_for_employees(entered_id)
 
@@ -523,6 +546,30 @@ def enter():
         conn.commit()
         conn.close()
 
+def payday_automated_clockout(entered_id):
+    conn = sqlite3.connect(database_file)
+    c = conn.cursor()
+    clock_in = c.execute("SELECT ClockIn, row FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (entered_id,)).fetchone()
+    if employee_max_hours_allowed_on_payday(entered_id) >= 8:
+        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id) + .5)
+    else:
+        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id))
+
+    if clock_out.day != datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").day:
+        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d") + " 23:59:59", clock_in[1]))
+        conn.commit()
+        print("Next Day!")
+        return
+    c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (clock_out.strftime("%Y-%m-%d %H:%M:%S"), clock_in[1]))
+    conn.commit()
+
+    emp_record = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (entered_id,)).fetchone()
+    name = str(emp_record[0]) + " " + str(emp_record[1])
+
+    greeting.config(text=name + "\n\nHappy Payday\n\nThe system logged you In AND Out today\nfor the max period hours possible.\n\nPLEASE END YOUR SHIFT AT " + clock_out.strftime("%I:%M:%S%p"), fg="green")
+
+    conn.close()
+
 # This function fetches and displays an employees task based on the global variable (date) defined in the enter function. The idea of this function is that when an
 # employee toggles between certain days, the displayed task will also change accordingly.
 def fetch_and_display_task(id):
@@ -538,10 +585,11 @@ def fetch_and_display_task(id):
 
 def employee_max_hours_allowed_on_payday(id):
     current_period_dates = getPeriodDays()
-    emp_worked_hours_for_period = sum([getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", id) for adate in current_period_dates])
+    emp_worked_hours_for_period = calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
-    max_daily_hours_allowed = c.execute("SELECT MaxDailyHours FROM employees WHERE ID = @0", (id)).fetchall()
+    print("ID:", id)
+    max_daily_hours_allowed = c.execute("SELECT MaxDailyHours FROM employees WHERE ID = @0", (id,)).fetchone()[0]
     conn.commit()
     conn.close()
     total_period_hours_allowed = max_daily_hours_allowed * sum([datetime.strptime(adate, "%m/%d/%y").isoweekday() < 6 for adate in current_period_dates])
@@ -571,9 +619,9 @@ def calculate_and_display_period_totals_for_employees(id):
         #period_hours_sum += getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())
         #displayed_daily_hours += str(getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())) + "\n"
         period_hours_sum += getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", id)
-        displayed_daily_hours += str(getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", id)) + "\n"
+        displayed_daily_hours += str(round(getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", id), 3)) + "\n"
     if dates[0] == current_period_dates[0]:
-        period_total.config(text="Current\nPeriod's Total Hours: " + str(round(period_hours_sum, 3)))
+        period_total.config(text="Current\nPeriod's Total Hours: " + str(round(period_hours_sum, 2)))
     else:
         #print(current_date_mm_dd_yy - dates[-1])
 
@@ -588,7 +636,7 @@ def calculate_and_display_period_totals_for_employees(id):
             last_day_of_period = f"{month}/15/{year}"
         else:
             last_day_of_period = f"{month}/{num_of_days_in_month}/{year}"
-        period_total.config(text=last_day_of_period + "\nPeriod's Total Hours: " + str(round(period_hours_sum, 3)))
+        period_total.config(text=last_day_of_period + "\nPeriod's Total Hours: " + str(round(period_hours_sum, 2)))
 
     period_days.config(text=displayed_dates)
     period_daily_hours.config(text=displayed_daily_hours)
@@ -703,9 +751,9 @@ def calculate_and_display_day_totals(num_added_days, id):
     if current_date_mm_dd_yy == datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date():
         #format_seconds_to_hhmmss(total_seconds), this returns the raw duration that an employee spends at work.
         # The below function, getTotalDailyHoursAccountingForBreaks, shows the employee their total paid hours, which is calculated by considering the break hours and total day duration.
-        day_total.config(text="Today's\nTotal Hours: " + str(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id)))
+        day_total.config(text="Today's\nTotal Hours: " + str(round(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id), 2)))
     else:
-        day_total.config(text=current_date_mm_dd_yy.strftime("%m/%d/%y") + "\nTotal Hours: " + str(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id)))
+        day_total.config(text=current_date_mm_dd_yy.strftime("%m/%d/%y") + "\nTotal Hours: " + str(round(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id), 2)))
     
     conn.commit()
     conn.close()
@@ -2336,19 +2384,15 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     if ot_allowed == "yes":
         for hours_per_day in array_of_hours_per_day:
             if hours_per_day <= 8:
-                #regular_pay += hourly_pay * hours_per_day
                 regular_hours += hours_per_day
             elif hours_per_day > 8 and hours_per_day < 12:
-                #total_pay += hourly_pay * 8 + hourly_pay * 1.5 * (hours_per_day - 8)
                 regular_hours += 8
                 overtime_hours += hours_per_day - 8
             else:
-                #total_pay += hourly_pay * 8 + hourly_pay * 1.5 * 4 + hourly_pay * 2 * (hours_per_day - 12)
                 regular_hours += 8
                 overtime_hours += 4
                 double_time_hours += hours_per_day - 12
     elif ot_allowed == "no":
-        #total_pay += hourly_pay * total_employee_hours
         regular_hours = calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0]
 
     regular_hours = round(regular_hours, 2)
