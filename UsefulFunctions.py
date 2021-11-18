@@ -1,8 +1,12 @@
 def count_dec_places(num):
     num_as_str = str(num)
-    dec_index = num_as_str.index(".")
-    dec = num_as_str[dec_index + 1:]
-    return len(dec)
+    try:
+        dec_index = num_as_str.index(".")
+        dec = num_as_str[dec_index + 1:]
+        return len(dec)
+    except:
+        return 0
+    
 
 def round_to(num, nrst, limit):
     """
