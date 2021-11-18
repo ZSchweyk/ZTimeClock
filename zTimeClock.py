@@ -1,4 +1,3 @@
-
 from ast import Index
 from sqlite3.dbapi2 import Error, PARSE_DECLTYPES
 from tkinter import *
@@ -19,13 +18,15 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-#from openpyxl import load_workbook
+# from openpyxl import load_workbook
 import xlsxwriter as xl
 import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 import os
 import sys
-sys.stderr = sys.stdout  
+
+sys.stderr = sys.stdout
+
 
 def passable():
     pass
@@ -34,8 +35,9 @@ def passable():
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = "C:\\Programming\\MyProjects\\ZTimeClock\\"
+program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
+
 
 # A class that handles selecting admin information such as email, password, admin usernmane ... etc.
 class AdminInformation:
@@ -44,7 +46,9 @@ class AdminInformation:
     def select(field_property):
         conn = sqlite3.connect(database_file)
         c = conn.cursor()
-        field_value = c.execute("SELECT FieldValue FROM admin_information WHERE FieldProperty = @0", (field_property,)).fetchone()[0]
+        field_value = \
+            c.execute("SELECT FieldValue FROM admin_information WHERE FieldProperty = @0",
+                      (field_property,)).fetchone()[0]
         conn.commit()
         conn.close()
         if field_value is None:
@@ -56,12 +60,13 @@ class AdminInformation:
 # Sets up the TKinter GUI main window.
 root = Tk()
 root.iconbitmap(program_files_path + "ChemtrolImage.ico")
-width= root.winfo_width()
-height= root.winfo_height()
+width = root.winfo_width()
+height = root.winfo_height()
 # 1200, 773
 root.geometry("%dx%d" % (1200, 1000))
 root.resizable(width=False, height=False)
 root.title("SBCS (Chemtrol)")
+
 
 # A standalone function that checks if a given timestamp in a given format is valid. Returns a boolean.
 def validate_timestamp(time_string, format):
@@ -72,10 +77,11 @@ def validate_timestamp(time_string, format):
     else:
         return True
 
+
 # This function inserts an employee's clock out request into the "Request" column in the database if they forget to clock out on the same day they clocked in at.
 # It also handles validating the entered timestamp as well.
 def insert_request(emp_id, time_string, format, clocked_in_time):
-    if validate_timestamp(time_string, format) :
+    if validate_timestamp(time_string, format):
         conn = sqlite3.connect(database_file)
         c = conn.cursor()
 
@@ -84,13 +90,17 @@ def insert_request(emp_id, time_string, format, clocked_in_time):
 
         if clock_out.time() >= clock_in.time():
             formatted_time = clock_out.strftime("%H:%M:%S")
-            max_row = c.execute(f"SELECT row, ClockIn, Request FROM time_clock_entries WHERE empID = '{emp_id}' ORDER BY row DESC LIMIT 1;").fetchone()
-            c.execute(f"UPDATE time_clock_entries SET ClockOut = 'FORGOT', Request = '{max_row[1][:10]} {formatted_time}' WHERE row = '{max_row[0]}';")
+            max_row = c.execute(
+                f"SELECT row, ClockIn, Request FROM time_clock_entries WHERE empID = '{emp_id}' ORDER BY row DESC LIMIT 1;").fetchone()
+            c.execute(
+                f"UPDATE time_clock_entries SET ClockOut = 'FORGOT', Request = '{max_row[1][:10]} {formatted_time}' WHERE row = '{max_row[0]}';")
             conn.commit()
             conn.close()
             # if max_row[2] is None:
-            messagebox.showinfo("Thank You", f"Your timestamp request of \"{time_string}\" has been sent to management for approval.")
-            clear([greeting, enter_actual_clock_out_time_label], [enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None)
+            messagebox.showinfo("Thank You",
+                                f"Your timestamp request of \"{time_string}\" has been sent to management for approval.")
+            clear([greeting, enter_actual_clock_out_time_label],
+                  [enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None)
             id_field.delete(0, "end")
             button.config(command=enter)
 
@@ -101,12 +111,13 @@ def insert_request(emp_id, time_string, format, clocked_in_time):
             messagebox.showerror("Error", "Please type in a time greater than or equal to your Clock In timestamp.")
     else:
         messagebox.showerror("Wrong Time Format", "Enter timestamp in the format of \"HH:MM am/pm\"")
-        
+
     return
+
 
 # Sends an email from a gmail account, and provides the option to include a file to attach to the email. If the file_path parameter is an emtpy string, no file will be attached.
 def send_email(sender, password, recipient, body, subject, file_path):
-    #Make file_path = "" if you don't want to send an attachment.
+    # Make file_path = "" if you don't want to send an attachment.
     message = EmailMessage()
     message['From'] = sender
     message['To'] = recipient
@@ -118,16 +129,16 @@ def send_email(sender, password, recipient, body, subject, file_path):
         mime_type, mime_subtype = mime_type.split('/')
         with open(file_path, 'rb') as file:
             message.add_attachment(file.read(),
-            maintype=mime_type,
-            subtype=mime_subtype,
-            filename=file_path.split("\\")[-1])
-        
+                                   maintype=mime_type,
+                                   subtype=mime_subtype,
+                                   filename=file_path.split("\\")[-1])
 
     mail_server = smtplib.SMTP_SSL('smtp.gmail.com')
     mail_server.set_debuglevel(1)
     mail_server.login(sender, password)
     mail_server.send_message(message)
     mail_server.quit()
+
 
 def send_email_with_db_attachment(sender, password, recipient, body, subject, file_path):
     data = MIMEMultipart()
@@ -148,9 +159,8 @@ def send_email_with_db_attachment(sender, password, recipient, body, subject, fi
     s.sendmail(sender, recipient, text)
     s.quit()
     return
-    
 
-    
+
 # Checks if a given date is a payday. Note: 15th or last day of the month = end_of_pay_period. It will return True if the date is a weekday and the end_of_pay_period, a Friday but the end_of_pay_period is on the following weekend (1 or 2 days after it), or a Thursday and the end_of_pay_period is a Saturday.
 def is_this_a_pay_day(date_in, format):
     date_in = datetime.strptime(date_in, format)
@@ -161,10 +171,12 @@ def is_this_a_pay_day(date_in, format):
         return True
     else:
         # check if the date is <= the 15th, or the end of the month, by two days or less, and it's a Friday
-        if ((date_in.day >= 13 and date_in.day <= 15) or (date_in.day >= last_day_of_month - 2 and date_in.day <= last_day_of_month)) and date_in.weekday() == 4: 
+        if ((date_in.day >= 13 and date_in.day <= 15) or (
+                date_in.day >= last_day_of_month - 2 and date_in.day <= last_day_of_month)) and date_in.weekday() == 4:
             return True
         else:
             return False
+
 
 def get_database_copy():
     conn = sqlite3.connect(database_file)
@@ -192,7 +204,6 @@ def get_database_copy():
     conn.commit()
     conn.close()
 
-    
     return array_of_dicts, array_of_sheet_names
 
 
@@ -205,12 +216,13 @@ def merge_2_dicts(dict1, dict2):
     res = {**dict1, **dict2}
     return res
 
+
 # This function checks every hour that the program is open if the given date is a pay day using is_this_a_pay_day. If it is, it sends an email with a Excel File Report attached to the admin.
 def send_report_if_pay_day():
     today = datetime.today()
     last_day_of_month = monthrange(today.year, today.month)[1]
 
-    if (today.day == 15 or today.day == last_day_of_month) and int(datetime.now().strftime("%H")) >= 9:
+    if (today.day == 15 or today.day == last_day_of_month) and int(datetime.now().strftime("%H")) == 9:
         # final_list = []
         report_dict = [{
             "ID": [],
@@ -239,7 +251,7 @@ def send_report_if_pay_day():
             if emp_dict["Total Hours"] != 0:
                 for key, value in emp_dict.items():
                     report_dict[0][key].append(value)
-            
+
             # final_list.append({"EmpID": str(emp_id[0]), "FLast": emp_id[1][0] + emp_id[2]} | calculate_employee_pay(beginning_of_pay_period, end_of_pay_period, "%m/%d/%y", str(emp_id[0])))
 
         period_1 = datetime.strptime(get_period_days(0)[0][1], "%m/%d/%y").strftime("%m%d%y")
@@ -247,7 +259,9 @@ def send_report_if_pay_day():
         complete_file_path = program_files_path + period_1 + "_Pay_Period_Report_and_DB_Copy.xlsx"
 
         copy_of_db_as_dict_array, array_of_sheet_names = get_database_copy()
-        CreateExcelFile.create_excel_file_with_multiple_sheets(complete_file_path, report_dict + copy_of_db_as_dict_array, [f"{period_1}_Pay_Period_Report"] + array_of_sheet_names)
+        CreateExcelFile.create_excel_file_with_multiple_sheets(complete_file_path,
+                                                               report_dict + copy_of_db_as_dict_array,
+                                                               [f"{period_1}_Pay_Period_Report"] + array_of_sheet_names)
 
         # json_string = json.dumps(final_list, indent=4)
         # filename = program_files_path + "z_time_clock_report.json"
@@ -264,16 +278,18 @@ Sincerely,
 ZTimeClock
         """
         subject = f"ZTimeClock {period_2} Pay Period Report for Chemtrol"
-        send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), AdminInformation.select("EmailAddress"), body, subject, complete_file_path)
+        send_email(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"),
+                   AdminInformation.select("EmailAddress"), body, subject, complete_file_path)
 
         os.remove(complete_file_path)
 
-# I'm not sure how to send a database file. It has a problem with the following line of code:
-# mime_type, mime_subtype = mime_type.split('/')
-# and says that it is NoneType.
+    # I'm not sure how to send a database file. It has a problem with the following line of code:
+    # mime_type, mime_subtype = mime_type.split('/')
+    # and says that it is NoneType.
 
-    root.after(60*60*1000, send_report_if_pay_day)
+    root.after(60 * 60 * 1000, send_report_if_pay_day)
     return
+
 
 # Fetches all employee ids from the database. This is often useful for looping through every single employee.
 def get_all_emp_ids():
@@ -285,6 +301,7 @@ def get_all_emp_ids():
     conn.commit()
     conn.close()
     return ids
+
 
 # This functions displays a specific greeting based on the time of day.
 def greeting_time():
@@ -301,11 +318,13 @@ def greeting_time():
     day_time_greeting.config(text=string)
     day_time_greeting.after(1000, greeting_time)
 
+
 # Subtracts two timestamps as strings in the following format, "%Y-%m-%d %H:%M:%S", and returns the difference.
 def subtract_time(t2, t1):
     d1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S").timestamp()
     d2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S").timestamp()
     return d2 - d1
+
 
 # Adds a list of timestamps in the format of "%H:%M:%S" and returns the sum.
 def add_time_stamps(array):
@@ -314,13 +333,15 @@ def add_time_stamps(array):
         d1 += datetime.strptime(str, "%H:%M:%S")
     return d1
 
+
 # Formats a given number of seconds to hh:mm:ss, and returns the result as a string.
 def format_seconds_to_hhmmss(seconds):
-    hours = seconds // (60*60)
-    seconds %= (60*60)
+    hours = seconds // (60 * 60)
+    seconds %= (60 * 60)
     minutes = seconds // 60
     seconds %= 60
     return "%02i:%02i:%02i" % (hours, minutes, seconds)
+
 
 # Fetches the current time, date, and day of the week, and displays that on the screen. This function waits every 1 second until it calls itself again, as the displayed time changes every second.
 def clock():
@@ -334,6 +355,7 @@ def clock():
     day_of_week.config(text=day[:3] + " " + current_date)
     program_clock.after(1000, clock)
 
+
 # Grabs all the week days up until and including the weekday of the passed in date.
 def getWeekDays(todays_date, format):
     array_of_week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -342,9 +364,11 @@ def getWeekDays(todays_date, format):
     day_of_week = today
     result_array = []
     for i in range(week_day + 1):
-        day_of_week = str(today - timedelta(days=week_day-i))
-        result_array.append([array_of_week_days[i], day_of_week[5:7] + "/" + day_of_week[8:10] + "/" + day_of_week[0:4]])
+        day_of_week = str(today - timedelta(days=week_day - i))
+        result_array.append(
+            [array_of_week_days[i], day_of_week[5:7] + "/" + day_of_week[8:10] + "/" + day_of_week[0:4]])
     return result_array
+
 
 # Creates and returns list of dates in the interval [start, end], both inclusive, as a string array.
 def getArrayOfDates(start, end, entered_format, result_format):
@@ -356,6 +380,7 @@ def getArrayOfDates(start, end, entered_format, result_format):
         result_array.append(start_date.strftime(result_format))
     return result_array
 
+
 # Adds/subtracts a given number of dates to a specific date.
 def add_subtract_days(todays_date, format, num_of_days):
     today = datetime.strptime(todays_date, format)
@@ -363,22 +388,25 @@ def add_subtract_days(todays_date, format, num_of_days):
     new_date = new_date[5:7] + "/" + new_date[8:10] + "/" + new_date[0:4]
     return new_date
 
+
 # Grabs today's weekday and date, and returns a 2 element list containing the weekday and date respectively.
 def getTodaysWeekDayAndDate():
     today = datetime.strptime(str(datetime.now().date()), "%Y-%m-%d")
     array_of_week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     week_day = array_of_week_days[today.weekday()]
     todays_date = str(today.date())
-    #todays_date = todays_date[5:7] + "/" + todays_date[8:10] + "/" + todays_date[0:4]
+    # todays_date = todays_date[5:7] + "/" + todays_date[8:10] + "/" + todays_date[0:4]
     todays_date = todays_date[:10]
     result = [week_day, todays_date]
     return result
+
 
 # Returns the weekday of a specific date as a string.
 def getWeekDayFromDate(entered_date, format):
     array_of_week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     week_day = datetime.strptime(entered_date, format).weekday()
     return array_of_week_days[week_day]
+
 
 # Returns a date in another specified format.
 def change_date_format(entered_date, input_format, output_format):
@@ -399,19 +427,17 @@ def enter():
     global time_out
     global time_duration
     global button
-    button.config(text="Clear", command=lambda: clear([greeting, time_in, time_out, time_duration, day_total, period_total, period_days, period_daily_hours, employee_task_header_label, employee_task_label, enter_actual_clock_out_time_label], [forward, backward, enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None))
+    button.config(text="Clear", command=lambda: clear(
+        [greeting, time_in, time_out, time_duration, day_total, period_total, period_days, period_daily_hours,
+         employee_task_header_label, employee_task_label, enter_actual_clock_out_time_label],
+        [forward, backward, enter_actual_clock_out_time_entry, actual_clock_out_time_submit_button], True, None))
 
-    
-    #Add the following as parameters to the clear function above.
-    #Labels: employee_list_label, employee_hours_label, start_date_label, end_date_label
-    #Buttons: employee_hours_button, employee_start_date, employee_end_date
+    # Add the following as parameters to the clear function above.
+    # Labels: employee_list_label, employee_hours_label, start_date_label, end_date_label
+    # Buttons: employee_hours_button, employee_start_date, employee_end_date
 
-    
-    #root.bind("<Return>", lambda event=None: button.invoke())
+    # root.bind("<Return>", lambda event=None: button.invoke())
     root.bind("<Return>", lambda event=None: button.invoke())
-    
-        
-
 
     if id_field.get() != AdminInformation.select("AdminPassword"):
         global entered_id
@@ -425,67 +451,86 @@ def enter():
         else:
             entered_id = ""
 
-        
         emp_record = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (entered_id,)).fetchone()
         if emp_record is not None and len(id_field.get()) != 0:
             name = str(emp_record[0]) + " " + str(emp_record[1])
 
-            time_clock_entries_record = c.execute("SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;").fetchone()
+            time_clock_entries_record = c.execute(
+                "SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;").fetchone()
 
             inOrOut = ""
             greeting_text = []
             flag = True
             # if the record is full with clock in and clock out timestamps, then add to db a new record that clocks them in.
-            if time_clock_entries_record is None or (time_clock_entries_record[1] is not None and time_clock_entries_record[2] is not None):
-                #Clocked IN
+            if time_clock_entries_record is None or (
+                    time_clock_entries_record[1] is not None and time_clock_entries_record[2] is not None):
+                # Clocked IN
                 inOrOut = "In"
-                greeting_text = ["Welcome", "Greetings", "Hello", "Have a great day", "Have a productive day", "Have a fun work day"]
+                greeting_text = ["Welcome", "Greetings", "Hello", "Have a great day", "Have a productive day",
+                                 "Have a fun work day"]
                 if is_this_a_pay_day(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
-                    period_last_record = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (entered_id,)).fetchone()
-                    if is_this_a_pay_day(datetime.strptime(period_last_record[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d"), "%Y-%m-%d"):
-                        greeting.config(text=name + "\n\nPeriod ended and payroll has been processed.\n\nPlease end your shift at " + datetime.strptime(period_last_record[1], "%Y-%m-%d %H:%M:%S").strftime("%I:%M:%S %p"))
+                    period_last_record = c.execute(
+                        "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1",
+                        (entered_id,)).fetchone()
+                    # If they already clocked in on payday, and the program automatically clocked them out, prevent them from clockin in again.
+                    if is_this_a_pay_day(
+                            datetime.strptime(period_last_record[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d"),
+                            "%Y-%m-%d"):
+                        greeting.config(
+                            text=name + "\n\nPeriod ended and payroll has been processed.\n\nPlease end your shift at " + datetime.strptime(
+                                period_last_record[1], "%Y-%m-%d %H:%M:%S").strftime("%I:%M:%S %p"), fg="green")
                         return
-                    
-                c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES('" + str(entered_id) + "', DateTime('now', 'localtime'));")
+
+                c.execute("INSERT INTO time_clock_entries(empID, ClockIn) VALUES('" + str(
+                    entered_id) + "', DateTime('now', 'localtime'));")
                 conn.commit()
-                # If they already clocked in on payday, and the program automaticaly clocked them out, prevent them from clockin in again.
-                
+
                 # If time just clocked in is on payday, then automatically clock them out.
                 if is_this_a_pay_day(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
-                    conn = sqlite3.connect(database_file)
-                    c = conn.cursor()
-                    clock_in = c.execute("SELECT ClockIn, row FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (entered_id,)).fetchone()
+                    clock_in = c.execute(
+                        "SELECT ClockIn, row FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1",
+                        (entered_id,)).fetchone()
                     if employee_max_hours_allowed_on_payday(entered_id) >= 8:
-                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id) + .5)
+                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(
+                            hours=employee_max_hours_allowed_on_payday(entered_id) + .5)
                     else:
-                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id))
+                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(
+                            hours=employee_max_hours_allowed_on_payday(entered_id))
 
                     if clock_out.day != datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").day:
-                        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d") + " 23:59:59", clock_in[1]))
+                        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (
+                            datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d") + " 23:59:59",
+                            clock_in[1]))
                         conn.commit()
                         print("Next Day!")
                         return
-                    c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (clock_out.strftime("%Y-%m-%d %H:%M:%S"), clock_in[1]))
+                    c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1",
+                              (clock_out.strftime("%Y-%m-%d %H:%M:%S"), clock_in[1]))
                     conn.commit()
 
-                    greeting.config(text=name + "\n\nHappy Payday\n\nThe system logged you In AND Out today\nfor the max period hours possible.\n\nPLEASE END YOUR SHIFT AT " + clock_out.strftime("%I:%M:%S %p"), fg="green")
+                    greeting.config(
+                        text=name + "\n\nHappy Payday\n\nThe system logged you In AND Out today\nfor the max period hours possible.\n\nPLEASE END YOUR SHIFT AT " + clock_out.strftime(
+                            "%I:%M:%S %p"), fg="green")
 
-                    conn.close()             
+                    conn.close()
                     flag = False
-                    
+
 
 
             elif time_clock_entries_record[1] is not None and time_clock_entries_record[2] == None:
-                #Clocked OUT
+                # Clocked OUT
                 inOrOut = "Out"
-                greeting_text = ["Goodbye", "Have a nice day", "See you later", "Have a wonderful day", "Thank you for your great work"]
+                greeting_text = ["Goodbye", "Have a nice day", "See you later", "Have a wonderful day",
+                                 "Thank you for your great work"]
 
                 if time_clock_entries_record[1][:10] == getTodaysWeekDayAndDate()[1]:
-                    c.execute("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = " + str(time_clock_entries_record[0]) + ";")
+                    c.execute(
+                        "UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = " + str(
+                            time_clock_entries_record[0]) + ";")
                     conn.commit()
                 else:
 
-                    rand = random.randint(0, len(greeting_text)-1)
+                    rand = random.randint(0, len(greeting_text) - 1)
                     conn.commit()
                     conn.close()
 
@@ -495,15 +540,20 @@ def enter():
                     enter_actual_clock_out_time_entry.focus_set()
                     enter_actual_clock_out_time_entry.place(relx=.50, rely=.64, anchor=N)
 
-                    actual_clock_out_time_submit_button.config(command=lambda: insert_request(entered_id, enter_actual_clock_out_time_entry.get(), "%I:%M %p", clocked_in_time.strftime("%H:%M:%S")))
+                    actual_clock_out_time_submit_button.config(
+                        command=lambda: insert_request(entered_id, enter_actual_clock_out_time_entry.get(), "%I:%M %p",
+                                                       clocked_in_time.strftime("%H:%M:%S")))
                     actual_clock_out_time_submit_button.place(relx=.46, rely=.67)
 
-                    root.bind("<Return>", lambda event=None: actual_clock_out_time_submit_button.invoke())                  
-                    
-                    return greeting.config(text=name + "\n\n" + getWeekDayFromDate(time_clock_entries_record[1][:10], "%Y-%m-%d") + " " + datetime.strptime(time_clock_entries_record[1][:10], "%Y-%m-%d").strftime("%m/%d/%y") + "\nwas your last Clock In and you forgot to Clock Out on that day.\nfue su último reloj de entrada y se olvidó de marcar el reloj de salida ese día.\n\nPlease enter the time you clocked out on that day in this format\nIngrese la hora a la que marcó ese día en este formato\n\n HH:MM am/pm\n\n\n\n\n\n\nYour request will be sent to management for approval.\nSu solicitud se enviará a la gerencia para su aprobación.", fg="red")
-                    
+                    root.bind("<Return>", lambda event=None: actual_clock_out_time_submit_button.invoke())
 
-            rand = random.randint(0, len(greeting_text)-1)
+                    return greeting.config(text=name + "\n\n" + getWeekDayFromDate(time_clock_entries_record[1][:10],
+                                                                                   "%Y-%m-%d") + " " + datetime.strptime(
+                        time_clock_entries_record[1][:10], "%Y-%m-%d").strftime(
+                        "%m/%d/%y") + "\nwas your last Clock In and you forgot to Clock Out on that day.\nfue su último reloj de entrada y se olvidó de marcar el reloj de salida ese día.\n\nPlease enter the time you clocked out on that day in this format\nIngrese la hora a la que marcó ese día en este formato\n\n HH:MM am/pm\n\n\n\n\n\n\nYour request will be sent to management for approval.\nSu solicitud se enviará a la gerencia para su aprobación.",
+                                           fg="red")
+
+            rand = random.randint(0, len(greeting_text) - 1)
 
             forward.place(relx=.52, rely=.6, anchor=N)
             backward.place(relx=.48, rely=.6, anchor=N)
@@ -517,9 +567,9 @@ def enter():
 
             calculate_and_display_period_totals_for_employees(entered_id)
 
-            #Retreive task from database table and display it on the screen
+            # Retreive task from database table and display it on the screen
             fetch_and_display_task(entered_id)
-            
+
             id_field.delete(0, END)
         else:
             greeting.config(text="Incorrect Password", fg="red")
@@ -530,45 +580,26 @@ def enter():
         id_field.delete(0, END)
         greeting.config(text="Hello Admin!", fg="green")
 
-        #main_menu.config(text="Main Menu")
+        # main_menu.config(text="Main Menu")
         main_menu.place(relx=.5, rely=.425, anchor=N)
 
         global main_menu_buttons
-        main_menu_buttons = [["Employees", employee_codes_function], ["Assign Tasks", assign_tasks_function], ["Period Totals", period_totals_function], ["Historical Totals", historical_totals_function], ["Resolve Requests", resolve_requests], ["Send Copy of DB", send_copy_of_db]]
+        main_menu_buttons = [["Employees", employee_codes_function], ["Assign Tasks", assign_tasks_function],
+                             ["Period Totals", period_totals_function],
+                             ["Historical Totals", historical_totals_function], ["Resolve Requests", resolve_requests],
+                             ["Send Copy of DB", send_copy_of_db]]
 
         global employee_codes_child_buttons
-        employee_codes_child_buttons = [["Add New Employee", employee_codes__add_new_employee_function], ["Edit", employee_codes__edit_function], ["Delete", employee_codes__delete_function], ["View", employee_codes__view_function]]
+        employee_codes_child_buttons = [["Add New Employee", employee_codes__add_new_employee_function],
+                                        ["Edit", employee_codes__edit_function],
+                                        ["Delete", employee_codes__delete_function],
+                                        ["View", employee_codes__view_function]]
 
         fill_frame(main_menu, main_menu_buttons, "Main Menu", None)
-
-
 
         conn.commit()
         conn.close()
 
-def payday_automated_clockout(entered_id):
-    conn = sqlite3.connect(database_file)
-    c = conn.cursor()
-    clock_in = c.execute("SELECT ClockIn, row FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1", (entered_id,)).fetchone()
-    if employee_max_hours_allowed_on_payday(entered_id) >= 8:
-        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id) + .5)
-    else:
-        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(hours=employee_max_hours_allowed_on_payday(entered_id))
-
-    if clock_out.day != datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").day:
-        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d") + " 23:59:59", clock_in[1]))
-        conn.commit()
-        print("Next Day!")
-        return
-    c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (clock_out.strftime("%Y-%m-%d %H:%M:%S"), clock_in[1]))
-    conn.commit()
-
-    emp_record = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (entered_id,)).fetchone()
-    name = str(emp_record[0]) + " " + str(emp_record[1])
-
-    greeting.config(text=name + "\n\nHappy Payday\n\nThe system logged you In AND Out today\nfor the max period hours possible.\n\nPLEASE END YOUR SHIFT AT " + clock_out.strftime("%I:%M:%S%p"), fg="green")
-
-    conn.close()
 
 # This function fetches and displays an employees task based on the global variable (date) defined in the enter function. The idea of this function is that when an
 # employee toggles between certain days, the displayed task will also change accordingly.
@@ -577,7 +608,9 @@ def fetch_and_display_task(id):
     if current_date_mm_dd_yy == datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date():
         employee_task_header_label.config(text="Today's Task")
     else:
-        employee_task_header_label.config(text=str(current_date_mm_dd_yy)[5:7] + "/" + str(current_date_mm_dd_yy)[8:10] + "/" + str(current_date_mm_dd_yy)[2:4] + " Task")
+        employee_task_header_label.config(
+            text=str(current_date_mm_dd_yy)[5:7] + "/" + str(current_date_mm_dd_yy)[8:10] + "/" + str(
+                current_date_mm_dd_yy)[2:4] + " Task")
 
     employee_task_label.config(text=task)
     return
@@ -585,24 +618,21 @@ def fetch_and_display_task(id):
 
 def employee_max_hours_allowed_on_payday(id):
     current_period_dates = getPeriodDays()
-    emp_worked_hours_for_period = calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
+    emp_worked_hours_for_period = \
+    calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
     print("ID:", id)
     max_daily_hours_allowed = c.execute("SELECT MaxDailyHours FROM employees WHERE ID = @0", (id,)).fetchone()[0]
     conn.commit()
     conn.close()
-    total_period_hours_allowed = max_daily_hours_allowed * sum([datetime.strptime(adate, "%m/%d/%y").isoweekday() < 6 for adate in current_period_dates])
+    total_period_hours_allowed = max_daily_hours_allowed * sum(
+        [datetime.strptime(adate, "%m/%d/%y").isoweekday() < 6 for adate in current_period_dates])
     total_hours_possible_on_payday = total_period_hours_allowed - emp_worked_hours_for_period
     if total_hours_possible_on_payday >= max_daily_hours_allowed:
         return max_daily_hours_allowed
     else:
         return total_hours_possible_on_payday
-    
-
-    
-
-
 
 
 # Calculuates and displays the period totals for an employee. The period total calculation depends on the number of total hours an employee was clocked in for, and also
@@ -616,14 +646,14 @@ def calculate_and_display_period_totals_for_employees(id):
     period_hours_sum = 0
     for adate in dates:
         displayed_dates += adate + "\n"
-        #period_hours_sum += getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())
-        #displayed_daily_hours += str(getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())) + "\n"
+        # period_hours_sum += getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())
+        # displayed_daily_hours += str(getRawTotalEmployeeHours(adate, "%m/%d/%y", id_field.get())) + "\n"
         period_hours_sum += getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", id)
         displayed_daily_hours += str(round(getTotalDailyHoursAccountingForBreaks(adate, "%m/%d/%y", id), 3)) + "\n"
     if dates[0] == current_period_dates[0]:
         period_total.config(text="Current\nPeriod's Total Hours: " + str(round(period_hours_sum, 2)))
     else:
-        #print(current_date_mm_dd_yy - dates[-1])
+        # print(current_date_mm_dd_yy - dates[-1])
 
         last_day_of_period = ""
         current_date = str(current_date_mm_dd_yy)
@@ -631,7 +661,7 @@ def calculate_and_display_period_totals_for_employees(id):
         month = current_date[5:7]
         year = current_date[:4]
         num_of_days_in_month = monthrange(current_date_mm_dd_yy.year, int(month))[1]
-        #mm/dd/yy
+        # mm/dd/yy
         if day >= 1 and day < 16:
             last_day_of_period = f"{month}/15/{year}"
         else:
@@ -641,12 +671,11 @@ def calculate_and_display_period_totals_for_employees(id):
     period_days.config(text=displayed_dates)
     period_daily_hours.config(text=displayed_daily_hours)
 
+
 # This function toggles to the previous day that an employee sees, and displays that day's totals.
 def previous_day_totals():
     # conn = sqlite3.connect(database_file)
     # c = conn.cursor()
-
-    
 
     # global current_date_mm_dd_yy
     # global entered_id
@@ -661,7 +690,7 @@ def previous_day_totals():
     # #times_array = []
     # for record in time_in_out_records:
     #     print_time_in_records += datetime.strptime(record[0][11:], "%H:%M:%S").strftime("%I:%M:%S %p") + "\n"
-                
+
     #     if record[1] is not None:
     #         print_time_out_records += datetime.strptime(record[1][11:], "%H:%M:%S").strftime("%I:%M:%S %p") + "\n"
     #         t1 = datetime.strptime(record[1], "%Y-%m-%d %H:%M:%S").timestamp()
@@ -681,7 +710,7 @@ def previous_day_totals():
     # time_duration.config(text="\nDuration\n-----------\n" + print_duration_records)
 
     # day_total.config(text=str(current_date_mm_dd_yy)[5:7] + "/" + str(current_date_mm_dd_yy)[8:10] + "/" + str(current_date_mm_dd_yy)[:4] + " Total - " + format_seconds_to_hhmmss(total_seconds))
-    
+
     # conn.commit()
     # conn.close()
     global entered_id
@@ -690,6 +719,7 @@ def previous_day_totals():
     calculate_and_display_period_totals_for_employees(entered_id)
     return
 
+
 # This function toggles to the next day that an employee sees, and displays that day's totals.
 def next_day_totals():
     global entered_id
@@ -697,6 +727,7 @@ def next_day_totals():
     fetch_and_display_task(entered_id)
     calculate_and_display_period_totals_for_employees(entered_id)
     return
+
 
 # This function deals with a specific part of the information that an employee sees when they clock in or out. It calculates and displays a specific day's hourly totals
 # accounting for breaks, and also gives a break down of exactly all of their clock in and out times. It also displays whether or not an employee forgot to clock out at
@@ -707,26 +738,28 @@ def calculate_and_display_day_totals(num_added_days, id):
     c = conn.cursor()
 
     global current_date_mm_dd_yy
-    
 
-    if current_date_mm_dd_yy + timedelta(days=num_added_days) >= datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date():
+    if current_date_mm_dd_yy + timedelta(days=num_added_days) >= datetime.strptime(str(datetime.now().date()),
+                                                                                   "%Y-%m-%d").date():
         forward.config(state=DISABLED)
-        #return
+        # return
     else:
         forward.config(state=NORMAL)
 
     current_date_mm_dd_yy += timedelta(days=num_added_days)
 
-    time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = @0 AND ClockIn LIKE @1;", (id, '%' + current_date_mm_dd_yy.strftime("%Y-%m-%d") + '%',)).fetchall()
+    time_in_out_records = c.execute(
+        "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = @0 AND ClockIn LIKE @1;",
+        (id, '%' + current_date_mm_dd_yy.strftime("%Y-%m-%d") + '%',)).fetchall()
 
     print_time_in_records = ""
     print_time_out_records = ""
     print_duration_records = ""
     total_seconds = 0
-    #times_array = []
+    # times_array = []
     for record in time_in_out_records:
         print_time_in_records += datetime.strptime(record[0][11:], "%H:%M:%S").strftime("%I:%M:%S %p") + "\n"
-                
+
         if record[1] is not None:
             if record[1] != "FORGOT":
                 print_time_out_records += datetime.strptime(record[1][11:], "%H:%M:%S").strftime("%I:%M:%S %p") + "\n"
@@ -745,16 +778,18 @@ def calculate_and_display_day_totals(num_added_days, id):
 
     time_out.config(text="\nTime Out\n-----------\n" + print_time_out_records)
 
-    #time_duration.config(text="\nDuration\n-----------\n" + print_duration_records + "\nDay Total " + format_seconds_to_hhmmss(total_seconds))
+    # time_duration.config(text="\nDuration\n-----------\n" + print_duration_records + "\nDay Total " + format_seconds_to_hhmmss(total_seconds))
     time_duration.config(text="\nDuration\n-----------\n" + print_duration_records)
 
     if current_date_mm_dd_yy == datetime.strptime(str(datetime.now().date()), "%Y-%m-%d").date():
-        #format_seconds_to_hhmmss(total_seconds), this returns the raw duration that an employee spends at work.
+        # format_seconds_to_hhmmss(total_seconds), this returns the raw duration that an employee spends at work.
         # The below function, getTotalDailyHoursAccountingForBreaks, shows the employee their total paid hours, which is calculated by considering the break hours and total day duration.
-        day_total.config(text="Today's\nTotal Hours: " + str(round(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id), 2)))
+        day_total.config(text="Today's\nTotal Hours: " + str(
+            round(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id), 2)))
     else:
-        day_total.config(text=current_date_mm_dd_yy.strftime("%m/%d/%y") + "\nTotal Hours: " + str(round(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id), 2)))
-    
+        day_total.config(text=current_date_mm_dd_yy.strftime("%m/%d/%y") + "\nTotal Hours: " + str(
+            round(getTotalDailyHoursAccountingForBreaks(str(current_date_mm_dd_yy), "%Y-%m-%d", id), 2)))
+
     conn.commit()
     conn.close()
     return
@@ -762,7 +797,7 @@ def calculate_and_display_day_totals(num_added_days, id):
 
 # This function clears the contents of label, button, and entry widgets. It is mainly used to clear the screen between employees.
 def clear(all_labels, all_buttons, bool, reset_commands):
-    #all_labels = [greeting, time_in, time_out, time_duration, employee_list_label, employee_hours_label]
+    # all_labels = [greeting, time_in, time_out, time_duration, employee_list_label, employee_hours_label]
 
     for label in all_labels:
         clear_widget_text(label)
@@ -774,13 +809,14 @@ def clear(all_labels, all_buttons, bool, reset_commands):
         for row in reset_commands:
             row[0].config(command=row[1])
 
-    #employee_hours_button.place_forget()
+    # employee_hours_button.place_forget()
     if bool:
         button.config(text="Enter", command=enter)
         root.bind("<Return>", lambda event=None: button.invoke())
-    
+
     clear_frame(main_menu)
     main_menu.place_forget()
+
 
 # This function fills the labelframe (a widget that contains other widgets) in a certain format. It mainly allows me to easily and quickly create a menu or submenu with
 # any number of buttons. It also deals with the function that each button is linked with.
@@ -790,19 +826,21 @@ def fill_frame(frame, button_names_and_funcs, frame_header, return_to_array):
     global num_of_menu_items
     num_of_menu_items = len(button_names_and_funcs)
     for i in range(1, num_of_menu_items + 1):
-        #menu_item_number = Label(frame, text=str(i) + ") ", font=("Arial", 15))
-        #menu_item_number.grid(row=i-1, column=0, pady=15)
-        menu_item = Button(frame, text=button_names_and_funcs[i-1][0], command=button_names_and_funcs[i-1][1])
-        menu_item.grid(row=i-1, column=1, pady=15)
-    #["text", function]
+        # menu_item_number = Label(frame, text=str(i) + ") ", font=("Arial", 15))
+        # menu_item_number.grid(row=i-1, column=0, pady=15)
+        menu_item = Button(frame, text=button_names_and_funcs[i - 1][0], command=button_names_and_funcs[i - 1][1])
+        menu_item.grid(row=i - 1, column=1, pady=15)
+    # ["text", function]
     if return_to_array != None:
         return_to_menu = Button(frame, text="Return to " + return_to_array[0], command=return_to_array[1])
         return_to_menu.grid(row=num_of_menu_items, column=0, columnspan=2, pady=10)
+
 
 # Clears the main_menu frame that the admin sees. This happens when the admin goes through the main menu.
 def clear_frame(frame):
     for widget in frame.winfo_children():
         widget.destroy()
+
 
 # A function that returns and displays all the buttons in the main menu, as well as all the functions each button is linked to. This is necessary because lots of other
 # sub menu options contain a button that allows the admin to go back to the main menu, and that return button is linked to this function.
@@ -810,32 +848,37 @@ def main_menu_function():
     fill_frame(main_menu, main_menu_buttons, "Main Menu", None)
     return
 
-# Returns and displays all the buttons in the employee codes button within the main_menu. Basically, a function here is necessary because the "employee codes" button 
+
+# Returns and displays all the buttons in the employee codes button within the main_menu. Basically, a function here is necessary because the "employee codes" button
 # acts as a folder for other buttons, and must be referred to later.
 def employee_codes_function():
     clear_frame(main_menu)
-    #main_menu.config(text="Employee Codes")
+    # main_menu.config(text="Employee Codes")
     fill_frame(main_menu, employee_codes_child_buttons, "Main Menu > Employees", ["Main Menu", main_menu_function])
     # return_to_main_menu = Button(main_menu, text="Return to Main Menu", command=lambda: fill_frame(main_menu, main_menu_buttons, "Main Menu"))
     # return_to_main_menu.grid(row=num_of_menu_items, column=0, columnspan=2)
     global_confirmation_text.set("")
     return
 
+
 # Fills the main menu with buttons related to assigning tasks. Because the "assign tasks" option is a folder for other buttons, it is helpful to create a function for it
 # to call later.
 def assign_tasks_function():
-    fill_frame(main_menu, [["Assign by Department", assign_tasks__by_department], ["Assign by Employee", assign_tasks__by_employee]], "Main Menu > Assign Tasks", ["Main Menu", main_menu_function])
+    fill_frame(main_menu, [["Assign by Department", assign_tasks__by_department],
+                           ["Assign by Employee", assign_tasks__by_employee]], "Main Menu > Assign Tasks",
+               ["Main Menu", main_menu_function])
     return
+
 
 # This function displays the screen that the admin sees when assigning tasks to employees by their department. It contains checkboxes, buttons, entries, and more, and
 # sends all that info to another function to deal with inserting/updating employee tasks.
 def assign_tasks__by_department():
     clear_frame(main_menu)
-    main_menu.config(text = "Main Menu > Assign Tasks > By Department")
+    main_menu.config(text="Main Menu > Assign Tasks > By Department")
     assign_tasks_by_department_label = Label(main_menu, text="Department: ", font=("Arial", 15), pady=3, padx=10)
     assign_tasks_by_department_label.grid(row=0, column=0, sticky="e")
 
-    #tkinter.ttk.Separator(main_menu, orient=VERTICAL).grid(row=0, column=1, rowspan=6, sticky="nsw", padx=10)
+    # tkinter.ttk.Separator(main_menu, orient=VERTICAL).grid(row=0, column=1, rowspan=6, sticky="nsw", padx=10)
 
     none_department = StringVar()
     MG_department = StringVar()
@@ -848,55 +891,63 @@ def assign_tasks__by_department():
 
     next_row = 0
     for department, strvar, counter in zip(departments, department_strvars, range(len(departments))):
-        Checkbutton(main_menu, text=department, variable=strvar, onvalue=department, offvalue="").grid(row=counter, column=1, sticky="w", pady=3)
+        Checkbutton(main_menu, text=department, variable=strvar, onvalue=department, offvalue="").grid(row=counter,
+                                                                                                       column=1,
+                                                                                                       sticky="w",
+                                                                                                       pady=3)
         if counter == len(departments) - 1:
             next_row = counter + 1
 
-    Label(main_menu, text="Seperate entries with (s) by commas and no spaces", font=("Arial", 8), pady=10, anchor=CENTER).grid(row=next_row, column=0, columnspan=2, sticky="ew")
+    Label(main_menu, text="Seperate entries with (s) by commas and no spaces", font=("Arial", 8), pady=10,
+          anchor=CENTER).grid(row=next_row, column=0, columnspan=2, sticky="ew")
 
     exclude_label = Label(main_menu, text="ID(s) to Exclude: ", font=("Arial", 15), pady=3, padx=10)
-    exclude_label.grid(row=next_row+1, column=0, sticky="e")
+    exclude_label.grid(row=next_row + 1, column=0, sticky="e")
 
     exclude_entry_widget = Entry(main_menu)
-    exclude_entry_widget.grid(row=next_row+1, column=1, sticky="w")
+    exclude_entry_widget.grid(row=next_row + 1, column=1, sticky="w")
 
-    tkinter.ttk.Separator(main_menu, orient=HORIZONTAL).grid(row=next_row+2, column=0, columnspan=2, padx=10)
+    tkinter.ttk.Separator(main_menu, orient=HORIZONTAL).grid(row=next_row + 2, column=0, columnspan=2, padx=10)
 
-    #root.unbind("<Return>")
+    # root.unbind("<Return>")
 
     task_label = Label(main_menu, text="Task: ", font=("Arial", 15), pady=3, padx=10)
-    task_label.grid(row=next_row+3, column=0, sticky="e")
+    task_label.grid(row=next_row + 3, column=0, sticky="e")
 
     task_entry = Text(main_menu, width=15, height=2)
-    task_entry.grid(row=next_row+3, column=1, sticky="w")
+    task_entry.grid(row=next_row + 3, column=1, sticky="w")
 
     date_label = Label(main_menu, text="Date(s) mm/dd/yyyy: ", font=("Arial", 15), pady=3, padx=10)
-    date_label.grid(row=next_row+4, column=0, sticky="e")
+    date_label.grid(row=next_row + 4, column=0, sticky="e")
 
     date_entry = Entry(main_menu)
-    date_entry.grid(row=next_row+4, column=1, sticky="w")
+    date_entry.grid(row=next_row + 4, column=1, sticky="w")
 
-    submit_button = Button(main_menu, text="Assign Tasks", command=lambda: assign_tasks__by_department_submit_button_function(department_strvars, exclude_entry_widget.get(), task_entry.get("1.0","end-1c"), date_entry.get()))
-    submit_button.grid(row=next_row+5, column=0, columnspan=2, pady=3)
+    submit_button = Button(main_menu, text="Assign Tasks",
+                           command=lambda: assign_tasks__by_department_submit_button_function(department_strvars,
+                                                                                              exclude_entry_widget.get(),
+                                                                                              task_entry.get("1.0",
+                                                                                                             "end-1c"),
+                                                                                              date_entry.get()))
+    submit_button.grid(row=next_row + 5, column=0, columnspan=2, pady=3)
 
     return_to_employee_codes = Button(main_menu, text="Return to Assign Tasks", command=assign_tasks_function)
-    return_to_employee_codes.grid(row=next_row+6, column=0, columnspan=2, pady=3)
+    return_to_employee_codes.grid(row=next_row + 6, column=0, columnspan=2, pady=3)
 
     return
+
 
 # This function funnels all the input from the assign_tasks__by_department() function and updates the database to reflect those changes. Note: employees are only allowed to have
 # one task per day, so if the admin attempts to assign another task for a specific employee on a given day, this function makes sure that that employee only has 
 # one task for that day. In this case, this function will overide that employee's previous task with the new task.
 def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, single_task_string, date_string):
-
     if single_task_string == "" or date_string == "" or all(var.get() == "" for var in strvars):
-        messagebox.showerror("Empty field(s)!", "No tasks were assigned. 'Task', 'Date', or 'Department' fields were blank.")
+        messagebox.showerror("Empty field(s)!",
+                             "No tasks were assigned. 'Task', 'Date', or 'Department' fields were blank.")
         return
 
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
-
-
 
     employees_array = []
     excluded_emps = excluded_emps.split(",")
@@ -905,9 +956,11 @@ def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, s
         value = strvar.get()
         if value != "":
             if value == "None":
-                all_matching_emp_ids = c.execute("SELECT ID FROM employees WHERE Department = '" + value + "' OR Department = '';").fetchall()
+                all_matching_emp_ids = c.execute(
+                    "SELECT ID FROM employees WHERE Department = '" + value + "' OR Department = '';").fetchall()
             else:
-                all_matching_emp_ids = c.execute("SELECT ID FROM employees WHERE Department = '" + value + "';").fetchall()
+                all_matching_emp_ids = c.execute(
+                    "SELECT ID FROM employees WHERE Department = '" + value + "';").fetchall()
             for matching_id in all_matching_emp_ids:
                 if str(matching_id[0]) not in excluded_emps:
                     employees_array.append(str(matching_id[0]))
@@ -921,11 +974,12 @@ def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, s
             except ValueError:
                 messagebox.showerror("Wrong Date Format!", "Format must be in (mm/dd/yyyy)")
                 return
-            
+
             today = datetime.strptime(getTodaysWeekDayAndDate()[1], "%Y-%m-%d")
-            
+
             if datetime.strptime(single_date, "%m/%d/%Y") < today:
-                messagebox.showerror("Cannot Assign Tasks on Past Dates!", "Check your dates such that each one is greater than or equal to today's date.")
+                messagebox.showerror("Cannot Assign Tasks on Past Dates!",
+                                     "Check your dates such that each one is greater than or equal to today's date.")
                 return
 
             old_date = single_date.split("/")
@@ -935,27 +989,31 @@ def assign_tasks__by_department_submit_button_function(strvars, excluded_emps, s
                 old_date[1] = "0" + old_date[1]
             single_date = "/".join(old_date)
 
-            task_id_for_matching_emp_and_date = c.execute("SELECT task_id, task FROM employee_tasks WHERE employee_id = '" + emp + "' AND task_date = '" + single_date + "';").fetchone()
+            task_id_for_matching_emp_and_date = c.execute(
+                "SELECT task_id, task FROM employee_tasks WHERE employee_id = '" + emp + "' AND task_date = '" + single_date + "';").fetchone()
             name = c.execute(f"SELECT FirstName, LastName FROM employees WHERE ID = '{emp}';").fetchone()
             if task_id_for_matching_emp_and_date != None:
-                c.execute("UPDATE employee_tasks SET task = '" + single_task_string + "' WHERE task_id = '" + str(task_id_for_matching_emp_and_date[0]) + "';")
+                c.execute("UPDATE employee_tasks SET task = '" + single_task_string + "' WHERE task_id = '" + str(
+                    task_id_for_matching_emp_and_date[0]) + "';")
                 replaced += f"{name[0]} {name[1]}'s task, '{task_id_for_matching_emp_and_date[1]}', on {single_date} was over-written.\n\n"
             else:
                 sql_statement = f"INSERT INTO employee_tasks(employee_id, task_date, task) VALUES('{emp}', '{single_date}', '{single_task_string}')"
                 c.execute(sql_statement)
                 replaced += f"A task for {name[0]} {name[1]} on {single_date} was added.\n\n"
-    
+
     messagebox.showinfo("Successful!", "Your tasks have been succesfully assigned.\n\n" + replaced)
 
     conn.commit()
     conn.close()
     return
 
+
 # Returns the screen that the admin sees when assigning tasks by employee. It has entry, button, and label widgets in order to do so.
 def assign_tasks__by_employee():
     clear_frame(main_menu)
-    main_menu.config(text = "Main Menu > Assign Tasks > By Employee")
-    Label(main_menu, text="Seperate entries labeled with \"(s)\" by commas and no spaces", font=("Arial", 8), pady=10, anchor=CENTER).grid(row=0, column=0, columnspan=2, sticky="ew")
+    main_menu.config(text="Main Menu > Assign Tasks > By Employee")
+    Label(main_menu, text="Seperate entries labeled with \"(s)\" by commas and no spaces", font=("Arial", 8), pady=10,
+          anchor=CENTER).grid(row=0, column=0, columnspan=2, sticky="ew")
 
     emp_label = Label(main_menu, text="Employee ID(s): ", font=("Arial", 15), pady=10, padx=10)
     emp_label.grid(row=1, column=0, sticky="e")
@@ -975,18 +1033,23 @@ def assign_tasks__by_employee():
     date_entry = Entry(main_menu)
     date_entry.grid(row=3, column=1, sticky="w")
 
-    submit_button = Button(main_menu, text="Assign Tasks", command=lambda: assign_tasks__by_employee_submit_button(emp_id_entry.get(), task_entry.get("1.0","end-1c"), date_entry.get()))
+    submit_button = Button(main_menu, text="Assign Tasks",
+                           command=lambda: assign_tasks__by_employee_submit_button(emp_id_entry.get(),
+                                                                                   task_entry.get("1.0", "end-1c"),
+                                                                                   date_entry.get()))
     submit_button.grid(row=4, column=0, columnspan=2, pady=10)
 
     return_to_employee_codes = Button(main_menu, text="Return to Assign Tasks", command=assign_tasks_function)
     return_to_employee_codes.grid(row=5, column=0, columnspan=2, pady=10)
     return
 
+
 # Funnels all the info collected from the screen, which was created by the assign_tasks__by_employee() function, and updates the database. It only allows employees to have
 # one task per day, so if necessary, it will overide certain tasks if the admin says so.
 def assign_tasks__by_employee_submit_button(id_string, task, date_string):
     if task == "" or date_string == "" or id_string == "":
-        messagebox.showerror("Empty field(s)!", "No tasks were assigned. 'Task', 'Date', or 'Department' fields were blank.")
+        messagebox.showerror("Empty field(s)!",
+                             "No tasks were assigned. 'Task', 'Date', or 'Department' fields were blank.")
         return
 
     conn = sqlite3.connect(database_file)
@@ -996,7 +1059,7 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
     id_array = id_string.split(",")
 
     all_ids = c.execute("SELECT ID FROM employees;").fetchall()
-    
+
     print(all_ids)
     successful_ids = []
     unsuccessful_ids = []
@@ -1011,7 +1074,7 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
                 break
             except:
                 pass
-    
+
     successful_dates = []
     unsuccessful_dates = []
     for single_date in date_array:
@@ -1026,7 +1089,6 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
         else:
             unsuccessful_dates.append(single_date)
 
-
     print("Successful Ids:", successful_ids)
     print("Unsuccessful Ids:", unsuccessful_ids)
 
@@ -1039,16 +1101,19 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
 
     for single_id in successful_ids:
         for single_date in successful_dates:
-            task_from_table = c.execute("SELECT task_id, task FROM employee_tasks WHERE employee_id = @0 AND task_date = @1;", (single_id, single_date,)).fetchone()
-            
+            task_from_table = c.execute(
+                "SELECT task_id, task FROM employee_tasks WHERE employee_id = @0 AND task_date = @1;",
+                (single_id, single_date,)).fetchone()
+
             name = c.execute(f"SELECT FirstName, LastName FROM employees WHERE ID = @0;", (single_id,)).fetchone()
             if task_from_table != None:
                 c.execute("UPDATE employee_tasks SET task = @0 WHERE task_id = @1;", (task, task_from_table[0],))
                 successful_over_written += f"\t\t\"{name[0]} {name[1]}\" task > \"{task_from_table[1]}\" on \"{single_date}\" < over-written.\n"
             else:
-                c.execute("INSERT INTO employee_tasks(employee_id, task_date, task) VALUES(@0, @1, @2);", (single_id, single_date, task,))
+                c.execute("INSERT INTO employee_tasks(employee_id, task_date, task) VALUES(@0, @1, @2);",
+                          (single_id, single_date, task,))
                 successful_updated += f"\t\t\"{name[0]} {name[1]}\" > task added on \"{single_date}\"\n"
-    
+
     for id in unsuccessful_ids:
         unsuccessful_ids_str += f"\t\t\"{str(id)}\"\n"
     for date in unsuccessful_dates:
@@ -1059,6 +1124,7 @@ def assign_tasks__by_employee_submit_button(id_string, task, date_string):
     message = successful + successful_over_written + successful_updated + unsuccessful + unsuccessful_ids_str + unsuccessful_dates_str
     messagebox.showinfo("Report", message)
     return
+
 
 # This function returns the period days of a certain period. It passes in a number and generates the period days, both displayed and calculated as a tuple.
 # For instance, if the argument = 0, it will fetch the period days of today's period. If the argument = 1, it will fetch the period days of the period after the current one.
@@ -1097,7 +1163,8 @@ def get_period_days(num):
         else:
             day = "01"
 
-    temporary_date = datetime.strptime((today + relativedelta(months=additional_months)).strftime("%m/%d/%Y"), "%m/%d/%Y").strftime("%m/%d/%Y")
+    temporary_date = datetime.strptime((today + relativedelta(months=additional_months)).strftime("%m/%d/%Y"),
+                                       "%m/%d/%Y").strftime("%m/%d/%Y")
     beginning_of_period = temporary_date[:3] + day + temporary_date[5:]
 
     end_of_period = datetime.strptime(beginning_of_period, "%m/%d/%Y")
@@ -1107,19 +1174,26 @@ def get_period_days(num):
     last_day_of_calculated_period_days = 0
     if day == "16":
         # mm/dd/yy
-        last_day_of_calculated_period_days = str(monthrange(int(beginning_of_period[6:]), int(beginning_of_period[:2]))[1])
+        last_day_of_calculated_period_days = str(
+            monthrange(int(beginning_of_period[6:]), int(beginning_of_period[:2]))[1])
     else:
         last_day_of_calculated_period_days = "15"
 
     # (displayed_period_boundaries, calculated_pay_days_from_1_to_15)
-    
-    return ((datetime.strptime(beginning_of_period, "%m/%d/%Y").strftime("%m/%d/%y") , end_of_period.strftime("%m/%d/%y")), tuple(getArrayOfDates(beginning_of_period, end_of_period.strftime("%m/%d/%Y")[:3] + last_day_of_calculated_period_days + end_of_period.strftime("%m/%d/%Y")[5:], "%m/%d/%Y", "%m/%d/%y")))
+
+    return (
+        (datetime.strptime(beginning_of_period, "%m/%d/%Y").strftime("%m/%d/%y"), end_of_period.strftime("%m/%d/%y")),
+        tuple(getArrayOfDates(beginning_of_period, end_of_period.strftime("%m/%d/%Y")[
+                                                   :3] + last_day_of_calculated_period_days + end_of_period.strftime(
+            "%m/%d/%Y")[5:], "%m/%d/%Y", "%m/%d/%y")))
+
 
 # This function allows the admin to toggle between periods to view the payroll information for all the employees.
 def next_previous_period(num):
     global period_count
     period_count += num
     return display_period_totals(get_period_days(period_count))
+
 
 # Displays the payroll totals for a given range of dates. Loops through each employee's timeclock entries for every single date and performs calculations. This also creates
 # an excel file report with the same information.
@@ -1129,7 +1203,8 @@ def display_period_totals(period_days_input):
 
     displayed_period_range, period_days = period_days_input
 
-    Label(main_menu, text=displayed_period_range[0] + " - " + displayed_period_range[1], font=("Arial", 8, "bold"), pady=10).grid(row=1, column=5)
+    Label(main_menu, text=displayed_period_range[0] + " - " + displayed_period_range[1], font=("Arial", 8, "bold"),
+          pady=10).grid(row=1, column=5)
 
     try:
         global next_period
@@ -1170,12 +1245,11 @@ def display_period_totals(period_days_input):
 
     for record in all_ids:
         id = record[0]
-        
+
         dictionary_info = calculate_employee_pay(period_days[0], period_days[-1], "%m/%d/%y", str(id))
         if dictionary_info["Total Hours"] != 0:
             for key, value in dictionary_info.items():
                 label_dictionary[key].append(str(value))
-
 
     for counter, value, header in zip(range(len(label_dictionary)), label_dictionary.values(), label_headers):
         text = header + "\n"
@@ -1199,10 +1273,17 @@ Sincerely,
 ZTimeClock
     """
     subject = f"ZTimeClock {period_2} Pay Period Report for Chemtrol"
-    create_file = Button(main_menu, text="Generate Excel Report and Email Myself", font=("Arial", 8), pady=10, command=lambda: CreateExcelFile.create_excel_file(file_name, label_dictionary, email_report_bool = True, sender_address = AdminInformation.select("EmailAddress"), sender_pswd = AdminInformation.select("EmailAddressPassword"), receiver_address = AdminInformation.select("EmailAddress"), subject = subject, body = body))
+    create_file = Button(main_menu, text="Generate Excel Report and Email Myself", font=("Arial", 8), pady=10,
+                         command=lambda: CreateExcelFile.create_excel_file(file_name, label_dictionary,
+                                                                           email_report_bool=True,
+                                                                           sender_address=AdminInformation.select(
+                                                                               "EmailAddress"),
+                                                                           sender_pswd=AdminInformation.select(
+                                                                               "EmailAddressPassword"),
+                                                                           receiver_address=AdminInformation.select(
+                                                                               "EmailAddress"), subject=subject,
+                                                                           body=body))
     create_file.grid(row=1, column=9)
-
-    
 
     conn.commit()
     conn.close()
@@ -1212,7 +1293,7 @@ ZTimeClock
 def send_copy_of_db():
     copy_of_db_as_dict_array, array_of_sheet_names = get_database_copy()
     # CreateExcelFile.create_excel_file_with_multiple_sheets(program_files_path + "Copy_Of_Database.xlsx", copy_of_db_as_dict_array, array_of_sheet_names)
-    
+
     current_time = datetime.now().strftime("%m/%d/%Y at %I:%M:%S %p")
 
     body = f"""Time Clock Report,
@@ -1225,13 +1306,17 @@ Sincerely,
 ZTimeClock
         """
     subject = f"ZTimeClock Copy of Chemtrol's Employee Timeclock Database as of {current_time}"
-    send_email_with_db_attachment(AdminInformation.select("EmailAddress"), AdminInformation.select("EmailAddressPassword"), AdminInformation.select("EmailAddress"), body, subject, database_file)
+    send_email_with_db_attachment(AdminInformation.select("EmailAddress"),
+                                  AdminInformation.select("EmailAddressPassword"),
+                                  AdminInformation.select("EmailAddress"), body, subject, database_file)
 
     # os.remove(program_files_path + "Copy_Of_Database.xlsx")
 
-    messagebox.showinfo("Successful!", "An email containing an identical copy of the database has been sent to yourself.")
+    messagebox.showinfo("Successful!",
+                        "An email containing an identical copy of the database has been sent to yourself.")
 
     return
+
 
 # A class to create excel files in different formats. Although there is only one method here, more can be created if necessary depending on the different formats the
 # admin prefers.
@@ -1242,7 +1327,7 @@ class CreateExcelFile:
         dict_values_to_list = []
         for value in dictionary.values():
             dict_values_to_list.append(value)
-        
+
         data = []
         for i in range(len(dict_values_to_list[0])):
             sub_array = []
@@ -1253,9 +1338,9 @@ class CreateExcelFile:
         columns = []
         for label in dictionary.keys():
             columns.append({"header": label})
-        
+
         return data, columns
-    
+
     @staticmethod
     def create_excel_file_with_multiple_sheets(complete_file_path, array_of_dicts, sheet_names):
         if len(array_of_dicts) != len(sheet_names):
@@ -1274,26 +1359,18 @@ class CreateExcelFile:
             sheet = workbook.add_worksheet(sheet_names[sheet_name_counter])
             sheet_name_counter += 1
 
-            abc = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+            abc = (
+                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
+                "V", "W", "X", "Y", "Z")
 
             sheet.add_table("A1:" + abc[len(columns) - 1] + str(len(data) + 2), {"data": data, "columns": columns})
 
-        
         workbook.close()
-
-
-
-
-
-
-
 
         os.path.join(file_path, file_name)
 
-
-
-
-    def create_excel_file(complete_file_path, dictionary, email_report_bool = False, sender_address = False, sender_pswd = False, receiver_address = False, subject = False, body = False):
+    def create_excel_file(complete_file_path, dictionary, email_report_bool=False, sender_address=False,
+                          sender_pswd=False, receiver_address=False, subject=False, body=False):
         """
         file_name is the name of the Excel file WITH the extension.
 
@@ -1310,14 +1387,17 @@ class CreateExcelFile:
         workbook = xl.Workbook(complete_file_path)
         sheet = workbook.add_worksheet()
 
-        abc = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+        abc = (
+            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
+            "V",
+            "W", "X", "Y", "Z")
 
         sheet.add_table("A1:" + abc[len(columns) - 1] + str(len(data) + 1), {"data": data, "columns": columns})
 
         workbook.close()
-        
+
         os.path.join(file_path, file_name)
-        
+
         if email_report_bool:
             try:
                 send_email(sender_address, sender_pswd, receiver_address, body, subject, complete_file_path)
@@ -1326,7 +1406,6 @@ class CreateExcelFile:
                 return
             os.remove(complete_file_path)
             messagebox.showinfo("Successful", "Report has been sent!")
-
 
     # @staticmethod
     # def create_excel_file_with_table(file_name, dictionary):
@@ -1339,7 +1418,7 @@ class CreateExcelFile:
     #     dict_values_to_list = []
     #     for value in dictionary.values():
     #         dict_values_to_list.append(value)
-        
+
     #     data = []
     #     for i in range(len(dict_values_to_list[0])):
     #         sub_array = []
@@ -1357,7 +1436,7 @@ class CreateExcelFile:
     #     file_name = splitted[-1]
 
     #     entered_complete_file_name = asksaveasfilename(filetypes=files, defaultextension=files, initialfile=file_name, initialdir=program_files_path)
-        
+
     #         # if (CreateExcelFile.every_index(file_name, "/")[-1] + 1) != "DNE":
 
     #     splitted = entered_complete_file_name.split("/")
@@ -1376,7 +1455,6 @@ class CreateExcelFile:
     #     os.path.join(entered_file_path, entered_file_name)
 
     #     messagebox.showinfo("Successful", f"{entered_file_name} has been saved in {entered_file_path}!")
-
 
     # @staticmethod
     # def every_index(string, char):
@@ -1401,19 +1479,22 @@ def period_totals_function():
     next_period = Button(main_menu, text="Next", font=("Arial", 8), pady=10, command=lambda: next_previous_period(1))
     next_period.grid(row=1, column=6)
 
-    previous_period = Button(main_menu, text="Previous", font=("Arial", 8), pady=10, command=lambda: next_previous_period(-1))
+    previous_period = Button(main_menu, text="Previous", font=("Arial", 8), pady=10,
+                             command=lambda: next_previous_period(-1))
     previous_period.grid(row=1, column=4)
-    
+
     next_period.config(state=DISABLED)
 
     display_period_totals(get_period_days(0))
 
     return
 
+
 # Clears the entry of an entry widget.
 def clear_entry(event, entry):
     entry.delete(0, END)
     entry.unbind('<Button-1>', event)
+
 
 # Very similar to the period totals function, but allows the admin to enter any specific range of dates (inclusive).
 def historical_totals_function():
@@ -1427,20 +1508,20 @@ def historical_totals_function():
     start_date.grid(row=1, column=0, columnspan=2, padx=5)
     start_date.insert(0, "Start Date mm/dd/yyyy")
 
-    spacer = Label(main_menu, text = "", font=("Arial", 8), width=5)
+    spacer = Label(main_menu, text="", font=("Arial", 8), width=5)
     spacer.grid(row=1, column=1, columnspan=2, padx=5)
 
     end_date = Entry(main_menu, font=("Arial", 8), width=18)
     end_date.grid(row=1, column=2, columnspan=2, padx=5)
     end_date.insert(0, "End Date mm/dd/yyyy")
 
-    generate = Button(main_menu, text="Generate", font=("Arial", 8), pady=10, command=lambda: validate_grabArray_sendto_display_period_totals(start_date.get(), end_date.get()))
+    generate = Button(main_menu, text="Generate", font=("Arial", 8), pady=10,
+                      command=lambda: validate_grabArray_sendto_display_period_totals(start_date.get(), end_date.get()))
     generate.grid(row=1, column=4, padx=5)
-
-    
 
     display_period_totals(get_period_days(0))
     return
+
 
 # Validates and grabs the array of dates that the admin specified in historical_totals_function() and displays and generates a report for that range of dates.
 def validate_grabArray_sendto_display_period_totals(start, end):
@@ -1452,11 +1533,13 @@ def validate_grabArray_sendto_display_period_totals(start, end):
         messagebox.showerror("Invalid Entry", "Please enter start and end dates in the format of \"mm/dd/yyyy\"!")
         return
 
+
 # Grabs all the requests that employees make when they forget to clock out on the same day they clocked in at.
 def get_requests():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
-    requests = c.execute("SELECT row, empID, ClockIn, Request FROM time_clock_entries WHERE ClockOut = 'FORGOT' ORDER BY EmpID ASC").fetchall()
+    requests = c.execute(
+        "SELECT row, empID, ClockIn, Request FROM time_clock_entries WHERE ClockOut = 'FORGOT' ORDER BY EmpID ASC").fetchall()
     row = []
     empID = []
     ClockIn = []
@@ -1473,7 +1556,8 @@ def get_requests():
         "empID": empID,
         "ClockIn": ClockIn,
         "Request": Request
-        }
+    }
+
 
 # The parent function for the admin to resolve employee requests.
 def resolve_requests():
@@ -1483,7 +1567,7 @@ def resolve_requests():
     global previous_request
     global next_request
     global_index = 0
-    
+
     requests = get_requests()
     # all_entries_and_btns = []
     # for i in range(len(requests["Row"])):
@@ -1492,6 +1576,7 @@ def resolve_requests():
     display_individual_request(requests, 0)
     return
 
+
 # Displays a single employee's request, and allows the admin to modify their request and commit changes.
 def display_individual_request(requests, increment):
     clear_frame(main_menu)
@@ -1499,9 +1584,11 @@ def display_individual_request(requests, increment):
 
     # requests = get_requests()
 
-    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, -1), width=6)
+    previous_request = Button(main_menu, text="<", font=("Arial", 8), pady=5,
+                              command=lambda: display_individual_request(requests, -1), width=6)
     previous_request.grid(row=0, column=0)
-    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5, command=lambda: display_individual_request(requests, 1), width=6)
+    next_request = Button(main_menu, text=">", font=("Arial", 8), pady=5,
+                          command=lambda: display_individual_request(requests, 1), width=6)
     next_request.grid(row=0, column=2)
 
     if len(requests["Row"]) == 1:
@@ -1513,7 +1600,6 @@ def display_individual_request(requests, increment):
     elif global_index + increment == 0:
         previous_request.config(state=DISABLED)
 
-
     global_index += increment
 
     #                  [Row, empID, ClockIn, RequestTimeStamp]
@@ -1524,12 +1610,14 @@ def display_individual_request(requests, increment):
         global_index = 0
     employee_request = [value[global_index] for value in requests.values()]
 
-    Label(main_menu, text=f"{global_index + 1} of {len(requests['Row'])}", font=("Arial", 20, "bold"), pady=5).grid(row=0, column=1)
+    Label(main_menu, text=f"{global_index + 1} of {len(requests['Row'])}", font=("Arial", 20, "bold"), pady=5).grid(
+        row=0, column=1)
 
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    first_name, last_name = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (employee_request[1],)).fetchone()
+    first_name, last_name = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0",
+                                      (employee_request[1],)).fetchone()
 
     conn.commit()
     conn.close()
@@ -1542,13 +1630,14 @@ def display_individual_request(requests, increment):
     clock_in_time = clock_in_timestamp.strftime("%I:%M:%S %p")
     clock_in_weekday = getWeekDayFromDate(clock_in_date, "%m/%d/%y")
 
-    requested_clock_out_timestamp = datetime.strptime(employee_request[3], "%Y-%m-%d %H:%M:%S") if employee_request[3] is not None else "None"
-    requested_clock_out_time = requested_clock_out_timestamp.strftime("%I:%M:%S %p") if type(requested_clock_out_timestamp) == datetime else "None"
+    requested_clock_out_timestamp = datetime.strptime(employee_request[3], "%Y-%m-%d %H:%M:%S") if employee_request[
+                                                                                                       3] is not None else "None"
+    requested_clock_out_time = requested_clock_out_timestamp.strftime("%I:%M:%S %p") if type(
+        requested_clock_out_timestamp) == datetime else "None"
 
     Label(main_menu, text=f"{clock_in_weekday}, {clock_in_date}", font=("Arial", 15), pady=5).grid(row=3, column=1)
 
     Label(main_menu, text="", font=("Arial", 15), pady=5).grid(row=4, column=1)
-
 
     Label(main_menu, text="Clock In ", font=("Arial", 15), pady=5).grid(row=5, column=0)
     Label(main_menu, text=f"{clock_in_time} ", font=("Arial", 15), pady=5).grid(row=6, column=0)
@@ -1560,7 +1649,10 @@ def display_individual_request(requests, increment):
     # all_entries_and_btns[global_index][0].grid(row=6, column=1)
     # all_entries_and_btns[global_index][0].insert(0, f"{requested_clock_out_time}")
     Label(main_menu, text="", font=("Arial", 8)).grid(row=7, column=1)
-    commit_btn = Button(main_menu, text="Commit Change", font=("Arial", 8), command=lambda: commit_request(employee_request[0], clock_in_timestamp.strftime("%I:%M:%S %p"), admin_clock_out.get(), first_name, last_name, employee_request[1]))
+    commit_btn = Button(main_menu, text="Commit Change", font=("Arial", 8),
+                        command=lambda: commit_request(employee_request[0], clock_in_timestamp.strftime("%I:%M:%S %p"),
+                                                       admin_clock_out.get(), first_name, last_name,
+                                                       employee_request[1]))
     commit_btn.grid(row=8, column=1)
     # all_entries_and_btns[global_index][1].config(command=lambda: commit_request(employee_request[0], all_entries_and_btns[global_index][0].get(), first_name, last_name, employee_request[1], all_entries_and_btns[global_index][0], all_entries_and_btns[global_index][1]))
     # all_entries_and_btns[global_index][1].grid(row=8, column=1)
@@ -1573,6 +1665,7 @@ def display_individual_request(requests, increment):
 
     return
 
+
 # This function makes commits to the database based on the information funneled from display_individual_request().
 def commit_request(row, employee_clock_in, admin_request, first, last, id):
     """Commit the admin's request to resolve an employee's mistake of forgetting to clock out on the same day."""
@@ -1580,7 +1673,8 @@ def commit_request(row, employee_clock_in, admin_request, first, last, id):
     # employee_request
 
     if validate_timestamp(admin_request, "%I:%M:%S %p"):
-        if datetime.strptime(admin_request, "%I:%M:%S %p").time() < datetime.strptime(employee_clock_in, "%I:%M:%S %p").time():
+        if datetime.strptime(admin_request, "%I:%M:%S %p").time() < datetime.strptime(employee_clock_in,
+                                                                                      "%I:%M:%S %p").time():
             messagebox.showerror("Invalid Timestamp", "Please enter a timestamp after or equal to the clock in time!")
             return
         conn = sqlite3.connect(database_file)
@@ -1591,11 +1685,13 @@ def commit_request(row, employee_clock_in, admin_request, first, last, id):
         clock_in = c.execute("SELECT ClockIn FROM time_clock_entries WHERE Row = @0", (row,)).fetchone()[0]
         ymd = datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
 
-        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE Row = @1", (ymd + " " + formatted_admin_request, row,))
+        c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE Row = @1",
+                  (ymd + " " + formatted_admin_request, row,))
 
         conn.commit()
         conn.close()
-        messagebox.showinfo("Successful!", f"The clock out time for the following employee:\n\"{first} {last}\" (id = \"{id}\")\n has been changed to \"{admin_request}\".")
+        messagebox.showinfo("Successful!",
+                            f"The clock out time for the following employee:\n\"{first} {last}\" (id = \"{id}\")\n has been changed to \"{admin_request}\".")
         requests = get_requests()
         global global_index
         if len(requests["Row"]) == 0:
@@ -1606,20 +1702,24 @@ def commit_request(row, employee_clock_in, admin_request, first, last, id):
             else:
                 display_individual_request(requests, -1)
     else:
-        messagebox.showerror("Invalid Timestamp", "Please re-enter the timestamp in the format of \"HH:MM:SS am/pm\". Here is an example: \"03:47:29 pm\"")
+        messagebox.showerror("Invalid Timestamp",
+                             "Please re-enter the timestamp in the format of \"HH:MM:SS am/pm\". Here is an example: \"03:47:29 pm\"")
     return
+
 
 # This function simply displays that the admin finished resolving all the employee requests and sends the admin back to the main_menu.
 def resolved_all_requests():
     clear_frame(main_menu)
     main_menu_function()
-    messagebox.showinfo("All Requests Successfully Resolved!", "There are no more employee requests. You have successfully resolved all of them.")
+    messagebox.showinfo("All Requests Successfully Resolved!",
+                        "There are no more employee requests. You have successfully resolved all of them.")
+
 
 # The screen that allows the admin to add a new employee.
 def employee_codes__add_new_employee_function():
     clear_frame(main_menu)
-    main_menu.config(text = main_menu["text"] + " > Add New Employee")
-    #main_menu.config(text="Add New Employee")
+    main_menu.config(text=main_menu["text"] + " > Add New Employee")
+    # main_menu.config(text="Add New Employee")
 
     padding = 3
 
@@ -1671,23 +1771,32 @@ def employee_codes__add_new_employee_function():
     max_daily_hours_entry = Entry(main_menu, width=25)
     max_daily_hours_entry.grid(row=6, column=1, pady=padding)
 
-    add_to_database = Button(main_menu, text="Add Employee", command=lambda: add_new_employee(employee_codes__add_new_employee_id.get(), employee_codes__add_new_employee_first_name.get(), employee_codes__add_new_employee_last_name.get(), employee_codes__add_new_employee_department.get(ANCHOR), hourly_pay_entry_widget.get(), ot_allowed_listbox.get(ANCHOR), max_daily_hours_entry.get()))
+    add_to_database = Button(main_menu, text="Add Employee",
+                             command=lambda: add_new_employee(employee_codes__add_new_employee_id.get(),
+                                                              employee_codes__add_new_employee_first_name.get(),
+                                                              employee_codes__add_new_employee_last_name.get(),
+                                                              employee_codes__add_new_employee_department.get(ANCHOR),
+                                                              hourly_pay_entry_widget.get(),
+                                                              ot_allowed_listbox.get(ANCHOR),
+                                                              max_daily_hours_entry.get()))
     add_to_database.grid(row=7, column=0, columnspan=2, pady=padding)
 
     root.bind("<Return>", lambda event=None: add_to_database.invoke())
 
     return_to_employee_codes = Button(main_menu, text="Return to Employees", command=employee_codes_function)
     return_to_employee_codes.grid(row=8, column=0, columnspan=2, pady=padding)
-    
+
     return
+
 
 # Grabs the information that the admin enters to create a new employee and updates the database accordingly.
 def add_new_employee(id, first, last, department, hourly_pay, ot_allowed, max_daily_hours):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
     if id == "" or first == "" or last == "" or department == "" or hourly_pay == "" or ot_allowed == "" or max_daily_hours == "":
-        messagebox.showerror("Empty Field", "Missing 'Id', 'First Name', 'Last Name', 'Department', 'Hourly Pay', 'OT Allowed', or 'Max Daily Hours'")
-        #label_widget.config(text="Missing 'Id', 'First Name', 'Last Name', 'Department', 'Hourly Pay', 'OT Allowed', or 'Max Daily Hours'")
+        messagebox.showerror("Empty Field",
+                             "Missing 'Id', 'First Name', 'Last Name', 'Department', 'Hourly Pay', 'OT Allowed', or 'Max Daily Hours'")
+        # label_widget.config(text="Missing 'Id', 'First Name', 'Last Name', 'Department', 'Hourly Pay', 'OT Allowed', or 'Max Daily Hours'")
         return
     else:
         try:
@@ -1695,12 +1804,13 @@ def add_new_employee(id, first, last, department, hourly_pay, ot_allowed, max_da
             float(max_daily_hours)
         except ValueError:
             messagebox.showerror("Invalid Field", "'Hourly Pay' and 'Max Daily Hours' must be numbers!")
-            #label_widget.config(text="'Hourly Pay' and 'Max Daily Hours' must be numbers!")
+            # label_widget.config(text="'Hourly Pay' and 'Max Daily Hours' must be numbers!")
             return
 
     result = ""
     try:
-        c.execute(f"INSERT INTO employees(ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours) VALUES('{id}', '{first}', '{last}', '{department}', '{hourly_pay}', '{ot_allowed}', '{max_daily_hours}');")
+        c.execute(
+            f"INSERT INTO employees(ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours) VALUES('{id}', '{first}', '{last}', '{department}', '{hourly_pay}', '{ot_allowed}', '{max_daily_hours}');")
 
     except sqlite3.IntegrityError:
         result = "ID already exists"
@@ -1709,12 +1819,13 @@ def add_new_employee(id, first, last, department, hourly_pay, ot_allowed, max_da
     conn.commit()
     conn.close()
     messagebox.showinfo("Successful!", result)
-    #label_widget.config(text=result)
+    # label_widget.config(text=result)
+
 
 # The screen that allows the admin to edit the information of a certain employee.
 def employee_codes__edit_function():
     clear_frame(main_menu)
-    main_menu.config(text = main_menu["text"] + " > Edit")
+    main_menu.config(text=main_menu["text"] + " > Edit")
 
     id_label_widget = Label(main_menu, text="Enter Employee ID to Edit", font=("Arial", 15), pady=10)
     id_label_widget.grid(row=0, column=0, columnspan=2)
@@ -1722,11 +1833,13 @@ def employee_codes__edit_function():
     id_entry_widget = Entry(main_menu, width=25)
     id_entry_widget.grid(row=1, column=0, columnspan=2, pady=10)
 
-    #error_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
-    #confirmation_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
-    #confirmation_message.grid(row=11, column=0, columnspan=2)
+    # error_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
+    # confirmation_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
+    # confirmation_message.grid(row=11, column=0, columnspan=2)
 
-    edit_button = Button(main_menu, text="Edit", command=lambda: employee_codes__edit__edit_button(id_entry_widget.get(), return_to_employee_codes))
+    edit_button = Button(main_menu, text="Edit",
+                         command=lambda: employee_codes__edit__edit_button(id_entry_widget.get(),
+                                                                           return_to_employee_codes))
     edit_button.grid(row=3, column=0, columnspan=2)
 
     root.bind("<Return>", lambda event=None: edit_button.invoke())
@@ -1736,11 +1849,11 @@ def employee_codes__edit_function():
 
     return
 
+
 # A sub-sub button within the main_menu that allows the admin to edit information of a specific employee.
 def employee_codes__edit__edit_button(id, return_button):
     return_button.grid_forget()
-    #confirmation_message.config(text="")
-    
+    # confirmation_message.config(text="")
 
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
@@ -1748,11 +1861,11 @@ def employee_codes__edit__edit_button(id, return_button):
     try:
         emp_info = c.execute(f"SELECT * FROM employees WHERE ID = @0;", (id,)).fetchone()
     except Exception as e:
-        #error_message.destroy()
+        # error_message.destroy()
         return_button.grid(row=10, column=0, columnspan=2, pady=10)
         messagebox.showerror("Error", str(e))
-        #confirmation_message.config(text="Error: " + str(e))
-        #confirmation_message.grid(row=11, column=0, columnspan=2)
+        # confirmation_message.config(text="Error: " + str(e))
+        # confirmation_message.grid(row=11, column=0, columnspan=2)
         conn.commit()
         conn.close()
         return
@@ -1764,7 +1877,8 @@ def employee_codes__edit__edit_button(id, return_button):
     first_name_entry_widget = Entry(main_menu, width=18)
     last_name_label_widget = Label(main_menu, text="Last: ", font=("Arial", 15), pady=padding)
     last_name_entry_widget = Entry(main_menu, width=18)
-    deparment_label_widget = Label(main_menu, text="Department ('MG', 'MK', 'PD', 'CL'): ", font=("Arial", 15), pady=padding)
+    deparment_label_widget = Label(main_menu, text="Department ('MG', 'MK', 'PD', 'CL'): ", font=("Arial", 15),
+                                   pady=padding)
     department_entry_widget = Entry(main_menu, width=18)
     hourly_pay_label_widget = Label(main_menu, text="Hourly Pay: ", font=("Arial", 15), pady=padding)
     hourly_pay_entry_widget = Entry(main_menu, width=18)
@@ -1773,20 +1887,19 @@ def employee_codes__edit__edit_button(id, return_button):
     max_daily_hours_label_widget = Label(main_menu, text="Max Daily Hours: ", font=("Arial", 15), pady=padding)
     max_daily_hours_entry_widget = Entry(main_menu, width=18)
     commit_changes = Button(main_menu, text="Commit Changes")
-    
-    #error_message = Label(main_menu, font=("Arial", 15), pady=10)
-    #confirmation_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
-    #confirmation_message.grid(row=11, column=0, columnspan=2)
 
+    # error_message = Label(main_menu, font=("Arial", 15), pady=10)
+    # confirmation_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
+    # confirmation_message.grid(row=11, column=0, columnspan=2)
 
     if emp_info is not None:
-        #error_message.grid_forget()
-        #error_message.destroy()
-        #confirmation_message.destroy()
-        #confirmation_message.config(text="")
-        
-        #confirmation_message.destroy()
-        #clear([error_message, id_label_widget, first_name_label_widget, last_name_label_widget, deparment_label_widget], [commit_changes], False, [])
+        # error_message.grid_forget()
+        # error_message.destroy()
+        # confirmation_message.destroy()
+        # confirmation_message.config(text="")
+
+        # confirmation_message.destroy()
+        # clear([error_message, id_label_widget, first_name_label_widget, last_name_label_widget, deparment_label_widget], [commit_changes], False, [])
 
         id_label_widget.grid(row=4, column=0, sticky=E)
 
@@ -1810,7 +1923,7 @@ def employee_codes__edit__edit_button(id, return_button):
         department_entry_widget.grid(row=7, column=1, sticky=W, pady=padding)
         department_entry_widget.insert(END, emp_info[3])
 
-        #department_listbox_widget.event_generate("<<ListboxSelect>>")
+        # department_listbox_widget.event_generate("<<ListboxSelect>>")
 
         hourly_pay_label_widget.grid(row=8, column=0, sticky=NE)
 
@@ -1826,22 +1939,24 @@ def employee_codes__edit__edit_button(id, return_button):
         max_daily_hours_entry_widget.grid(row=10, column=1, sticky=W)
         max_daily_hours_entry_widget.insert(END, emp_info[6])
 
+        # confirmation_message.grid(row=11, column=0, columnspan=2)
 
-
-
-
-        
-        #confirmation_message.grid(row=11, column=0, columnspan=2)
-
-        #department_listbox_widget.curselection()
+        # department_listbox_widget.curselection()
         #                                                                                       old_id, new_id,             new_first,                      new_last,                   new_department,                 new_hourly_pay,                 new_ot_allowed,                 new_max_daily_hours
-        commit_changes.config(command=lambda: employee_codes__edit__edit_button__commit_changes(id, id_entry_widget.get(), first_name_entry_widget.get(), last_name_entry_widget.get(), department_entry_widget.get(), hourly_pay_entry_widget.get(), ot_allowed_entry_widget.get(), max_daily_hours_entry_widget.get()))
+        commit_changes.config(
+            command=lambda: employee_codes__edit__edit_button__commit_changes(id, id_entry_widget.get(),
+                                                                              first_name_entry_widget.get(),
+                                                                              last_name_entry_widget.get(),
+                                                                              department_entry_widget.get(),
+                                                                              hourly_pay_entry_widget.get(),
+                                                                              ot_allowed_entry_widget.get(),
+                                                                              max_daily_hours_entry_widget.get()))
         commit_changes.grid(row=11, column=0, columnspan=2, pady=padding)
 
         root.bind("<Return>", lambda event=None: commit_changes.invoke())
 
         return_button.grid(row=12, column=0, columnspan=2, pady=padding)
-        
+
     else:
         clear_frame(main_menu)
 
@@ -1853,7 +1968,9 @@ def employee_codes__edit__edit_button(id, return_button):
         id_entry_widget = Entry(main_menu, width=25)
         id_entry_widget.grid(row=1, column=0, columnspan=2, pady=10)
 
-        edit_button = Button(main_menu, text="Edit", command=lambda: employee_codes__edit__edit_button(id_entry_widget.get(), return_to_employee_codes))
+        edit_button = Button(main_menu, text="Edit",
+                             command=lambda: employee_codes__edit__edit_button(id_entry_widget.get(),
+                                                                               return_to_employee_codes))
         edit_button.grid(row=2, column=0, columnspan=2)
 
         return_to_employee_codes = Button(main_menu, text="Return to Employees", command=employee_codes_function)
@@ -1863,27 +1980,23 @@ def employee_codes__edit__edit_button(id, return_button):
         # error_message = Label(main_menu, text="ID '" + id + "' Does Not Exist", font=("Arial", 15), pady=10)
         # error_message.grid(row=4, column=0, columnspan=2)
 
-        #confirmation_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
-        #confirmation_message.grid(row=11, column=0, columnspan=2)
-
-        
+        # confirmation_message = Label(main_menu, text="", font=("Arial", 15), pady=10)
+        # confirmation_message.grid(row=11, column=0, columnspan=2)
 
         root.bind("<Return>", lambda event=None: edit_button.invoke())
 
-        
-        
         conn.commit()
         conn.close()
         return
-    
-    
 
     conn.commit()
     conn.close()
     return
 
+
 # This function funnels in information from employee_codes__edit_function(), (whatever info the admin modifies), and commits those changes to the database.
-def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first, new_last, new_department, new_hourly_pay, new_ot_allowed, new_max_daily_hours):
+def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first, new_last, new_department,
+                                                      new_hourly_pay, new_ot_allowed, new_max_daily_hours):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
@@ -1909,15 +2022,17 @@ def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first,
     #         return
 
     try:
-        
-        
+
         departments = ["MG", "MK", "PD", "CL"]
         ot_responses = ["Yes", "No"]
-        
-        if new_id == "" or new_first == "" or new_last == "" or (new_department not in departments) or new_hourly_pay == "" or (new_ot_allowed not in ot_responses) or new_max_daily_hours == "":
-            messagebox.showerror("Empty Field", "Missing 'Id', 'First Name', 'Last Name', valid 'Department', 'Hourly Pay', valid 'OT Allowed', or 'Max Daily Hours'")
-            #confirmation_message.config(text="Missing 'Id', 'First Name', 'Last Name', valid 'Department', 'Hourly Pay', valid 'OT Allowed', or 'Max Daily Hours'")
-            #confirmation_message.grid(row=13, column=0, columnspan=2)
+
+        if new_id == "" or new_first == "" or new_last == "" or (
+                new_department not in departments) or new_hourly_pay == "" or (
+                new_ot_allowed not in ot_responses) or new_max_daily_hours == "":
+            messagebox.showerror("Empty Field",
+                                 "Missing 'Id', 'First Name', 'Last Name', valid 'Department', 'Hourly Pay', valid 'OT Allowed', or 'Max Daily Hours'")
+            # confirmation_message.config(text="Missing 'Id', 'First Name', 'Last Name', valid 'Department', 'Hourly Pay', valid 'OT Allowed', or 'Max Daily Hours'")
+            # confirmation_message.grid(row=13, column=0, columnspan=2)
             return
         else:
             try:
@@ -1931,9 +2046,10 @@ def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first,
 
         edited_info = ""
         # "s" = string, "f" = float, "m" = $float
-        types =    ["s", "s", "s", "s", "m", "s", "f"]
-        #old_info = [emp_info[0], emp_info[1], emp_info[2], emp_info[3], emp_info[4], emp_info[5], emp_info[6]]
-        displayed_labels_for_changes = ["ID", "First Name", "Last Name", "Department", "Hourly Pay", "OT Allowed", "Max Daily Hours"]
+        types = ["s", "s", "s", "s", "m", "s", "f"]
+        # old_info = [emp_info[0], emp_info[1], emp_info[2], emp_info[3], emp_info[4], emp_info[5], emp_info[6]]
+        displayed_labels_for_changes = ["ID", "First Name", "Last Name", "Department", "Hourly Pay", "OT Allowed",
+                                        "Max Daily Hours"]
         new_info = [new_id, new_first, new_last, new_department, new_hourly_pay, new_ot_allowed, new_max_daily_hours]
 
         for type, label, old, new in zip(types, displayed_labels_for_changes, emp_info, new_info):
@@ -1949,52 +2065,54 @@ def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first,
 
         if edited_info == "":
             messagebox.showinfo("No Changes", "No modifications were made. All information already matched.")
-            #confirmation_message.config(text="No modifications made")
+            # confirmation_message.config(text="No modifications made")
         else:
             employees_table_update = f"UPDATE employees SET ID = '{new_id}', FirstName = '{new_first}', LastName = '{new_last}', Department = '{new_department}', HourlyPay = '{new_hourly_pay}', OTAllowed = '{new_ot_allowed}', MaxDailyHours = '{new_max_daily_hours}' WHERE ID = '{old_id}';"
             time_clock_entries_table_update = f"UPDATE time_clock_entries SET empID = '{new_id}' WHERE empID = '{old_id}';"
             employee_tasks_table_update = f"UPDATE employee_tasks SET employee_id = '{new_id}' WHERE employee_id = '{old_id}';"
-            updated_table_query_array = [employees_table_update, time_clock_entries_table_update, employee_tasks_table_update]
+            updated_table_query_array = [employees_table_update, time_clock_entries_table_update,
+                                         employee_tasks_table_update]
             for updated_table_query in updated_table_query_array:
                 c.execute(updated_table_query)
             conn.commit()
             conn.close()
             messagebox.showinfo("Successful", old_id + "' was edited at " + current_time + "!\n" + edited_info)
-            #confirmation_message.config(text="Successful! '" + old_id + "' was edited at " + current_time + "!\n" + edited_info)
+            # confirmation_message.config(text="Successful! '" + old_id + "' was edited at " + current_time + "!\n" + edited_info)
 
     except Exception as e:
         if str(e) == "'NoneType' object is not iterable":
             messagebox.showerror("Invalid ID", f"ID '{old_id}' could not be found. You may have changed it.")
-            #confirmation_message.config(text=f"ID '{old_id}' could not be found. You may have changed it.")
+            # confirmation_message.config(text=f"ID '{old_id}' could not be found. You may have changed it.")
         else:
-            messagebox.showerror("Unknown Error", "Unsuccessful. " + old_id + " was not edited at " + current_time + " due to the following error: " + str(e))
-            #confirmation_message.config(text="Unsuccessful. " + old_id + " was not edited at " + current_time + " due to the following error: " + str(e))
-        #confirmation_message.grid(row=11, column=0, columnspan=2)
-    #else:
-        # edited_info = ""
-        # new_info = [new_id, new_first, new_last, new_department, new_hourly_pay]
+            messagebox.showerror("Unknown Error",
+                                 "Unsuccessful. " + old_id + " was not edited at " + current_time + " due to the following error: " + str(
+                                     e))
+            # confirmation_message.config(text="Unsuccessful. " + old_id + " was not edited at " + current_time + " due to the following error: " + str(e))
+        # confirmation_message.grid(row=11, column=0, columnspan=2)
+    # else:
+    # edited_info = ""
+    # new_info = [new_id, new_first, new_last, new_department, new_hourly_pay]
 
-        # for old, new in zip(emp_info, new_info):
-        #     if str(old) != str(new):
-        #         edited_info += "'" + str(old) + "' => '" + str(new) + "'\n"
+    # for old, new in zip(emp_info, new_info):
+    #     if str(old) != str(new):
+    #         edited_info += "'" + str(old) + "' => '" + str(new) + "'\n"
 
-        # if edited_info == "":
-        #     confirmation_message.config(text="No modifications made")
-        # else:
-        #     confirmation_message.config(text="Successful! '" + old_id + "' was edited at " + current_time + "!\n" + edited_info)
-        #confirmation_message.grid(row=11, column=0, columnspan=2)
-    #confirmation_message.grid(row=13, column=0, columnspan=2)
+    # if edited_info == "":
+    #     confirmation_message.config(text="No modifications made")
+    # else:
+    #     confirmation_message.config(text="Successful! '" + old_id + "' was edited at " + current_time + "!\n" + edited_info)
+    # confirmation_message.grid(row=11, column=0, columnspan=2)
+    # confirmation_message.grid(row=13, column=0, columnspan=2)
 
-    
     return
+
 
 # The screen that the admin can delete employees from.
 def employee_codes__delete_function():
-
-    #global_confirmation_text
+    # global_confirmation_text
 
     clear_frame(main_menu)
-    main_menu.config(text = main_menu["text"] + " > Delete")
+    main_menu.config(text=main_menu["text"] + " > Delete")
 
     id_label_widget = Label(main_menu, text="Enter Employee Id to Delete", font=("Arial", 15), pady=10)
     id_label_widget.grid(row=0, column=0, columnspan=2)
@@ -2002,7 +2120,8 @@ def employee_codes__delete_function():
     id_entry_widget = Entry(main_menu, width=25)
     id_entry_widget.grid(row=1, column=0, columnspan=2, pady=10)
 
-    delete_button = Button(main_menu, text="Delete", command=lambda: employee_codes__delete_function__delete_button(id_entry_widget.get()))
+    delete_button = Button(main_menu, text="Delete",
+                           command=lambda: employee_codes__delete_function__delete_button(id_entry_widget.get()))
     delete_button.grid(row=2, column=0, columnspan=2, pady=10)
 
     root.bind("<Return>", lambda event=None: delete_button.invoke())
@@ -2010,6 +2129,7 @@ def employee_codes__delete_function():
     return_to_employee_codes = Button(main_menu, text="Return to Employees", command=employee_codes_function)
     return_to_employee_codes.grid(row=3, column=0, columnspan=2, pady=10)
     return
+
 
 # Deletes the specific employee entered by the admin from employee_codes__delete_function()
 def employee_codes__delete_function__delete_button(id):
@@ -2021,11 +2141,12 @@ def employee_codes__delete_function__delete_button(id):
     try:
         if name == None:
             messagebox.showerror("Invalid ID", f"An employee with the id of \"{id}\" does not exist. Please try again.")
-            #global_confirmation_text.set("'" + id + "' Does Not Exist.")
+            # global_confirmation_text.set("'" + id + "' Does Not Exist.")
             conn.commit()
             conn.close()
             return
-        response = messagebox.askyesno("Warning!", f"Are you sure you'd like to delete the employee, \"{name[0]} {name[1]}\", and all his/her data? This action is irreversible.")
+        response = messagebox.askyesno("Warning!",
+                                       f"Are you sure you'd like to delete the employee, \"{name[0]} {name[1]}\", and all his/her data? This action is irreversible.")
         if response:
             c.execute("DELETE FROM employees WHERE ID = '" + id + "';")
             c.execute("DELETE FROM time_clock_entries WHERE empID = '" + id + "';")
@@ -2045,19 +2166,23 @@ def employee_codes__delete_function__delete_button(id):
     conn.close()
     return
 
+
 # The admin screen where employees and all their information can be viewed. This creates another sub-menu with the option of viewing employee info and viewing timeclock entry info.
 def employee_codes__view_function():
-    fill_frame(main_menu, [["Employees", employee_codes__view_function__view_employees], ["Timeclock Entries", employee_codes__view_function__view_timeclock_entries]], "Main Menu > Employees > View", ["Employees", employee_codes_function])
+    fill_frame(main_menu, [["Employees", employee_codes__view_function__view_employees],
+                           ["Timeclock Entries", employee_codes__view_function__view_timeclock_entries]],
+               "Main Menu > Employees > View", ["Employees", employee_codes_function])
     # return_to_main_menu = Button(main_menu, text="Return to Employee Codes", command=employee_codes_function)
     # return_to_main_menu.grid(row=num_of_menu_items, column=0, columnspan=2, pady=10)
     return
+
 
 # The admin screen where employee information can be viewed.
 def employee_codes__view_function__view_employees():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text = "Main Menu > Employees > View > Employees")
+    main_menu.config(text="Main Menu > Employees > View > Employees")
 
     clear_frame(main_menu)
 
@@ -2068,7 +2193,8 @@ def employee_codes__view_function__view_employees():
     hourly_pay_label = Label(main_menu, text="")
     ot_allowed_label = Label(main_menu, text="")
     max_daily_hours_label = Label(main_menu, text="")
-    master_label_array = [id_label, first_name_label, last_name_label, department_label, hourly_pay_label, ot_allowed_label, max_daily_hours_label]
+    master_label_array = [id_label, first_name_label, last_name_label, department_label, hourly_pay_label,
+                          ot_allowed_label, max_daily_hours_label]
 
     id = "ID\n-------------\n\n"
     first_name = "First Name\n-------------\n\n"
@@ -2085,7 +2211,7 @@ def employee_codes__view_function__view_employees():
         for item, db_fields_counter in zip(record, range(len(record))):
             master_field_array[db_fields_counter] += str(item) + "\n"
 
-    #print(master_field_array)
+    # print(master_field_array)
     next_column = 0
     for label, field, column_counter in zip(master_label_array, master_field_array, range(len(master_label_array))):
         label.config(text=field)
@@ -2098,18 +2224,17 @@ def employee_codes__view_function__view_employees():
 
     root.bind("<Return>", lambda event=None: button.invoke())
 
-
-
     conn.commit()
     conn.close()
     return
+
 
 # The admin screen where timeclock entry info can be viewed. The scrollbar was especially hard!
 def employee_codes__view_function__view_timeclock_entries():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    main_menu.config(text = "Main Menu > Employees > View > Timeclock Entries")
+    main_menu.config(text="Main Menu > Employees > View > Timeclock Entries")
 
     clear_frame(main_menu)
 
@@ -2120,7 +2245,7 @@ def employee_codes__view_function__view_timeclock_entries():
 
     canvas = Canvas(main_frame)
     canvas.pack(side=LEFT, fill=BOTH, expand=1)
-    
+
     scrollbar = ttk.Scrollbar(main_frame, orient=VERTICAL, command=canvas.yview)
     scrollbar.pack(side=LEFT, fill=Y)
 
@@ -2129,16 +2254,16 @@ def employee_codes__view_function__view_timeclock_entries():
 
     second_frame = Frame(canvas)
 
-    canvas.create_window((0,0), window=second_frame, anchor="nw")
+    canvas.create_window((0, 0), window=second_frame, anchor="nw")
 
-    #row_label = Label(second_frame, text="")
+    # row_label = Label(second_frame, text="")
     emp_id_label = Label(second_frame, text="")
     clock_in_label = Label(second_frame, text="")
     clock_out_label = Label(second_frame, text="")
     requests_label = Label(second_frame, text="")
     master_label_array = [emp_id_label, clock_in_label, clock_out_label, requests_label]
 
-    #row = "Row\n-------------\n\n"
+    # row = "Row\n-------------\n\n"
     id = "ID\n-------------\n\n"
     clock_in = "Clock In\n-------------\n\n"
     clock_out = "Clock Out\n-------------\n\n"
@@ -2146,20 +2271,23 @@ def employee_codes__view_function__view_timeclock_entries():
     master_field_array = [id, clock_in, clock_out, request]
 
     for record, r in zip(data, range(len(data))):
-        #master_field_array[0] += str(r+1) + "\n\n"
+        # master_field_array[0] += str(r+1) + "\n\n"
         for item, db_fields_counter in zip(record, range(len(record))):
             if db_fields_counter == 1 and item != "FORGOT" and item is not None:
-                master_field_array[db_fields_counter] += datetime.strptime(item, "%Y-%m-%d %H:%M:%S").strftime("%m/%d/%y %I:%M:%S %p") + "\n\n"
+                master_field_array[db_fields_counter] += datetime.strptime(item, "%Y-%m-%d %H:%M:%S").strftime(
+                    "%m/%d/%y %I:%M:%S %p") + "\n\n"
             elif db_fields_counter == 2 and item != "FORGOT" and item is not None:
-                master_field_array[db_fields_counter] += datetime.strptime(item, "%Y-%m-%d %H:%M:%S").strftime("%I:%M:%S %p") + "\n\n"
+                master_field_array[db_fields_counter] += datetime.strptime(item, "%Y-%m-%d %H:%M:%S").strftime(
+                    "%I:%M:%S %p") + "\n\n"
             elif db_fields_counter == 3:
                 if item is None:
                     master_field_array[db_fields_counter] += "\n\n"
                 else:
-                    master_field_array[db_fields_counter] += datetime.strptime(item[11:], "%H:%M:%S").strftime("%I:%M:%S %p") + "\n\n"
+                    master_field_array[db_fields_counter] += datetime.strptime(item[11:], "%H:%M:%S").strftime(
+                        "%I:%M:%S %p") + "\n\n"
             else:
                 master_field_array[db_fields_counter] += str(item) + "\n\n"
-    
+
     for label, field, column_counter in zip(master_label_array, master_field_array, range(len(master_label_array))):
         label.config(text=field)
         label.grid(row=0, column=column_counter)
@@ -2174,35 +2302,19 @@ def employee_codes__view_function__view_timeclock_entries():
     return
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Selects an employee's task on a given date.
 def selectTask(emp_id, task_date, format):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
-    task = c.execute("SELECT task FROM employee_tasks WHERE employee_id = '" + emp_id + "' AND task_date = '" + str(datetime.strptime(task_date, format).strftime("%m/%d/%Y")) + "';").fetchone()
+    task = c.execute("SELECT task FROM employee_tasks WHERE employee_id = '" + emp_id + "' AND task_date = '" + str(
+        datetime.strptime(task_date, format).strftime("%m/%d/%Y")) + "';").fetchone()
     conn.commit()
     conn.close()
     if task != None:
         return task[0]
     else:
         return "You don't have any tasks!"
+
 
 # Grabs the current period's date range (for calculation use).
 def getPeriodDays():
@@ -2212,17 +2324,18 @@ def getPeriodDays():
     month = current_date[0:2]
     year = current_date[6:8]
     num_of_days_in_month = monthrange(datetime.now().year, int(month))[1]
-    #mm/dd/yy
+    # mm/dd/yy
     if day >= 1 and day < 16:
-        for i in range(1, day+1):
+        for i in range(1, day + 1):
             if i < 10:
                 result_str.append(month + "/0" + str(i) + "/" + year)
             else:
                 result_str.append(month + "/" + str(i) + "/" + year)
     else:
-        for i in range(16, day+1):
+        for i in range(16, day + 1):
             result_str.append(month + "/" + str(i) + "/" + year)
     return result_str
+
 
 # Returns an array of dates in a period depending on what period a given date is in.
 def getPeriodFromDateString(date_string, format):
@@ -2232,13 +2345,13 @@ def getPeriodFromDateString(date_string, format):
     month = date[0:2]
     year = date[6:8]
     if day >= 1 and day < 16:
-        for i in range(1, day+1):
+        for i in range(1, day + 1):
             if i < 10:
                 result_array_of_str_dates.append(month + "/0" + str(i) + "/" + year)
             else:
                 result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
     else:
-        for i in range(16, day+1):
+        for i in range(16, day + 1):
             result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
     return result_array_of_str_dates
 
@@ -2246,15 +2359,14 @@ def getPeriodFromDateString(date_string, format):
 # %Y means 2021, %y means 21
 
 
-
-#Fix later
+# Fix later
 # def getAllEmployeeHours(start, end, entered_format, result_format):
 
 #     employee_hours_button.config(command=lambda: clear([employee_list_label, employee_hours_label], [], False, [[employee_hours_button, getAllEmployeeHours]]))
 
 #     conn = sqlite3.connect(database_file)
 #     c = conn.cursor()
-    
+
 
 #     employees_table = c.execute("SELECT * FROM employees;").fetchall()
 
@@ -2270,42 +2382,43 @@ def getPeriodFromDateString(date_string, format):
 #         employee_list_string += record[1] + " " + record[2] + "\n\n"  
 #         for single_date in array_of_dates:
 #             employee_hours_string += str(getTotalEmployeeHours(single_date, result_format, str(id))) + "\n\n"
-                            
+
 #     employee_list_label.config(text=employee_list_string)
 #     employee_hours_label.config(text=employee_hours_string)
-    
 
-    
+
 # Grabs an employees raw employee hours for a certain date. It simply subtracts the clock in timestamp from the clock out timestamp in the database. If an employee forgot
 # to clock out, it make the duration for that record 0.
 def getRawTotalEmployeeHours(entered_date, format, id):
-    #Other commented version: getRawTotalEmployeeHours(start, end, id):
+    # Other commented version: getRawTotalEmployeeHours(start, end, id):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "' AND ClockIn LIKE '%" + str(datetime.strptime(entered_date, format).strftime("%Y-%m-%d")) + "%';").fetchall()
+    time_in_out_records = c.execute(
+        "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "' AND ClockIn LIKE '%" + str(
+            datetime.strptime(entered_date, format).strftime("%Y-%m-%d")) + "%';").fetchall()
 
     total_seconds = 0
     for record in time_in_out_records:
-        t0 = datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").timestamp()        
+        t0 = datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").timestamp()
         if record[1] is not None:
             if record[1] == "FORGOT":
-                #t1 = t0
+                # t1 = t0
                 continue
             else:
                 t1 = datetime.strptime(record[1], "%Y-%m-%d %H:%M:%S").timestamp()
         else:
             # t1 = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f").timestamp()
-            #t1 = t0
-            continue   
+            # t1 = t0
+            continue
         total_seconds += t1 - t0
     employee_hours = total_seconds / 3600
     conn.close()
     return employee_hours
 
+
 # Grabs the result from getRawTotalEmployeeHours(), calculates an employee's total break time for the day, and contains logic to return an employee's total hours for the day accounting for breaks.
 def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
-
     total_period_hours = getRawTotalEmployeeHours(entered_date, format, id)
 
     formatted_entered_date = str(datetime.strptime(entered_date, format).strftime("%Y-%m-%d"))
@@ -2313,7 +2426,8 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "' AND ClockIn LIKE '%" + formatted_entered_date + "%';").fetchall()
+    time_in_out_records = c.execute(
+        "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "' AND ClockIn LIKE '%" + formatted_entered_date + "%';").fetchall()
 
     conn.close()
 
@@ -2321,7 +2435,7 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
     for record in range(len(time_in_out_records)):
         if record < len(time_in_out_records) - 1:
             out_to_lunch = datetime.strptime(time_in_out_records[record][1], "%Y-%m-%d %H:%M:%S").timestamp()
-            back_from_lunch = datetime.strptime(time_in_out_records[record+1][0], "%Y-%m-%d %H:%M:%S").timestamp()
+            back_from_lunch = datetime.strptime(time_in_out_records[record + 1][0], "%Y-%m-%d %H:%M:%S").timestamp()
             total_break_seconds += back_from_lunch - out_to_lunch
 
     # total_break_seconds = 0
@@ -2333,9 +2447,7 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
     #     clock_out = datetime.strptime(previous_record[1], "%Y-%m-%d %H:%M:%S").timestamp()
     #     clock_in = datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").timestamp()
     #     total_break_seconds += clock_in - clock_out
-        
-    
-    
+
     # total_break_hours = round(total_break_seconds / 3600, 3)
     # print("Total Break Seconds:", total_break_seconds)
     total_break_hours = total_break_seconds / 3600
@@ -2347,6 +2459,7 @@ def getTotalDailyHoursAccountingForBreaks(entered_date, format, id):
             return total_period_hours - (.5 - total_break_hours)
     else:
         return total_period_hours
+
 
 # Uses the result from getTotalDailyHoursAccountingForBreaks() in order to calculate an employee's total paid employee hours in a specific range of dates.
 def calculateTotalPaidEmpHours(start_date, end_date, entered_format, id):
@@ -2377,7 +2490,6 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     ot_allowed = ot_allowed[0].lower()
     hourly_pay = hourly_pay[0]
 
-
     regular_hours = 0
     overtime_hours = 0
     double_time_hours = 0
@@ -2407,12 +2519,12 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
 
     total_pay = round(regular_pay + overtime_pay + double_time_pay, 2)
     total_hours = round(calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0], 2)
-    
+
     # Uncomment the following to check if total_hours is correct.
     # if total_hours != round(regular_hours + overtime_hours + double_time_hours, 2):
     #     print("ID", id, ":", "WRONG Hours")
 
-    #returned_array = [total_pay, [regular_hours, overtime_hours, double_time_hours], [regular_pay, overtime_pay, double_time_pay]]
+    # returned_array = [total_pay, [regular_hours, overtime_hours, double_time_hours], [regular_pay, overtime_pay, double_time_pay]]
 
     dictionary = {
         "ID": id,
@@ -2429,17 +2541,6 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
 
     return dictionary
 
-    
-
-
-
-
-        
-
-    
-
-
-
     # The following works, however, since I fixed the time clock entries such that they can only be on the same day, all the nested if statements aren't necessary.
     # start_date = datetime.strptime(start, "%m/%d/%y").timestamp()
     # print(start_date)
@@ -2454,7 +2555,7 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     #     t1 = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f").timestamp()
     #     if time_record[1] is not None:
     #         t1 = datetime.strptime(time_record[1], "%Y-%m-%d %H:%M:%S").timestamp()
-                
+
     #     if end_date > start_date and t1 > t0:
     #         if t0 >= start_date and t1 <= end_date:
     #             total_seconds += t1 - t0
@@ -2471,7 +2572,7 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     #         elif start_date > t1 and end_date > t1:
     #             total_seconds += end_date - start_date
     #             print("5: " + str(total_seconds))
-                
+
     # employee_hours = round(total_seconds / 3600, 8)
 
     # conn.commit()
@@ -2479,14 +2580,7 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     # return employee_hours
 
 
-
-
-#clear([start_date_label, end_date_label], )
-
-
-
-
-
+# clear([start_date_label, end_date_label], )
 
 
 # Clears the text of a widget.
@@ -2494,9 +2588,7 @@ def clear_widget_text(widget):
     widget['text'] = ""
 
 
-
 global_confirmation_text = StringVar()
-
 
 # The static main screen.
 day_of_week = Label(root, text="", font=("Arial", 25), fg="blue", pady=45)
@@ -2508,21 +2600,20 @@ program_clock.place(relx=.825, rely=0.0, anchor=N)
 day_time_greeting = Label(root, text="", font=("Arial", 25), fg="blue")
 day_time_greeting.place(relx=0.5, rely=0.13, anchor=N)
 
-Label(root, text="Enter your Employee ID and hit the Enter Key to Log In/Out,\n\nthen hit the Clear Button to clear the screen after viewing", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
+Label(root,
+      text="Enter your Employee ID and hit the Enter Key to Log In/Out,\n\nthen hit the Clear Button to clear the screen after viewing",
+      font=("Arial", 12), fg="black").place(relx=0.5, rely=0.20, anchor=N)
 # Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
 
 clock()
-#root.after(1000, clock)
+# root.after(1000, clock)
 greeting_time()
 send_report_if_pay_day()
 
 header = Label(root, text="SBCS\nEmployee Time Clock", font=("Times New Roman", 25, "bold"), pady=22.5)
 header.place(relx=0.5, rely=0.0, anchor=N)
 
-
-
-
-#Employee Widgets:
+# Employee Widgets:
 id_field_label = Label(root, text="ID: ", font=("Arial", 20))
 id_field_label.place(relx=0.39, rely=.28, anchor=N)
 
@@ -2537,10 +2628,9 @@ root.bind("<Return>", lambda event=None: button.invoke())
 greeting = Label(root, text="", font=("Arial", 18))
 greeting.place(relx=.5, rely=.36, anchor=N)
 
-#rely = .35
-#rely = .375
-#rely = .4
-
+# rely = .35
+# rely = .375
+# rely = .4
 
 
 enter_actual_clock_out_time_label = Label(root, text="", font=("Arial", 18))
@@ -2586,22 +2676,6 @@ employee_task_label.place(relx=.5, rely=.77, anchor=N)
 z_time_clock_label = Label(root, text="ZTimeClock Ver 1.01", font=("Arial", 10))
 z_time_clock_label.place(relx=.945, rely=.97, anchor=N)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # #Admin Widgets:
 
 # #Employee Codes
@@ -2627,11 +2701,9 @@ z_time_clock_label.place(relx=.945, rely=.97, anchor=N)
 
 main_menu = LabelFrame(root, padx=50, pady=25)
 
-
-
 employee_codes_label_for_button = Label(root)
 employee_codes_button = Button(root)
-#Sub buttons
+# Sub buttons
 employee_codes_button__add_new_employee_label_for_button = Label(root)
 employee_codes_button__add_new_employee_button = Button(root)
 employee_codes_button__edit__label_for_button = Label(root)
@@ -2641,35 +2713,12 @@ employee_codes_button__delete_button = Button(root)
 employee_codes_button__view_label_for_button = Label(root)
 employee_codes_button__view_button = Button(root)
 
-
-
-
-
-
 assign_tasks_label_for_button = Label(root)
 assign_tasks_button = Button(root)
 period_totals_label_for_button = Label(root)
 period_totals_button = Button(root)
 historical_totals_label_for_button = Label(root)
 historical_totals_button = Button(root)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # employee_hours_button = Button(root, text="", font=("Arial", 10))
 
@@ -2691,4 +2740,4 @@ historical_totals_button = Button(root)
 # Creates the mainloop of the application to constantly check for input events like clicking a button or entering text in a entry widget.
 root.mainloop()
 
-#[start_date_label, end_date_label, greeting, time_in, time_out, time_duration, employee_list_label, employee_hours_label], [employee_hours_button, employee_start_date, employee_end_date]
+# [start_date_label, end_date_label, greeting, time_in, time_out, time_duration, employee_list_label, employee_hours_label], [employee_hours_button, employee_start_date, employee_end_date]
