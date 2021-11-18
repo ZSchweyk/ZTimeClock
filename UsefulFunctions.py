@@ -1,3 +1,9 @@
+def count_dec_places(num):
+    num_as_str = str(num)
+    dec_index = num_as_str.index(".")
+    dec = num_as_str[dec_index + 1:]
+    return len(dec)
+
 def round_to(num, nrst, limit):
     """
     Rounds a number to the nearest tenth, quarter..., and makes sure to not exceed a given limit.
@@ -21,3 +27,4 @@ print(round_to(80.149, .1, 80.5))
 
 # num = 8.5
 # print(f"{num} = {bin(num)}")
+
