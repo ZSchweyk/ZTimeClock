@@ -9,7 +9,7 @@ def round_to(num, nrst, limit):
 
     if dec_remainder == 0:
         return num
-    if dec_remainder >= nrst / 2:
+    if dec_remainder >= round(nrst / 2, 5):
         rounded_up = int(num) + (dec - dec_remainder) + nrst
         if rounded_up <= limit:
             return round(rounded_up, 5)
