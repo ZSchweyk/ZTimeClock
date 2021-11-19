@@ -1,3 +1,8 @@
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
+import time
+
+
 def count_dec_places(num):
     num_as_str = str(num)
     try:
@@ -6,7 +11,7 @@ def count_dec_places(num):
         return len(dec)
     except:
         return 0
-    
+
 
 def round_to(num, nrst, limit):
     """
@@ -27,8 +32,12 @@ def round_to(num, nrst, limit):
     return round(rounded_down if rounded_down <= limit else limit, 5)
 
 
-print(round_to(80.149, .1, 80.5))
-
-# num = 8.5
-# print(f"{num} = {bin(num)}")
-
+# Creates and returns list of dates in the interval [start, end], both inclusive, as a string array.
+def get_array_of_dates(start, end, entered_format, result_format):
+    start_date = datetime.strptime(start, entered_format)
+    end_date = datetime.strptime(end, entered_format)
+    result_array = [start_date.strftime(result_format)]
+    while start_date < end_date:
+        start_date += timedelta(days=1)
+        result_array.append(start_date.strftime(result_format))
+    return result_array

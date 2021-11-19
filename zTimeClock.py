@@ -319,21 +319,6 @@ def greeting_time():
     day_time_greeting.after(1000, greeting_time)
 
 
-# Subtracts two timestamps as strings in the following format, "%Y-%m-%d %H:%M:%S", and returns the difference.
-def subtract_time(t2, t1):
-    d1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S").timestamp()
-    d2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S").timestamp()
-    return d2 - d1
-
-
-# Adds a list of timestamps in the format of "%H:%M:%S" and returns the sum.
-def add_time_stamps(array):
-    d1 = datetime.strptime(array[0], "%H:%M:%S")
-    for str in range(1, len(array)):
-        d1 += datetime.strptime(str, "%H:%M:%S")
-    return d1
-
-
 # Formats a given number of seconds to hh:mm:ss, and returns the result as a string.
 def format_seconds_to_hhmmss(seconds):
     hours = seconds // (60 * 60)
@@ -2540,47 +2525,6 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     }
 
     return dictionary
-
-    # The following works, however, since I fixed the time clock entries such that they can only be on the same day, all the nested if statements aren't necessary.
-    # start_date = datetime.strptime(start, "%m/%d/%y").timestamp()
-    # print(start_date)
-    # end_date = datetime.strptime(end, "%m/%d/%y").timestamp()
-    # print(end_date)
-
-    # employee_hours = 0
-    # time_in_out_records = c.execute("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + id + "';").fetchall()
-    # total_seconds = 0
-    # for time_record in time_in_out_records:
-    #     t0 = datetime.strptime(time_record[0], "%Y-%m-%d %H:%M:%S").timestamp()
-    #     t1 = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f").timestamp()
-    #     if time_record[1] is not None:
-    #         t1 = datetime.strptime(time_record[1], "%Y-%m-%d %H:%M:%S").timestamp()
-
-    #     if end_date > start_date and t1 > t0:
-    #         if t0 >= start_date and t1 <= end_date:
-    #             total_seconds += t1 - t0
-    #             print("1: " + str(total_seconds))
-    #         elif t0 < start_date and t1 <= end_date:
-    #             total_seconds += t1 - start_date
-    #             print("2: " + str(total_seconds))
-    #         elif t0 >= start_date and t1 > end_date:
-    #             total_seconds += end_date - t0
-    #             print("3: " + str(total_seconds))
-    #         elif start_date < t0 and end_date < t0:
-    #             total_seconds += end_date - start_date
-    #             print("4: " + str(total_seconds))
-    #         elif start_date > t1 and end_date > t1:
-    #             total_seconds += end_date - start_date
-    #             print("5: " + str(total_seconds))
-
-    # employee_hours = round(total_seconds / 3600, 8)
-
-    # conn.commit()
-    # conn.close()
-    # return employee_hours
-
-
-# clear([start_date_label, end_date_label], )
 
 
 # Clears the text of a widget.
