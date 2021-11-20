@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import time
@@ -41,3 +42,23 @@ def get_array_of_dates(start, end, entered_format, result_format):
         start_date += timedelta(days=1)
         result_array.append(start_date.strftime(result_format))
     return result_array
+
+
+# Grabs the current period's date range (for calculation use).
+def get_period_days():
+    result_str = []
+    current_date = time.strftime("%x")
+    day = int(current_date[3:5])
+    month = current_date[0:2]
+    year = current_date[6:8]
+    # mm/dd/yy
+    if 1 <= day < 16:
+        for i in range(1, day + 1):
+            if i < 10:
+                result_str.append(month + "/0" + str(i) + "/" + year)
+            else:
+                result_str.append(month + "/" + str(i) + "/" + year)
+    else:
+        for i in range(16, day + 1):
+            result_str.append(month + "/" + str(i) + "/" + year)
+    return result_str

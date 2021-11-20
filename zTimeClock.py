@@ -603,8 +603,7 @@ def fetch_and_display_task(id):
 
 def employee_max_hours_allowed_on_payday(id):
     current_period_dates = getPeriodDays()
-    emp_worked_hours_for_period = \
-    calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
+    emp_worked_hours_for_period = calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
     print("ID:", id)

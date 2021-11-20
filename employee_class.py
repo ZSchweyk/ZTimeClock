@@ -4,8 +4,6 @@ from datetime import date, datetime, timedelta
 from UsefulFunctions import *
 
 
-
-
 class ZSqlite:
     def __init__(self, db_path):
         self.db_path = db_path
@@ -114,52 +112,43 @@ class Employee:
             array_of_total_hours_per_day.append(day_hours_accounting_for_breaks)
         return total_range_hours, array_of_total_hours_per_day
 
-    # Calculates employee pay, accounting for regular, overtime, and double time hours, and returns the result as a dictionary.
     def get_hours_and_pay(self, start_date, end_date, entered_format):
-        conn = sqlite3.connect(database_file)
-        c = conn.cursor()
+        """
+        Calculates employee pay, accounting for regular, overtime, and double time hours, and returns the result as a dictionary.
 
-        array_of_hours_per_day = self.get_range_hours_accounting_for_breaks(start_date, end_date, entered_format)[1]
+        """
 
-        ot_allowed = c.execute("SELECT OTAllowed FROM employees WHERE ID = @0", (id,)).fetchone()
-        hourly_pay = c.execute("SELECT HourlyPay FROM employees WHERE ID = @0", (id,)).fetchone()
-
-        first, last = c.execute("SELECT FirstName, LastName FROM employees WHERE ID = @0", (id,)).fetchone()
-        conn.commit()
-        conn.close()
-
-        ot_allowed = ot_allowed[0].lower()
-        hourly_pay = hourly_pay[0]
+        array_of_hours_per_day = self.get_range_hours_accounting_for_breaks(start_date, end_date, entered_format)
 
         regular_hours = 0
         overtime_hours = 0
         double_time_hours = 0
-        if ot_allowed == "yes":
-            for hours_per_day in array_of_hours_per_day:
+        if self.ot_allowed == "yes":
+            for hours_per_day in array_of_hours_per_day[1]:
                 if hours_per_day <= 8:
                     regular_hours += hours_per_day
-                elif hours_per_day > 8 and hours_per_day < 12:
+                elif 8 < hours_per_day <= 12:
                     regular_hours += 8
                     overtime_hours += hours_per_day - 8
                 else:
                     regular_hours += 8
                     overtime_hours += 4
                     double_time_hours += hours_per_day - 12
-        elif ot_allowed == "no":
-            regular_hours = calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0]
+        elif self.ot_allowed == "no":
+            regular_hours = array_of_hours_per_day[0]
 
         regular_hours = round(regular_hours, 2)
         overtime_hours = round(overtime_hours, 2)
         double_time_hours = round(double_time_hours, 2)
 
-        hourly_pay = round(hourly_pay, 2)
+        hourly_pay = round(self.hourly_pay, 2)
 
-        regular_pay = round(regular_hours * hourly_pay, 2)
+        regular_pay = round(hourly_pay * regular_hours, 2)
         overtime_pay = round(hourly_pay * 1.5 * overtime_hours, 2)
         double_time_pay = round(hourly_pay * 2 * double_time_hours, 2)
 
         total_pay = round(regular_pay + overtime_pay + double_time_pay, 2)
-        total_hours = round(calculateTotalPaidEmpHours(start_date, end_date, entered_format, id)[0], 2)
+        total_hours = round(array_of_hours_per_day[0], 2)
 
         # Uncomment the following to check if total_hours is correct.
         # if total_hours != round(regular_hours + overtime_hours + double_time_hours, 2):
@@ -168,8 +157,8 @@ class Employee:
         # returned_array = [total_pay, [regular_hours, overtime_hours, double_time_hours], [regular_pay, overtime_pay, double_time_pay]]
 
         dictionary = {
-            "ID": id,
-            "FLast": first[0] + last,
+            "ID": self.emp_id,
+            "FLast": self.first[0] + self.last,
             "Regular Hours": regular_hours,
             "Regular Pay": regular_pay,
             "Overtime Hours": overtime_hours,
@@ -182,6 +171,18 @@ class Employee:
 
         return dictionary
 
+    def employee_max_hours_allowed_on_payday(self):
+        current_period_dates = get_period_days()
+        emp_worked_hours_for_period = self.get_hours_and_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y")["Regular Hours"]
+
+        total_period_hours_allowed = self.max_daily_hours * sum(
+            [datetime.strptime(adate, "%m/%d/%y").isoweekday() < 6 for adate in current_period_dates])
+        total_hours_possible_on_payday = total_period_hours_allowed - emp_worked_hours_for_period
+        if total_hours_possible_on_payday >= self.max_daily_hours:
+            return self.max_daily_hours
+        else:
+            return total_hours_possible_on_payday
+
 
 emp = Employee("E3543")
 print(emp.first)
@@ -192,3 +193,4 @@ print(emp.ot_allowed)
 print(emp.max_daily_hours)
 print(emp.get_raw_day_hours("11/9/21", "%m/%d/%y"))
 print("Total Hours:", emp.get_range_hours_accounting_for_breaks("11/1/21", "11/15/21", "%m/%d/%y")[0])
+print("Hours and Pay:", emp.get_hours_and_pay("11/1/21", "11/15/21", "%m/%d/%y"))
