@@ -33,7 +33,7 @@ class Employee:
     def __init__(self, emp_id):
         self.c = ZSqlite(self.db_path)
         data = self.c.exec_sql(
-            "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = ?",
+            "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = ?;",
             param=(emp_id,), fetch_str="one")
         if data is None: raise Exception(f"Invalid Employee ID: \"{emp_id}\"")
         self.first, self.last, self.department, self.hourly_pay, self.ot_allowed, self.max_daily_hours = data
@@ -171,9 +171,10 @@ class Employee:
 
         return dictionary
 
-    def employee_max_hours_allowed_on_payday(self):
+    def max_hours_allowed_on_payday(self):
         current_period_dates = get_period_days()
-        emp_worked_hours_for_period = self.get_hours_and_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y")["Regular Hours"]
+        emp_worked_hours_for_period = \
+            self.get_hours_and_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y")["Regular Hours"]
 
         total_period_hours_allowed = self.max_daily_hours * sum(
             [datetime.strptime(adate, "%m/%d/%y").isoweekday() < 6 for adate in current_period_dates])
@@ -182,6 +183,19 @@ class Employee:
             return self.max_daily_hours
         else:
             return total_hours_possible_on_payday
+
+    # Selects an employee's task on a given date.
+    def select_task(self, task_date, format):
+        task = self.c.exec_sql("SELECT task FROM employee_tasks WHERE employee_id = ? AND task_date = ?;",
+                                param=(self.emp_id, datetime.strptime(task_date, format).strftime("%m/%d/%Y")),
+                                fetch_str="one")
+        if task is not None:
+            return task[0]
+        else:
+            return "You don't have any tasks!"
+
+    def get_status(self):
+        pass
 
 
 emp = Employee("E3543")
@@ -194,3 +208,5 @@ print(emp.max_daily_hours)
 print(emp.get_raw_day_hours("11/9/21", "%m/%d/%y"))
 print("Total Hours:", emp.get_range_hours_accounting_for_breaks("11/1/21", "11/15/21", "%m/%d/%y")[0])
 print("Hours and Pay:", emp.get_hours_and_pay("11/1/21", "11/15/21", "%m/%d/%y"))
+print("Max Hours Allowed on Payday:", emp.max_hours_allowed_on_payday())
+print("Task:", emp.select_task("11/1/21", "%m/%d/%y"))
