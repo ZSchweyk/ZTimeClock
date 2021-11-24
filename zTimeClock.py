@@ -327,7 +327,8 @@ def format_seconds_to_hhmmss(seconds):
     return "%02i:%02i:%02i" % (hours, minutes, seconds)
 
 
-# Fetches the current time, date, and day of the week, and displays that on the screen. This function waits every 1 second until it calls itself again, as the displayed time changes every second.
+# Fetches the current time, date, and day of the week, and displays it on the screen.
+# This function waits every 1 second until it calls itself again, as the time changes every second.
 def clock():
     hour = time.strftime("%I")
     minute = time.strftime("%M")
