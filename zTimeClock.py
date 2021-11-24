@@ -348,7 +348,6 @@ def clock():
         string = "Good Evening"
 
     day_time_greeting.config(text=string)
-    # day_time_greeting.after(1000, greeting_time)
 
     root.after(1000, clock)
 
