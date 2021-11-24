@@ -304,19 +304,18 @@ def get_all_emp_ids():
 
 
 # This functions displays a specific greeting based on the time of day.
-def greeting_time():
-    global day_time_greeting
-    string = ""
-    hour = int(time.strftime("%H"))
-    if hour < 12:
-        string = "Good Morning"
-    elif hour < 18:
-        string = "Good Afternoon"
-    else:
-        string = "Good Evening"
-
-    day_time_greeting.config(text=string)
-    day_time_greeting.after(1000, greeting_time)
+# def greeting_time():
+#     global day_time_greeting
+#     hour = int(time.strftime("%H"))
+#     if hour < 12:
+#         string = "Good Morning"
+#     elif hour < 18:
+#         string = "Good Afternoon"
+#     else:
+#         string = "Good Evening"
+#
+#     day_time_greeting.config(text=string)
+#     day_time_greeting.after(1000, greeting_time)
 
 
 # Formats a given number of seconds to hh:mm:ss, and returns the result as a string.
@@ -338,7 +337,20 @@ def clock():
     current_date = time.strftime("%x")
     program_clock.config(text=hour + ":" + minute + ":" + second + " " + am_pm)
     day_of_week.config(text=day[:3] + " " + current_date)
-    program_clock.after(1000, clock)
+
+    global day_time_greeting
+    hour = int(time.strftime("%H"))
+    if hour < 12:
+        string = "Good Morning"
+    elif hour < 18:
+        string = "Good Afternoon"
+    else:
+        string = "Good Evening"
+
+    day_time_greeting.config(text=string)
+    # day_time_greeting.after(1000, greeting_time)
+
+    root.after(1000, clock)
 
 
 # Grabs all the week days up until and including the weekday of the passed in date.
@@ -603,7 +615,8 @@ def fetch_and_display_task(id):
 
 def employee_max_hours_allowed_on_payday(id):
     current_period_dates = getPeriodDays()
-    emp_worked_hours_for_period = calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
+    emp_worked_hours_for_period = \
+    calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
     print("ID:", id)
@@ -2550,7 +2563,7 @@ Label(root,
 
 clock()
 # root.after(1000, clock)
-greeting_time()
+#greeting_time()
 send_report_if_pay_day()
 
 header = Label(root, text="SBCS\nEmployee Time Clock", font=("Times New Roman", 25, "bold"), pady=22.5)
