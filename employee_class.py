@@ -195,7 +195,18 @@ class Employee:
             return "You don't have any tasks!"
 
     def get_status(self):
-        pass
+        # "SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;"
+        last_record = self.c.exec_sql(
+            "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+            param=(self.emp_id,),
+            fetch_str="one")
+
+        if last_record is None or (last_record[0] is not None and last_record[1] is not None):
+            # They either haven't ever clocked in or out, or they are clocked out.
+            return False
+        elif last_record[0] is not None and last_record[1] is None:
+            # They are clocked in.
+            return True
 
 
 emp = Employee("E3543")
@@ -210,3 +221,4 @@ print("Total Hours:", emp.get_range_hours_accounting_for_breaks("11/1/21", "11/1
 print("Hours and Pay:", emp.get_hours_and_pay("11/1/21", "11/15/21", "%m/%d/%y"))
 print("Max Hours Allowed on Payday:", emp.max_hours_allowed_on_payday())
 print("Task:", emp.select_task("11/1/21", "%m/%d/%y"))
+print("Status:", emp.get_status())
