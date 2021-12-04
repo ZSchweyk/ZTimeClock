@@ -187,8 +187,8 @@ class Employee:
     # Selects an employee's task on a given date.
     def select_task(self, task_date, format):
         task = self.c.exec_sql("SELECT task FROM employee_tasks WHERE employee_id = ? AND task_date = ?;",
-                                param=(self.emp_id, datetime.strptime(task_date, format).strftime("%m/%d/%Y")),
-                                fetch_str="one")
+                               param=(self.emp_id, datetime.strptime(task_date, format).strftime("%m/%d/%Y")),
+                               fetch_str="one")
         if task is not None:
             return task[0]
         else:
@@ -208,17 +208,27 @@ class Employee:
             # They are clocked in.
             return True
 
+    def get_records(self, start, end, format):
+        total_hours = self.get_range_hours_accounting_for_breaks(start, end, format)[0]
+        # YYYY-MM-DD
+        start_reformatted = datetime.strptime(start, format).strftime("%Y-%m-%d")
+        end_reformatted = datetime.strptime(end, format).strftime("%Y-%m-%d")
+        records = self.c.exec_sql("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND date(ClockIn) BETWEEN ? AND ?;",
+                                  param=(self.emp_id, start_reformatted, end_reformatted), fetch_str="all")
+        return [[clock_in, clock_out, format_seconds_to_hhmmss(datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S").timestamp() - datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").timestamp())] for clock_in, clock_out in records]
+
 
 emp = Employee("E3543")
-print(emp.first)
-print(emp.last)
-print(emp.department)
-print(emp.hourly_pay)
-print(emp.ot_allowed)
-print(emp.max_daily_hours)
-print(emp.get_raw_day_hours("11/9/21", "%m/%d/%y"))
-print("Total Hours:", emp.get_range_hours_accounting_for_breaks("11/1/21", "11/15/21", "%m/%d/%y")[0])
-print("Hours and Pay:", emp.get_hours_and_pay("11/1/21", "11/15/21", "%m/%d/%y"))
-print("Max Hours Allowed on Payday:", emp.max_hours_allowed_on_payday())
-print("Task:", emp.select_task("11/1/21", "%m/%d/%y"))
-print("Status:", emp.get_status())
+# print(emp.first)
+# print(emp.last)
+# print(emp.department)
+# print(emp.hourly_pay)
+# print(emp.ot_allowed)
+# print(emp.max_daily_hours)
+# print(emp.get_raw_day_hours("11/9/21", "%m/%d/%y"))
+# print("Total Hours:", emp.get_range_hours_accounting_for_breaks("11/1/21", "11/15/21", "%m/%d/%y")[0])
+# print("Hours and Pay:", emp.get_hours_and_pay("11/1/21", "11/15/21", "%m/%d/%y"))
+# print("Max Hours Allowed on Payday:", emp.max_hours_allowed_on_payday())
+# print("Task:", emp.select_task("11/1/21", "%m/%d/%y"))
+# print("Status:", emp.get_status())
+print("Records:", emp.get_records("10/1/21", "11/1/21", "%m/%d/%y"))
