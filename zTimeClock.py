@@ -35,7 +35,7 @@ def passable():
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = "C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\"
+program_files_path = r"C:\Users\ZSchw\Documents\MyProjects\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 
@@ -1856,7 +1856,7 @@ def employee_codes__edit__edit_button(id, return_button):
     c = conn.cursor()
 
     try:
-        emp_info = c.execute(f"SELECT * FROM employees WHERE ID = @0;", (id,)).fetchone()
+        emp_info = c.execute(f"SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = @0;", (id,)).fetchone()
     except Exception as e:
         # error_message.destroy()
         return_button.grid(row=10, column=0, columnspan=2, pady=10)
@@ -2004,7 +2004,7 @@ def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first,
 
     current_time = hour + ":" + minute + ":" + second + " " + am_pm
 
-    emp_info = c.execute("SELECT * FROM employees WHERE ID = '" + old_id + "';").fetchone()
+    emp_info = c.execute("SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = '" + old_id + "';").fetchone()
 
     # if new_id == "" or new_first == "" or new_last == "" or new_hourly_pay == "":
     #     confirmation_message.config(text="Missing 'Id', 'First Name', 'Last Name', or 'Hourly Pay'")
@@ -2202,7 +2202,7 @@ def employee_codes__view_function__view_employees():
     max_daily_hours = "Max Daily Hours\n-------------\n\n"
     master_field_array = [id, first_name, last_name, department, hourly_pay, ot_allowed, max_daily_hours]
 
-    data = c.execute("SELECT * FROM employees").fetchall()
+    data = c.execute("SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees").fetchall()
 
     for record in data:
         for item, db_fields_counter in zip(record, range(len(record))):

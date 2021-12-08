@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3.dbapi2 import Error
 from datetime import date, datetime, timedelta
 from UsefulFunctions import *
+from calendar import monthrange
 
 
 class ZSqlite:
@@ -27,16 +28,16 @@ class ZSqlite:
         return query
 
 
-class Employee:
+class Employee():
     db_path = "employee_time_clock.db"
 
     def __init__(self, emp_id):
         self.c = ZSqlite(self.db_path)
         data = self.c.exec_sql(
-            "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = ?;",
+            "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours, Since FROM employees WHERE ID = ?;",
             param=(emp_id,), fetch_str="one")
         if data is None: raise Exception(f"Invalid Employee ID: \"{emp_id}\"")
-        self.first, self.last, self.department, self.hourly_pay, self.ot_allowed, self.max_daily_hours = data
+        self.first, self.last, self.department, self.hourly_pay, self.ot_allowed, self.max_daily_hours, self.since = data
         self.ot_allowed = self.ot_allowed.lower()
         self.emp_id = emp_id
 
@@ -213,12 +214,51 @@ class Employee:
         # YYYY-MM-DD
         start_reformatted = datetime.strptime(start, format).strftime("%Y-%m-%d")
         end_reformatted = datetime.strptime(end, format).strftime("%Y-%m-%d")
-        records = self.c.exec_sql("SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND date(ClockIn) BETWEEN ? AND ?;",
-                                  param=(self.emp_id, start_reformatted, end_reformatted), fetch_str="all")
-        return [[clock_in, clock_out, format_seconds_to_hhmmss(datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S").timestamp() - datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").timestamp())] for clock_in, clock_out in records]
+        records = self.c.exec_sql(
+            "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND date(ClockIn) BETWEEN ? AND ?;",
+            param=(self.emp_id, start_reformatted, end_reformatted), fetch_str="all")
+        return [[clock_in, clock_out, format_seconds_to_hhmmss(
+            datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S").timestamp() - datetime.strptime(clock_in,
+                                                                                              "%Y-%m-%d %H:%M:%S").timestamp())]
+                for clock_in, clock_out in records]
+
+    def get_vac_and_sick(self, from_date="1/1/2000", to_date=datetime.today().strftime("%m/%d/%Y"),
+                         dates_format="%m/%d/%Y"):
+        from_date = datetime.strptime(from_date, dates_format)
+        to_date = datetime.strptime(to_date, dates_format)
+        loop_date = from_date
+
+        unique_dates_array = list(set(self.c.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))
+        unique_dates_array = [t[0] for t in unique_dates_array]
+        unique_dates_array.reverse()
+        unique_dates_array.append("1/1/3000")
+
+        print(unique_dates_array)
+
+        for index, unique_date in enumerate(unique_dates_array):
+            unique_dates_array[index] = datetime.strptime(unique_date, "%m/%d/%Y")
+
+        while loop_date < to_date:
+            for index, date_obj in enumerate(unique_dates_array):
+                if loop_date < date_obj:
+                    tier_date = unique_dates_array[index-1].strftime("%m/%d/%Y")
+            assert tier_date is not None, "Older tier must be defined in vac_sick_rates table."
+            # print(tier_date)
+            break
+
+            tier = int((loop_date - from_date).days / 365)
+            tier_record = self.c.exec_sql("SELECT ")
+
+
+
+
+            loop_date += timedelta(days=1)
+
 
 
 emp = Employee("E3543")
+emp.get_vac_and_sick(from_date="12/1/2017", to_date="12/7/2021")
+
 # print(emp.first)
 # print(emp.last)
 # print(emp.department)
