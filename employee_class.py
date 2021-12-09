@@ -226,34 +226,33 @@ class Employee():
                          dates_format="%m/%d/%Y"):
         from_date = datetime.strptime(from_date, dates_format)
         to_date = datetime.strptime(to_date, dates_format)
-        loop_date = from_date
 
-        unique_dates_array = list(set(self.c.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))
-        unique_dates_array = [t[0] for t in unique_dates_array]
-        unique_dates_array.reverse()
+        unique_dates_array = [t[0] for t in list(set(self.c.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))]
         unique_dates_array.append("1/1/3000")
 
-        print(unique_dates_array)
+        sorted_unique_dates_array = sorted([datetime.strptime(d, "%m/%d/%Y") for d in unique_dates_array])
 
-        for index, unique_date in enumerate(unique_dates_array):
-            unique_dates_array[index] = datetime.strptime(unique_date, "%m/%d/%Y")
+        print(sorted_unique_dates_array)
 
+        loop_date = from_date
         while loop_date < to_date:
-            for index, date_obj in enumerate(unique_dates_array):
+            tier_date = None
+            for index, date_obj in enumerate(sorted_unique_dates_array):
                 if loop_date < date_obj:
-                    tier_date = unique_dates_array[index-1].strftime("%m/%d/%Y")
+                    previous_index = index - 1
+                    if previous_index >= 0:
+                        tier_date = sorted_unique_dates_array[previous_index].strftime("%m/%d/%Y")
+                    else:
+                        tier_date = sorted_unique_dates_array[0].strftime("%m/%d/%Y")
+                        loop_date = datetime.strptime(tier_date, "%m/%d/%Y")
+                    break
             assert tier_date is not None, "Older tier must be defined in vac_sick_rates table."
             # print(tier_date)
-            break
 
             tier = int((loop_date - from_date).days / 365)
-            tier_record = self.c.exec_sql("SELECT ")
-
-
-
+            # tier_record = self.c.exec_sql("SELECT ")
 
             loop_date += timedelta(days=1)
-
 
 
 emp = Employee("E3543")
