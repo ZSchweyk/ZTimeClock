@@ -222,41 +222,93 @@ class Employee():
                                                                                               "%Y-%m-%d %H:%M:%S").timestamp())]
                 for clock_in, clock_out in records]
 
-    def get_vac_and_sick(self, from_date="1/1/2000", to_date=datetime.today().strftime("%m/%d/%Y"),
+    def get_vac_and_sick(self, from_date="", to_date=datetime.today().strftime("%m/%d/%Y"),
                          dates_format="%m/%d/%Y"):
-        from_date = datetime.strptime(from_date, dates_format)
+        if from_date == "":
+            from_date = datetime.strptime(self.since, "%m/%d/%Y")
+        else:
+            from_date = datetime.strptime(from_date, dates_format)
         to_date = datetime.strptime(to_date, dates_format)
 
-        unique_dates_array = [t[0] for t in list(set(self.c.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))]
-        unique_dates_array.append("1/1/3000")
+        unique_dates_array = [t[0] for t in
+                              list(set(self.c.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))]
+        # unique_dates_array.append("1/1/3000")
 
         sorted_unique_dates_array = sorted([datetime.strptime(d, "%m/%d/%Y") for d in unique_dates_array])
 
-        print(sorted_unique_dates_array)
+        # print(sorted_unique_dates_array)
+
+        since = datetime.strptime(self.since, "%m/%d/%Y")
 
         loop_date = from_date
-        while loop_date < to_date:
-            tier_date = None
+        total_sick_accrued = 0
+        total_vac_accrued = 0
+        while loop_date <= to_date:
+            # tier_date = None
             for index, date_obj in enumerate(sorted_unique_dates_array):
                 if loop_date < date_obj:
                     previous_index = index - 1
                     if previous_index >= 0:
-                        tier_date = sorted_unique_dates_array[previous_index].strftime("%m/%d/%Y")
+                        tier_date = sorted_unique_dates_array[previous_index]
                     else:
-                        tier_date = sorted_unique_dates_array[0].strftime("%m/%d/%Y")
-                        loop_date = datetime.strptime(tier_date, "%m/%d/%Y")
+                        tier_date = sorted_unique_dates_array[0]
+                        loop_date = datetime.strptime(tier_date.strftime("%m/%d/%Y"), "%m/%d/%Y")
                     break
-            assert tier_date is not None, "Older tier must be defined in vac_sick_rates table."
-            # print(tier_date)
+                if index == len(sorted_unique_dates_array) - 1:
+                    tier_date = sorted_unique_dates_array[index]
+            # assert tier_date is not None, "Older tier must be defined in vac_sick_rates table."
+            # print(type(tier_date))
+            tier_date = tier_date.strftime("%m/%d/%Y")
 
-            tier = int((loop_date - from_date).days / 365)
-            # tier_record = self.c.exec_sql("SELECT ")
+            tier_array = sorted([tier[0] for tier in
+                                 self.c.exec_sql("SELECT Tier FROM vac_sick_rates WHERE Date = ?;", param=(tier_date,),
+                                                 fetch_str="all")])
+
+            total_work_duration = (loop_date - since).days / 365
+            for index, tier_num in enumerate(tier_array):
+                if total_work_duration < tier_num:
+                    previous_index = index - 1
+                    if previous_index >= 0:
+                        print("Total work duration:", total_work_duration)
+                        final_tier = tier_array[previous_index]
+                        break
+                    else:
+                        # Should never be negative
+                        raise Exception("Employee total duration is somehow negative.")
+                if index == len(tier_array) - 1:
+                    print("Total work duration:", total_work_duration)
+                    final_tier = tier_array[index]
+
+            tier_record = self.c.exec_sql(
+                "SELECT SickGracePeriod, VacGracePeriod, MonthlySickRate, MonthlyVacRate FROM vac_sick_rates WHERE Date = ? AND Tier = ?",
+                param=(tier_date, final_tier), fetch_str="one")
+            # print(tier_record)
+
+            sick_grace = tier_record[0]
+            sick_rate = str_fraction_to_num(tier_record[2])
+
+            vac_grace = tier_record[1]
+            vac_rate = str_fraction_to_num(tier_record[3])
+
+            # print("months", total_work_duration * 12)
+            if total_work_duration * 12 > sick_grace:
+                total_sick_accrued += sick_rate / monthrange(loop_date.year, loop_date.month)[1]
+
+            if total_work_duration * 12 > vac_grace:
+                total_vac_accrued += vac_rate / monthrange(loop_date.year, loop_date.month)[1]
 
             loop_date += timedelta(days=1)
 
+        return {
+            "SickAccrued": total_sick_accrued,
+            "VacAccrued": total_vac_accrued
+        }
+
 
 emp = Employee("E3543")
-emp.get_vac_and_sick(from_date="12/1/2017", to_date="12/7/2021")
+d = emp.get_vac_and_sick()
+print("Sick:", d["SickAccrued"])
+print("Vacation:", d["VacAccrued"])
 
 # print(emp.first)
 # print(emp.last)
