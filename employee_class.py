@@ -218,8 +218,8 @@ class Employee():
             "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND date(ClockIn) BETWEEN ? AND ?;",
             param=(self.emp_id, start_reformatted, end_reformatted), fetch_str="all")
         return [[clock_in, clock_out, format_seconds_to_hhmmss(
-            datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S").timestamp() - datetime.strptime(clock_in,
-                                                                                              "%Y-%m-%d %H:%M:%S").timestamp())]
+            datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S").timestamp() -
+            datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").timestamp())]
                 for clock_in, clock_out in records]
 
     def get_vac_and_sick(self, from_date="", to_date=datetime.today().strftime("%m/%d/%Y"),
@@ -251,6 +251,7 @@ class Employee():
                     if previous_index >= 0:
                         tier_date = sorted_unique_dates_array[previous_index]
                     else:
+                        print("Date < Smallest Tier Date")
                         tier_date = sorted_unique_dates_array[0]
                         loop_date = datetime.strptime(tier_date.strftime("%m/%d/%Y"), "%m/%d/%Y")
                     break
@@ -269,14 +270,12 @@ class Employee():
                 if total_work_duration < tier_num:
                     previous_index = index - 1
                     if previous_index >= 0:
-                        print("Total work duration:", total_work_duration)
                         final_tier = tier_array[previous_index]
                         break
                     else:
                         # Should never be negative
                         raise Exception("Employee total duration is somehow negative.")
                 if index == len(tier_array) - 1:
-                    print("Total work duration:", total_work_duration)
                     final_tier = tier_array[index]
 
             tier_record = self.c.exec_sql(
