@@ -20,7 +20,6 @@ def round_to(num, nrst, limit):
     """
     dec = num - int(num)
     dec_remainder = round(dec % nrst, 5)
-
     print(dec_remainder)
 
     if dec_remainder == 0:

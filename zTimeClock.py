@@ -24,9 +24,9 @@ import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 import os
 import sys
+from employee_class import Employee
 
 sys.stderr = sys.stdout
-
 
 def passable():
     pass
@@ -296,7 +296,7 @@ def get_all_emp_ids():
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
 
-    ids = c.execute("SELECT ID, FirstName, LastName FROM employees ORDER BY LastName").fetchall()
+    ids = c.execute("SELECT ID, FirstName, LastName FROM employees ORDER BY FirstName, LastName").fetchall()
 
     conn.commit()
     conn.close()
@@ -2485,8 +2485,22 @@ def calculate_employee_pay(start_date, end_date, entered_format, id):
     conn.close()
 
     ot_allowed = ot_allowed[0].lower()
-    hourly_pay = hourly_pay[0]
-
+    try:
+        hourly_pay = hourly_pay[0]
+        round(hourly_pay, 2)
+    except TypeError:
+        return {
+            "ID": id,
+            "FLast": first[0] + last,
+            "Regular Hours": "",
+            "Regular Pay": "",
+            "Overtime Hours": "",
+            "Overtime Pay": "",
+            "Double Time Hours": "",
+            "Double Time Pay": "",
+            "Total Hours": 0,
+            "Total Pay": ""
+        }
     regular_hours = 0
     overtime_hours = 0
     double_time_hours = 0

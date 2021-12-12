@@ -28,16 +28,16 @@ class ZSqlite:
         return query
 
 
-class Employee():
+class Employee:
     db_path = "employee_time_clock.db"
 
     def __init__(self, emp_id):
         self.c = ZSqlite(self.db_path)
         data = self.c.exec_sql(
-            "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours, Since FROM employees WHERE ID = ?;",
+            "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours, HireDate, TermDate, Hourly, PartTime, Birthday, EMail, CellNum FROM employees WHERE ID = ?;",
             param=(emp_id,), fetch_str="one")
         if data is None: raise Exception(f"Invalid Employee ID: \"{emp_id}\"")
-        self.first, self.last, self.department, self.hourly_pay, self.ot_allowed, self.max_daily_hours, self.since = data
+        self.first, self.last, self.department, self.hourly_pay, self.ot_allowed, self.max_daily_hours, self.hire_date, self.term_date, self.hourly, self.part_time, self.birthday, self.email, self.cell_num = data
         self.ot_allowed = self.ot_allowed.lower()
         self.emp_id = emp_id
 
@@ -118,6 +118,22 @@ class Employee():
         Calculates employee pay, accounting for regular, overtime, and double time hours, and returns the result as a dictionary.
 
         """
+
+        try:
+            round(self.hourly_pay, 2)
+        except TypeError:
+            return {
+                "ID": self.emp_id,
+                "FLast": self.first[0] + self.last,
+                "Regular Hours": "",
+                "Regular Pay": "",
+                "Overtime Hours": "",
+                "Overtime Pay": "",
+                "Double Time Hours": "",
+                "Double Time Pay": "",
+                "Total Hours": 0,
+                "Total Pay": ""
+            }
 
         array_of_hours_per_day = self.get_range_hours_accounting_for_breaks(start_date, end_date, entered_format)
 
@@ -225,10 +241,12 @@ class Employee():
     def get_vac_and_sick(self, from_date="", to_date=datetime.today().strftime("%m/%d/%Y"),
                          dates_format="%m/%d/%Y"):
         if from_date == "":
-            from_date = datetime.strptime(self.since, "%m/%d/%Y")
+            from_date = datetime.strptime(self.hire_date, "%m/%d/%Y")
         else:
             from_date = datetime.strptime(from_date, dates_format)
         to_date = datetime.strptime(to_date, dates_format)
+        print(from_date.strftime("%m/%d/%Y"))
+        print(to_date.strftime("%m/%d/%Y"))
 
         unique_dates_array = [t[0] for t in
                               list(set(self.c.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))]
@@ -238,11 +256,12 @@ class Employee():
 
         # print(sorted_unique_dates_array)
 
-        since = datetime.strptime(self.since, "%m/%d/%Y")
+        since = datetime.strptime(self.hire_date, "%m/%d/%Y")
 
         loop_date = from_date
         total_sick_accrued = 0
         total_vac_accrued = 0
+        loop_counter = 1
         while loop_date <= to_date:
             # tier_date = None
             for index, date_obj in enumerate(sorted_unique_dates_array):
@@ -265,7 +284,7 @@ class Employee():
                                  self.c.exec_sql("SELECT Tier FROM vac_sick_rates WHERE Date = ?;", param=(tier_date,),
                                                  fetch_str="all")])
 
-            total_work_duration = (loop_date - since).days / 365
+            total_work_duration = ((loop_date - since).days / 365)
             for index, tier_num in enumerate(tier_array):
                 if total_work_duration < tier_num:
                     previous_index = index - 1
@@ -284,30 +303,66 @@ class Employee():
             # print(tier_record)
 
             sick_grace = tier_record[0]
-            sick_rate = str_fraction_to_num(tier_record[2])
+            sick_daily_rate = str_fraction_to_num(tier_record[2]) * 12 / 365
 
             vac_grace = tier_record[1]
-            vac_rate = str_fraction_to_num(tier_record[3])
+            vac_daily_rate = str_fraction_to_num(tier_record[3]) * 12 / 365
 
-            # print("months", total_work_duration * 12)
-            if total_work_duration * 12 > sick_grace:
-                total_sick_accrued += sick_rate / monthrange(loop_date.year, loop_date.month)[1]
 
-            if total_work_duration * 12 > vac_grace:
-                total_vac_accrued += vac_rate / monthrange(loop_date.year, loop_date.month)[1]
 
+            #loop_date += timedelta(days=1)
+            total_vac_accrued += vac_daily_rate
+            total_sick_accrued += sick_daily_rate
+            loop_counter += 1
+
+         #   if loop_date.day == from_date.day:
+            print(loop_date.strftime("%m/%d/%Y"), end=" ")
+            print("sick_rate:", sick_daily_rate, end=" ")
+            print("vac_rate:", vac_daily_rate, end=" ")
+            print("Sick:", total_sick_accrued, "  Vac:", total_vac_accrued)
             loop_date += timedelta(days=1)
-
         return {
             "SickAccrued": total_sick_accrued,
             "VacAccrued": total_vac_accrued
         }
 
+    def get_time_off(self, period="", period_format="%m/%d/%Y"):
+        flast = (self.first[0] + self.last).upper()
+        if period == "":
+            total_vact = self.c.exec_sql(
+                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
+                param=(flast,),
+                fetch_str="all"
+            )
+            total_sick = self.c.exec_sql(
+                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
+                param=(flast,),
+                fetch_str="all"
+            )
+        else:
+            total_vact = self.c.exec_sql(
+                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
+                param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
+                fetch_str="all"
+            )
+            total_sick = self.c.exec_sql(
+                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
+                param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
+                fetch_str="all"
+            )
+        return {
+            "Vact": total_vact[0][0],
+            "Sick": total_sick[0][0]
+        }
 
-emp = Employee("E3543")
-d = emp.get_vac_and_sick()
-print("Sick:", d["SickAccrued"])
-print("Vacation:", d["VacAccrued"])
+
+
+
+emp = Employee("E1341")
+# d = emp.get_vac_and_sick()
+# print("Sick:", d["SickAccrued"])
+# print("Vacation:", d["VacAccrued"])
+print(emp.get_time_off()["Sick"])
 
 # print(emp.first)
 # print(emp.last)
