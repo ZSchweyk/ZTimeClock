@@ -225,6 +225,19 @@ class Employee:
             # They are clocked in.
             return True
 
+    def clock_in_or_out(self):
+
+        if self.get_status():
+            # Clock them out
+            row_to_insert = self.c.exec_sql(
+                "SELECT row FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+                param=(self.emp_id,),
+                fetch_str="one")
+
+        else:
+            # Clock them in
+            pass
+
     def get_records(self, start, end, format):
         total_hours = self.get_range_hours_accounting_for_breaks(start, end, format)[0]
         # YYYY-MM-DD
