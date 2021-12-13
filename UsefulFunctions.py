@@ -93,3 +93,92 @@ def getPeriodFromDateString(date_string, format):
         for i in range(16, day + 1):
             result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
     return result_array_of_str_dates
+
+# Checks if a given date is a payday. Note: 15th or last day of the month = end_of_pay_period. It will return True if the date is a weekday and the end_of_pay_period, a Friday but the end_of_pay_period is on the following weekend (1 or 2 days after it), or a Thursday and the end_of_pay_period is a Saturday.
+def is_this_a_pay_day(date_in, format):
+    date_in = datetime.strptime(date_in, format)
+    last_day_of_month = monthrange(date_in.year, date_in.month)[1]
+
+    # check if the date is the 15th, the end of the month, and it's a weekday
+    if (date_in.day == 15 or date_in.day == last_day_of_month) and date_in.weekday() <= 4:
+        return True
+    else:
+        # check if the date is <= the 15th, or the end of the month, by two days or less, and it's a Friday
+        if ((date_in.day >= 13 and date_in.day <= 15) or (
+                date_in.day >= last_day_of_month - 2 and date_in.day <= last_day_of_month)) and date_in.weekday() == 4:
+            return True
+        else:
+            return False
+
+# Creates and returns list of dates in the interval [start, end], both inclusive, as a string array.
+def getArrayOfDates(start, end, entered_format, result_format):
+    start_date = datetime.strptime(start, entered_format)
+    end_date = datetime.strptime(end, entered_format)
+    result_array = [start_date.strftime(result_format)]
+    while start_date < end_date:
+        start_date += timedelta(days=1)
+        result_array.append(start_date.strftime(result_format))
+    return result_array
+
+# This function returns the period days of a certain period. It passes in a number and generates the period days, both displayed and calculated as a tuple.
+# For instance, if the argument = 0, it will fetch the period days of today's period. If the argument = 1, it will fetch the period days of the period after the current one.
+# Negative numbers do the same thing, except they go back periods. This function is useful for when the admin toggles between the reports and summaries of certain
+# periods. Note: there is a difference between displayed and calculated period days. Calculated period days are strictly all the days between either the 1st - 15th or the 16th - last_day_of_month.
+# This is used in all the calculations for period totals, both for employees and the admin. Displayed period days are similar to the calculated period days, however, they
+# take into account for whether or not the last day of the period is a weekday or not. If the last day of the period lands on a weekend, the displayed period days will
+# end at the last weekday before the end of the period. The displayed period days are useful when displaying the period days in a report, and the calculated period days are useful when
+# looping through every single day in a period from the 1st - 15th or the 16th - last_day_of_month to do payroll calculations.
+def get_period_days(num):
+    today = datetime.today()
+    day = ""
+    additional_months = 0
+    if 0 < today.day < 16:
+        if num >= 0:
+            additional_months = int(num / 2)
+        elif num / 2 != int(num / 2):
+            additional_months = int(num / 2 - 1)
+        else:
+            additional_months = int(num / 2)
+
+        if num % 2 == 0:
+            day = "01"
+        else:
+            day = "16"
+    else:
+        if num >= 0:
+            additional_months = int((num + 1) / 2)
+        elif num / 2 != int(num / 2):
+            additional_months = int((num + 1) / 2)
+        else:
+            additional_months = int((num + 1) / 2 - 1)
+
+        if num % 2 == 0:
+            day = "16"
+        else:
+            day = "01"
+
+    temporary_date = datetime.strptime((today + relativedelta(months=additional_months)).strftime("%m/%d/%Y"),
+                                       "%m/%d/%Y").strftime("%m/%d/%Y")
+    beginning_of_period = temporary_date[:3] + day + temporary_date[5:]
+
+    end_of_period = datetime.strptime(beginning_of_period, "%m/%d/%Y")
+    while not is_this_a_pay_day(end_of_period.strftime("%m/%d/%Y"), "%m/%d/%Y"):
+        end_of_period += timedelta(days=1)
+
+    last_day_of_calculated_period_days = 0
+    if day == "16":
+        # mm/dd/yy
+        last_day_of_calculated_period_days = str(
+            monthrange(int(beginning_of_period[6:]), int(beginning_of_period[:2]))[1])
+    else:
+        last_day_of_calculated_period_days = "15"
+
+    # (displayed_period_boundaries, calculated_pay_days_from_1_to_15)
+
+    return (
+        (datetime.strptime(beginning_of_period, "%m/%d/%Y").strftime("%m/%d/%y"), end_of_period.strftime("%m/%d/%y")),
+        tuple(getArrayOfDates(beginning_of_period, end_of_period.strftime("%m/%d/%Y")[
+                                                   :3] + last_day_of_calculated_period_days + end_of_period.strftime(
+            "%m/%d/%Y")[5:], "%m/%d/%Y", "%m/%d/%y")))
+
+# print(getPeriodFromDateString("12/13/2021", "%m/%d/%Y"))

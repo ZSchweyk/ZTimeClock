@@ -400,7 +400,7 @@ class Employee:
 
 
 emp = Employee("E1341")
-print(emp.get_records_and_daily_hours_for_period("12/12/2021", "%m/%d/%Y"))
+# print(emp.get_records_and_daily_hours_for_period("12/13/2021", "%m/%d/%Y"))
 # d = emp.get_vac_and_sick()
 # print("Sick:", d["SickAccrued"])
 # print("Vacation:", d["VacAccrued"])

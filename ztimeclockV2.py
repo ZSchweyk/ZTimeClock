@@ -26,6 +26,7 @@ import os
 from threading import Thread
 import sys
 from employee_class import ZSqlite, Employee
+from UsefulFunctions import *
 
 sys.stderr = sys.stdout
 
@@ -131,31 +132,56 @@ def automatically_clear_frame(frame, num_of_sec):
     # root.after(num_of_sec * 1000)
 
 
+
+
+def create_frames_for_view_hours():
+    global day_hours_frame
+    global middle_greeting_frame
+    global period_hours_frame
+    ######### View Hours/Clock In or Out Frames ###########
+    day_hours_frame = Frame(root)  ###########
+    middle_greeting_frame = Frame(root)  ###########
+    period_hours_frame = Frame(root)  ###########
+    #######################################################
+
+    daily_and_period_frame_rely = .35
+
+    day_hours_frame.place(relx=.053, rely=daily_and_period_frame_rely)
+
+    middle_greeting_frame.place(relx=.5, rely=.3, anchor=N)
+
+    period_hours_frame.place(relx=.687, rely=daily_and_period_frame_rely)
+    return
+
+
 def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
-    clear_frame(employee_menu)
-    clear_frame(emp_id_entry_frame)
-    day_hours_frame = Frame(root)
-    day_hours_frame.place(relx=.08, rely=.35)
+    global day_hours_frame
+    global middle_greeting_frame
+    global period_hours_frame
+    for frame in [employee_menu, emp_id_entry_frame, day_hours_frame, period_hours_frame]:
+        clear_frame(frame)
 
     if day == datetime.today():
         Label(day_hours_frame, text="Today's", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=5)
     else:
-        Label(day_hours_frame, text=day.strftime("%m/%d/%y"), font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=5)
+        Label(day_hours_frame, text=day.strftime("%m/%d/%y"), font=("Arial", 20, "underline")).grid(row=0, column=0,
+                                                                                                    columnspan=5)
 
     records_and_total_hours = emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
-    total_hours = records_and_total_hours[1]
+    total_day_hours = records_and_total_hours[1]
     records = records_and_total_hours[0]
 
-    time_in = "Time In\n-----------\n"
-    time_out = "Time Out\n-----------\n"
-    duration = "Duration\n-----------\n"
+    time_in = "Time In\n------------------\n"
+    time_out = "Time Out\n------------------\n"
+    duration = "Duration\n------------------\n"
 
-    for record in records:
-        time_in += record[0] + "\n"
-        time_out += record[1] + "\n"
-        duration += record[2] + "\n"
+    for time_in_str, time_out_str, duration_str in records:
+        time_in += (time_in_str if time_in_str != "" else " " * 11) + "\n"
+        time_out += (time_out_str if time_out_str != "" else " " * 11) + "\n"
+        duration += (duration_str if duration_str != "" else " " * 8) + "\n"
 
-    Label(day_hours_frame, text=f"Total Hours: {round(total_hours, 2)}", font=("Arial", 20, "underline")).grid(row=1, column=0, columnspan=5)
+    Label(day_hours_frame, text=f"Total Hours: {round(total_day_hours, 2)}", font=("Arial", 20, "underline")).grid(
+        row=1, column=0, columnspan=5)
 
     Label(day_hours_frame).grid(row=2, column=1)
     Label(day_hours_frame).grid(row=3, column=1)
@@ -166,23 +192,51 @@ def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
     Label(day_hours_frame, text="           ").grid(row=4, column=3)
     Label(day_hours_frame, text=duration, font=("Arial", 10)).grid(row=4, column=4)
 
-    middle_greeting_frame = Frame(root)
-    middle_greeting_frame.place(relx=.5, rely=.3, anchor=N)
-
-    Label(middle_greeting_frame, text=f"Here are your hours\n{emp_obj.first} {emp_obj.last}", fg="green", font=("Arial", 25)).grid(row=0, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=f"Here are your hours\n{emp_obj.first} {emp_obj.last}", fg="green",
+          font=("Arial", 25)).grid(row=0, column=0, columnspan=2)
     Label(middle_greeting_frame, text=" ").grid(row=1, column=0)
     Label(middle_greeting_frame, text=" ").grid(row=2, column=0)
     Label(middle_greeting_frame, text=" ").grid(row=3, column=0)
-    Button(middle_greeting_frame, text="<", width=5, font=("Arial", 20, "bold")).grid(row=4, column=0)
-    Button(middle_greeting_frame, text=">", width=5, font=("Arial", 20, "bold")).grid(row=4, column=1)
+    backward = Button(middle_greeting_frame, text="<", width=5, font=("Arial", 20, "bold"),
+                      command=lambda: view_hours(emp_obj, day=day - timedelta(days=1), clock_in_out=False))
+    backward.grid(row=4, column=0)
+    forward = Button(middle_greeting_frame, text=">", width=5, font=("Arial", 20, "bold"),
+                     command=lambda: view_hours(emp_obj, day=day + timedelta(days=1), clock_in_out=False))
+    forward.grid(row=4, column=1)
 
+    if day == datetime.today():
+        forward.config(state=DISABLED)
+    else:
+        forward.config(state=NORMAL)
 
+    if day.strftime("%m/%d/%y") in getPeriodFromDateString(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
+        Label(period_hours_frame, text="Current", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=7)
+    else:
+        Label(period_hours_frame,
+              text=day.strftime("%m/%d/%y"),
+              font=("Arial", 20, "underline")
+              ).grid(row=0, column=0, columnspan=7)
 
+    period_records, period_total_hours = emp_obj.get_records_and_daily_hours_for_period(day.strftime("%m/%d/%Y"),
+                                                                                        "%m/%d/%Y")
+    Label(period_hours_frame,
+          text=f"Period's Total Hours: {round(period_total_hours, 2)}",
+          font=("Arial", 20, "underline")
+          ).grid(row=1, column=0, columnspan=7)
 
+    date_label = "Date\n------------------\n"
+    total_period_hours_label = "Total Hours\n------------------\n"
 
+    for date_str, hours in period_records:
+        date_label += date_str + "\n"
+        total_period_hours_label += str(round(hours, 3)) + "\n"
 
-    period_hours_frame = Frame(root)
-    period_hours_frame.place(relx=.7, rely=.5)
+    Label(period_hours_frame, text=" ").grid(row=2, column=0)
+
+    Label(period_hours_frame, text="           ").grid(row=3, column=0)
+    Label(period_hours_frame, text=date_label, font=("Arial", 10)).grid(row=3, column=1)
+    Label(period_hours_frame, text="           ").grid(row=3, column=2)
+    Label(period_hours_frame, text=total_period_hours_label, font=("Arial", 10)).grid(row=3, column=3)
 
 
 def enter():
@@ -250,7 +304,6 @@ program_clock.place(relx=.825, rely=0.0, anchor=N)
 day_time_greeting = Label(root, text="", font=("Arial", 25), fg="blue")
 day_time_greeting.place(relx=0.5, rely=0.13, anchor=N)
 
-
 # Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
 
 clock()
@@ -260,7 +313,7 @@ header = Label(root, text="SBCS\nEmployee Time Clock", font=("Times New Roman", 
 header.place(relx=0.5, rely=0.0, anchor=N)
 
 emp_id_entry_frame = Frame(root)
-emp_id_entry_frame.place(relx=.365, rely=.22)
+emp_id_entry_frame.place(relx=.363, rely=.22)
 
 Label(emp_id_entry_frame,
       text="Enter Employee ID",
@@ -273,7 +326,7 @@ id_field_label.grid(row=1, column=0, padx=1)
 
 id_field = Entry(emp_id_entry_frame, font=("Arial", 20), show="\u2022")
 # id_field.place(relx=.50, rely=.279, width=200, height=27, anchor=N)
-id_field.config(width=13)
+id_field.config(width=12)
 id_field.grid(row=1, column=1, padx=10)
 id_field.focus_set()
 
@@ -285,6 +338,8 @@ root.bind("<Return>", lambda event=None: enter_clear_button.invoke())
 
 employee_menu = Frame(root)
 employee_menu.place(relx=.5, rely=.3, anchor=N)
+
+create_frames_for_view_hours()
 
 # greeting = Label(employee_menu, text="", font=("Arial", 18))
 # greeting.place(relx=.5, rely=.36, anchor=N)
