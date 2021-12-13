@@ -24,7 +24,6 @@ import json
 from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 import os
 import sys
-from employee_class import Employee
 
 sys.stderr = sys.stdout
 

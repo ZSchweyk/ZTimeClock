@@ -226,30 +226,62 @@ class Employee:
             return True
 
     def clock_in_or_out(self):
-
-        if self.get_status():
+        if self.get_status() and False:
             # Clock them out
             row_to_insert = self.c.exec_sql(
                 "SELECT row FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
                 param=(self.emp_id,),
                 fetch_str="one")
-
+            self.c.exec_sql("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = ?",
+                            param=(row_to_insert,),
+                            )
         else:
             # Clock them in
-            pass
+            clock_out = self.c.exec_sql(
+                "SELECT ClockOut FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 2;",
+                param=(self.emp_id,),
+                fetch_str="all")[1][0]
+            clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
+            if (datetime.now() - clock_out).seconds >= 10 * 600:
+                self.c.exec_sql(
+                    "INSERT INTO time_clock_entries(empID, ClockIn) VALUES(?, DateTime('now', 'localtime'))",
+                    param=(self.emp_id,),
+                    )
+            else:
+                return False
+        return True
 
-    def get_records(self, start, end, format):
-        total_hours = self.get_range_hours_accounting_for_breaks(start, end, format)[0]
-        # YYYY-MM-DD
-        start_reformatted = datetime.strptime(start, format).strftime("%Y-%m-%d")
-        end_reformatted = datetime.strptime(end, format).strftime("%Y-%m-%d")
+    def get_records_and_hours_for_day(self, desired_date, format):
+        desired_date = datetime.strptime(desired_date, format).strftime("%Y-%m-%d")
         records = self.c.exec_sql(
-            "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND date(ClockIn) BETWEEN ? AND ?;",
-            param=(self.emp_id, start_reformatted, end_reformatted), fetch_str="all")
-        return [[clock_in, clock_out, format_seconds_to_hhmmss(
-            datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S").timestamp() -
-            datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").timestamp())]
-                for clock_in, clock_out in records]
+            "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND date(ClockIn) = ?;",
+            param=(self.emp_id, desired_date), fetch_str="all")
+        clockin_clockout_duration = []
+        seconds = 0
+        for clock_in, clock_out in records:
+            clock_in = datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S")
+            if clock_out is not None:
+                clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
+                seconds += clock_out.timestamp() - clock_in.timestamp()
+                clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"),
+                                                  clock_out.strftime("%I:%M:%S %p"),
+                                                  format_seconds_to_hhmmss(clock_out.timestamp() - clock_in.timestamp())
+                                                  ])
+            else:
+                clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"), "", ""])
+
+        return clockin_clockout_duration, seconds / (60 * 60)
+
+    def get_records_and_daily_hours_for_period(self, current_day, date_format):
+        period_days_until_current_day = getPeriodFromDateString(current_day, date_format)
+        total_hours = 0
+        daily_hours = []
+        for day in period_days_until_current_day:
+            r_and_h = self.get_records_and_hours_for_day(day, "%m/%d/%y")
+            total_hours += r_and_h[1]
+            daily_hours.append([day, r_and_h[1]])
+        return daily_hours, total_hours
+
 
     def get_vac_and_sick(self, from_date="", to_date=datetime.today().strftime("%m/%d/%Y"),
                          dates_format="%m/%d/%Y"):
@@ -321,14 +353,12 @@ class Employee:
             vac_grace = tier_record[1]
             vac_daily_rate = str_fraction_to_num(tier_record[3]) * 12 / 365
 
-
-
-            #loop_date += timedelta(days=1)
+            # loop_date += timedelta(days=1)
             total_vac_accrued += vac_daily_rate
             total_sick_accrued += sick_daily_rate
             loop_counter += 1
 
-         #   if loop_date.day == from_date.day:
+            #   if loop_date.day == from_date.day:
             print(loop_date.strftime("%m/%d/%Y"), end=" ")
             print("sick_rate:", sick_daily_rate, end=" ")
             print("vac_rate:", vac_daily_rate, end=" ")
@@ -369,13 +399,11 @@ class Employee:
         }
 
 
-
-
 emp = Employee("E1341")
+print(emp.get_records_and_daily_hours_for_period("12/12/2021", "%m/%d/%Y"))
 # d = emp.get_vac_and_sick()
 # print("Sick:", d["SickAccrued"])
 # print("Vacation:", d["VacAccrued"])
-print(emp.get_time_off()["Sick"])
 
 # print(emp.first)
 # print(emp.last)

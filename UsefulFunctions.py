@@ -74,3 +74,22 @@ def format_seconds_to_hhmmss(seconds):
 def str_fraction_to_num(fraction: str):
     num, den = fraction.split("/")
     return float(num) / float(den)
+
+
+# Returns an array of dates in a period depending on what period a given date is in.
+def getPeriodFromDateString(date_string, format):
+    result_array_of_str_dates = []
+    date = str(datetime.strptime(date_string, format).strftime("%m/%d/%y"))
+    day = int(date[3:5])
+    month = date[0:2]
+    year = date[6:8]
+    if day >= 1 and day < 16:
+        for i in range(1, day + 1):
+            if i < 10:
+                result_array_of_str_dates.append(month + "/0" + str(i) + "/" + year)
+            else:
+                result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
+    else:
+        for i in range(16, day + 1):
+            result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
+    return result_array_of_str_dates

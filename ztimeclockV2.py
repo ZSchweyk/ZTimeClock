@@ -131,6 +131,60 @@ def automatically_clear_frame(frame, num_of_sec):
     # root.after(num_of_sec * 1000)
 
 
+def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
+    clear_frame(employee_menu)
+    clear_frame(emp_id_entry_frame)
+    day_hours_frame = Frame(root)
+    day_hours_frame.place(relx=.08, rely=.35)
+
+    if day == datetime.today():
+        Label(day_hours_frame, text="Today's", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=5)
+    else:
+        Label(day_hours_frame, text=day.strftime("%m/%d/%y"), font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=5)
+
+    records_and_total_hours = emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
+    total_hours = records_and_total_hours[1]
+    records = records_and_total_hours[0]
+
+    time_in = "Time In\n-----------\n"
+    time_out = "Time Out\n-----------\n"
+    duration = "Duration\n-----------\n"
+
+    for record in records:
+        time_in += record[0] + "\n"
+        time_out += record[1] + "\n"
+        duration += record[2] + "\n"
+
+    Label(day_hours_frame, text=f"Total Hours: {round(total_hours, 2)}", font=("Arial", 20, "underline")).grid(row=1, column=0, columnspan=5)
+
+    Label(day_hours_frame).grid(row=2, column=1)
+    Label(day_hours_frame).grid(row=3, column=1)
+
+    Label(day_hours_frame, text=time_in, font=("Arial", 10)).grid(row=4, column=0)
+    Label(day_hours_frame, text="           ").grid(row=4, column=1)
+    Label(day_hours_frame, text=time_out, font=("Arial", 10)).grid(row=4, column=2)
+    Label(day_hours_frame, text="           ").grid(row=4, column=3)
+    Label(day_hours_frame, text=duration, font=("Arial", 10)).grid(row=4, column=4)
+
+    middle_greeting_frame = Frame(root)
+    middle_greeting_frame.place(relx=.5, rely=.3, anchor=N)
+
+    Label(middle_greeting_frame, text=f"Here are your hours\n{emp_obj.first} {emp_obj.last}", fg="green", font=("Arial", 25)).grid(row=0, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=1, column=0)
+    Label(middle_greeting_frame, text=" ").grid(row=2, column=0)
+    Label(middle_greeting_frame, text=" ").grid(row=3, column=0)
+    Button(middle_greeting_frame, text="<", width=5, font=("Arial", 20, "bold")).grid(row=4, column=0)
+    Button(middle_greeting_frame, text=">", width=5, font=("Arial", 20, "bold")).grid(row=4, column=1)
+
+
+
+
+
+
+    period_hours_frame = Frame(root)
+    period_hours_frame.place(relx=.7, rely=.5)
+
+
 def enter():
     # global employee_menu
 
@@ -161,9 +215,8 @@ def enter():
             return
 
         Label(employee_menu, text=f"Hello \n{emp.first} {emp.last}", fg="green", font=("Arial", 25)).grid(row=0,
-                                                                                                           column=0)
+                                                                                                          column=0)
         Label(employee_menu).grid(row=1, column=0)
-
 
         Label(employee_menu, text="Your Task/Msg for Today", font=("Arial", 16)).grid(row=2, column=0)
         Label(employee_menu, text="Fix This", font=("Arial", 16)).grid(row=3, column=0)
@@ -179,14 +232,12 @@ def enter():
 
         Label(employee_menu).grid(row=6, column=0)
 
-        Button(employee_menu, text="View Hours", font=font_tuple).grid(row=7, column=0)
+        Button(employee_menu, text="View Hours", font=font_tuple,
+               command=lambda: view_hours(emp, day=datetime.today(), clock_in_out=False)).grid(row=7, column=0)
         Label(employee_menu).grid(row=8, column=0)
         Button(employee_menu, text="View Time Off", font=font_tuple).grid(row=9, column=0)
         Label(employee_menu).grid(row=10, column=0)
         Button(employee_menu, text="Request Vacation", font=font_tuple).grid(row=11, column=0)
-
-
-
 
 
 # The static main screen.
@@ -199,9 +250,7 @@ program_clock.place(relx=.825, rely=0.0, anchor=N)
 day_time_greeting = Label(root, text="", font=("Arial", 25), fg="blue")
 day_time_greeting.place(relx=0.5, rely=0.13, anchor=N)
 
-Label(root,
-      text="Employee ID",
-      font=("Arial", 12), fg="black").place(relx=0.5, rely=0.2, anchor=N)
+
 # Label(root, text="2. Press \"Finish\" to complete.", font=("Arial", 12), fg="black").place(relx=0.5, rely=0.23, anchor=N)
 
 clock()
@@ -211,26 +260,30 @@ header = Label(root, text="SBCS\nEmployee Time Clock", font=("Times New Roman", 
 header.place(relx=0.5, rely=0.0, anchor=N)
 
 emp_id_entry_frame = Frame(root)
-emp_id_entry_frame.place(relx=.365, rely=.255)
+emp_id_entry_frame.place(relx=.365, rely=.22)
+
+Label(emp_id_entry_frame,
+      text="Enter Employee ID",
+      font=("Arial", 12), fg="black").grid(row=0, column=0, columnspan=3)
 
 # Employee Widgets:
 id_field_label = Label(emp_id_entry_frame, text="ID: ", font=("Arial", 20))
 # id_field_label.place(relx=0.39, rely=.2725, anchor=N)
-id_field_label.grid(row=0, column=1, padx=1)
+id_field_label.grid(row=1, column=0, padx=1)
 
 id_field = Entry(emp_id_entry_frame, font=("Arial", 20), show="\u2022")
 # id_field.place(relx=.50, rely=.279, width=200, height=27, anchor=N)
 id_field.config(width=13)
-id_field.grid(row=0, column=2, padx=10)
+id_field.grid(row=1, column=1, padx=10)
 id_field.focus_set()
 
 enter_clear_button_text = ["Enter", "Clear"]
 enter_clear_button = Button(emp_id_entry_frame, text=enter_clear_button_text[0], command=enter, font=("Arial", 15))
 # enter_clear_button.place(relx=.6, rely=.2725)
-enter_clear_button.grid(row=0, column=3, padx=10)
+enter_clear_button.grid(row=1, column=2, padx=10)
 root.bind("<Return>", lambda event=None: enter_clear_button.invoke())
 
-employee_menu = Frame(root, padx=50, pady=25)
+employee_menu = Frame(root)
 employee_menu.place(relx=.5, rely=.3, anchor=N)
 
 # greeting = Label(employee_menu, text="", font=("Arial", 18))
