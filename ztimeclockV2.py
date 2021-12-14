@@ -93,8 +93,13 @@ def clock():
 
 
 def clear_frame(frame):
-    for widget in frame.winfo_children():
-        widget.destroy()
+    if isinstance(frame, Frame):
+        for widget in frame.winfo_children():
+            widget.destroy()
+    else:
+        for f in frame:
+            for widget in f.winfo_children():
+                widget.destroy()
 
 
 def toggle_button(button, text_array, frame_to_clear):
@@ -126,12 +131,11 @@ def fill_frame(frame, button_names_and_funcs, frame_header, return_to_array):
 mouse_position = [root.winfo_pointerx(), root.winfo_pointery()]
 
 
+
 def automatically_clear_frame(frame, num_of_sec):
     mouse_x = root.winfo_pointerx()
     mouse_y = root.winfo_pointery()
     # root.after(num_of_sec * 1000)
-
-
 
 
 def create_frames_for_view_hours():
@@ -144,7 +148,7 @@ def create_frames_for_view_hours():
     period_hours_frame = Frame(root)  ###########
     #######################################################
 
-    daily_and_period_frame_rely = .35
+    daily_and_period_frame_rely = .25
 
     day_hours_frame.place(relx=.053, rely=daily_and_period_frame_rely)
 
@@ -158,8 +162,10 @@ def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
     global day_hours_frame
     global middle_greeting_frame
     global period_hours_frame
-    for frame in [employee_menu, emp_id_entry_frame, day_hours_frame, period_hours_frame]:
-        clear_frame(frame)
+    clear_frame([employee_menu, emp_id_entry_frame, day_hours_frame, period_hours_frame])
+
+    if clock_in_out:
+        emp_obj.clock_in_or_out()
 
     if day == datetime.today():
         Label(day_hours_frame, text="Today's", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=5)
@@ -205,9 +211,19 @@ def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
     forward.grid(row=4, column=1)
 
     if day == datetime.today():
+        print("Disabled")
         forward.config(state=DISABLED)
     else:
+        print("Normal")
         forward.config(state=NORMAL)
+
+    Label(middle_greeting_frame).grid(row=5, column=0, columnspan=2)
+
+    Button(middle_greeting_frame,
+           text="Back to Menu",
+           font=("Arial", 20, "bold"),
+           command=lambda: show_employee_menu(emp_obj)
+           ).grid(row=6, column=0, columnspan=2)
 
     if day.strftime("%m/%d/%y") in getPeriodFromDateString(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
         Label(period_hours_frame, text="Current", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=7)
@@ -239,6 +255,37 @@ def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
     Label(period_hours_frame, text=total_period_hours_label, font=("Arial", 10)).grid(row=3, column=3)
 
 
+def show_employee_menu(emp: Employee):
+    global day_hours_frame
+    global middle_greeting_frame
+    global period_hours_frame
+    clear_frame([day_hours_frame, period_hours_frame, middle_greeting_frame])
+    Label(employee_menu, text=f"Hello \n{emp.first} {emp.last}", fg="green", font=("Arial", 25)).grid(row=0,
+                                                                                                      column=0)
+    Label(employee_menu).grid(row=1, column=0)
+
+    Label(employee_menu, text="Your Task/Msg for Today", font=("Arial", 16)).grid(row=2, column=0)
+    Label(employee_menu, text="Fix This", font=("Arial", 16)).grid(row=3, column=0)
+
+    Label(employee_menu).grid(row=4, column=0)
+
+    font_tuple = ("Arial", 18)
+
+    if emp.get_status():
+        Button(employee_menu, text="Clock Out", font=font_tuple).grid(row=5, column=0)
+    else:
+        Button(employee_menu, text="Clock In", font=font_tuple).grid(row=5, column=0)
+
+    Label(employee_menu).grid(row=6, column=0)
+
+    Button(employee_menu, text="View Hours", font=font_tuple,
+           command=lambda: view_hours(emp, day=datetime.today(), clock_in_out=False)).grid(row=7, column=0)
+    Label(employee_menu).grid(row=8, column=0)
+    Button(employee_menu, text="View Time Off", font=font_tuple).grid(row=9, column=0)
+    Label(employee_menu).grid(row=10, column=0)
+    Button(employee_menu, text="Request Vacation", font=font_tuple).grid(row=11, column=0)
+
+
 def enter():
     # global employee_menu
 
@@ -267,31 +314,32 @@ def enter():
         except:
             Label(employee_menu, text="Incorrect Password", fg="red", font=("Arial", 20)).grid(row=0, column=0)
             return
+        show_employee_menu(emp)
 
-        Label(employee_menu, text=f"Hello \n{emp.first} {emp.last}", fg="green", font=("Arial", 25)).grid(row=0,
-                                                                                                          column=0)
-        Label(employee_menu).grid(row=1, column=0)
-
-        Label(employee_menu, text="Your Task/Msg for Today", font=("Arial", 16)).grid(row=2, column=0)
-        Label(employee_menu, text="Fix This", font=("Arial", 16)).grid(row=3, column=0)
-
-        Label(employee_menu).grid(row=4, column=0)
-
-        font_tuple = ("Arial", 18)
-
-        if emp.get_status():
-            Button(employee_menu, text="Clock Out", font=font_tuple).grid(row=5, column=0)
-        else:
-            Button(employee_menu, text="Clock In", font=font_tuple).grid(row=5, column=0)
-
-        Label(employee_menu).grid(row=6, column=0)
-
-        Button(employee_menu, text="View Hours", font=font_tuple,
-               command=lambda: view_hours(emp, day=datetime.today(), clock_in_out=False)).grid(row=7, column=0)
-        Label(employee_menu).grid(row=8, column=0)
-        Button(employee_menu, text="View Time Off", font=font_tuple).grid(row=9, column=0)
-        Label(employee_menu).grid(row=10, column=0)
-        Button(employee_menu, text="Request Vacation", font=font_tuple).grid(row=11, column=0)
+        # Label(employee_menu, text=f"Hello \n{emp.first} {emp.last}", fg="green", font=("Arial", 25)).grid(row=0,
+        #                                                                                                   column=0)
+        # Label(employee_menu).grid(row=1, column=0)
+        #
+        # Label(employee_menu, text="Your Task/Msg for Today", font=("Arial", 16)).grid(row=2, column=0)
+        # Label(employee_menu, text="Fix This", font=("Arial", 16)).grid(row=3, column=0)
+        #
+        # Label(employee_menu).grid(row=4, column=0)
+        #
+        # font_tuple = ("Arial", 18)
+        #
+        # if emp.get_status():
+        #     Button(employee_menu, text="Clock Out", font=font_tuple).grid(row=5, column=0)
+        # else:
+        #     Button(employee_menu, text="Clock In", font=font_tuple).grid(row=5, column=0)
+        #
+        # Label(employee_menu).grid(row=6, column=0)
+        #
+        # Button(employee_menu, text="View Hours", font=font_tuple,
+        #        command=lambda: view_hours(emp, day=datetime.today(), clock_in_out=False)).grid(row=7, column=0)
+        # Label(employee_menu).grid(row=8, column=0)
+        # Button(employee_menu, text="View Time Off", font=font_tuple).grid(row=9, column=0)
+        # Label(employee_menu).grid(row=10, column=0)
+        # Button(employee_menu, text="Request Vacation", font=font_tuple).grid(row=11, column=0)
 
 
 # The static main screen.
