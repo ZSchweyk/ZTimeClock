@@ -33,7 +33,7 @@ sys.stderr = sys.stdout
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = r"C:\Users\Zeyn Schweyk\Documents\MyProjects\ZTimeClock\\"
+program_files_path = r"C:\Users\ZSchw\Documents\MyProjects\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 # Sets up the TKinter GUI main window.
@@ -131,14 +131,127 @@ class ZTimeClockApp:
         Label(self.employee_menu).grid(row=6, column=0)
 
         Button(self.employee_menu, text="View Hours", font=font_tuple,
-               command=lambda: view_hours(emp, day=datetime.today(), clock_in_out=False)).grid(row=7, column=0)
+               command=lambda: self.view_hours(emp, day=datetime.today(), clock_in_out=False)).grid(row=7, column=0)
         Label(self.employee_menu).grid(row=8, column=0)
         Button(self.employee_menu, text="View Time Off", font=font_tuple).grid(row=9, column=0)
         Label(self.employee_menu).grid(row=10, column=0)
         Button(self.employee_menu, text="Request Vacation", font=font_tuple).grid(row=11, column=0)
 
+    def create_frames_for_view_hours(self):
+        self.day_hours_frame = Frame(root)
+        self.middle_greeting_frame = Frame(root)
+        self.period_hours_frame = Frame(root)
+
+        daily_and_period_frame_rely = .25
+
+        self.day_hours_frame.place(relx=.053, rely=daily_and_period_frame_rely)
+
+        self.middle_greeting_frame.place(relx=.5, rely=.3, anchor=N)
+
+        self.period_hours_frame.place(relx=.687, rely=daily_and_period_frame_rely)
+        return
+
+    def view_hours(self, emp_obj: Employee, day=datetime.today(), clock_in_out=False):
+        self.create_frames_for_view_hours()
+        self.clear_frames([self.employee_menu, self.emp_id_entry_frame, self.day_hours_frame, self.period_hours_frame])
+        self.create_frames_for_view_hours()
+
+
+        if clock_in_out:
+            emp_obj.clock_in_or_out()
+
+        if day == datetime.today():
+            Label(self.day_hours_frame, text="Today's", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=5)
+        else:
+            Label(self.day_hours_frame, text=day.strftime("%m/%d/%y"), font=("Arial", 20, "underline")).grid(row=0, column=0,
+                                                                                                        columnspan=5)
+
+        records_and_total_hours = emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
+        total_day_hours = records_and_total_hours[1]
+        records = records_and_total_hours[0]
+
+        time_in = "Time In\n------------------\n"
+        time_out = "Time Out\n------------------\n"
+        duration = "Duration\n------------------\n"
+
+        for time_in_str, time_out_str, duration_str in records:
+            time_in += (time_in_str if time_in_str != "" else " " * 11) + "\n"
+            time_out += (time_out_str if time_out_str != "" else " " * 11) + "\n"
+            duration += (duration_str if duration_str != "" else " " * 8) + "\n"
+
+        Label(self.day_hours_frame, text=f"Total Hours: {round(total_day_hours, 2)}", font=("Arial", 20, "underline")).\
+            grid(row=1, column=0, columnspan=5)
+
+        Label(self.day_hours_frame).grid(row=2, column=1)
+        Label(self.day_hours_frame).grid(row=3, column=1)
+
+        Label(self.day_hours_frame, text=time_in, font=("Arial", 10)).grid(row=4, column=0)
+        Label(self.day_hours_frame, text="           ").grid(row=4, column=1)
+        Label(self.day_hours_frame, text=time_out, font=("Arial", 10)).grid(row=4, column=2)
+        Label(self.day_hours_frame, text="           ").grid(row=4, column=3)
+        Label(self.day_hours_frame, text=duration, font=("Arial", 10)).grid(row=4, column=4)
+
+        Label(self.middle_greeting_frame, text=f"Here are your hours\n{emp_obj.first} {emp_obj.last}", fg="green",
+              font=("Arial", 25)).grid(row=0, column=0, columnspan=2)
+        Label(self.middle_greeting_frame, text=" ").grid(row=1, column=0)
+        Label(self.middle_greeting_frame, text=" ").grid(row=2, column=0)
+        Label(self.middle_greeting_frame, text=" ").grid(row=3, column=0)
+        backward = Button(self.middle_greeting_frame, text="<", width=5, font=("Arial", 20, "bold"),
+                          command=lambda: self.view_hours(emp_obj, day=day - timedelta(days=1), clock_in_out=False))
+        backward.grid(row=4, column=0)
+        forward = Button(self.middle_greeting_frame, text=">", width=5, font=("Arial", 20, "bold"),
+                         command=lambda: self.view_hours(emp_obj, day=day + timedelta(days=1), clock_in_out=False))
+        forward.grid(row=4, column=1)
+
+        if day == datetime.today():
+            print("Disabled")
+            forward.config(state=DISABLED)
+        else:
+            print("Normal")
+            forward.config(state=NORMAL)
+
+        Label(self.middle_greeting_frame).grid(row=5, column=0, columnspan=2)
+
+        Button(self.middle_greeting_frame,
+               text="Back to Menu",
+               font=("Arial", 20, "bold"),
+               command=lambda: show_employee_menu(emp_obj)
+               ).grid(row=6, column=0, columnspan=2)
+
+        if day.strftime("%m/%d/%y") in getPeriodFromDateString(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
+            Label(self.period_hours_frame, text="Current", font=("Arial", 20, "underline")).grid(row=0, column=0,
+                                                                                            columnspan=7)
+        else:
+            Label(self.period_hours_frame,
+                  text=day.strftime("%m/%d/%y"),
+                  font=("Arial", 20, "underline")
+                  ).grid(row=0, column=0, columnspan=7)
+
+        period_records, period_total_hours = emp_obj.get_records_and_daily_hours_for_period(day.strftime("%m/%d/%Y"),
+                                                                                            "%m/%d/%Y")
+        Label(self.period_hours_frame,
+              text=f"Period's Total Hours: {round(period_total_hours, 2)}",
+              font=("Arial", 20, "underline")
+              ).grid(row=1, column=0, columnspan=7)
+
+        date_label = "Date\n------------------\n"
+        total_period_hours_label = "Total Hours\n------------------\n"
+
+        for date_str, hours in period_records:
+            date_label += date_str + "\n"
+            total_period_hours_label += str(round(hours, 3)) + "\n"
+
+        Label(self.period_hours_frame, text=" ").grid(row=2, column=0)
+
+        Label(self.period_hours_frame, text="           ").grid(row=3, column=0)
+        Label(self.period_hours_frame, text=date_label, font=("Arial", 10)).grid(row=3, column=1)
+        Label(self.period_hours_frame, text="           ").grid(row=3, column=2)
+        Label(self.period_hours_frame, text=total_period_hours_label, font=("Arial", 10)).grid(row=3, column=3)
+
     def enter_clear(self, emp_id):
         if self.enter_clear_button["text"] == "Enter":
+            # self.make_employee_menu_frame()
+            # self.fill_employee_menu_frame(Employee(emp_id))
             root.bind("<Return>", lambda event=None: self.enter_clear_button.invoke())
             if emp_id != AdminInformation.select("AdminPassword"):
                 if len(emp_id) != 0:
@@ -165,12 +278,7 @@ class ZTimeClockApp:
                                   command=lambda: self.clear_frames([self.employee_menu]))
 
 
-    @staticmethod
-    def clear_frames(frames):
-        for frame in frames:
-            frame.destroy()
-            # for widget in frame.winfo_children():
-            #     widget.destroy()
+
 
 
 
@@ -219,6 +327,13 @@ class ZTimeClockApp:
 
     def delete_emp_id_entry_frame(self):
         self.clear_frames([self.emp_id_entry_frame])
+
+    @staticmethod
+    def clear_frames(frames):
+        for frame in frames:
+            for widget in frame.winfo_children():
+                widget.destroy()
+            # frame.destroy()
 
 
 

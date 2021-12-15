@@ -33,7 +33,7 @@ sys.stderr = sys.stdout
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = r"C:\Users\Zeyn Schweyk\Documents\MyProjects\ZTimeClock\\"
+program_files_path = r"C:\Users\ZSchw\Documents\MyProjects\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 c = ZSqlite(database_file)
@@ -131,7 +131,6 @@ def fill_frame(frame, button_names_and_funcs, frame_header, return_to_array):
 mouse_position = [root.winfo_pointerx(), root.winfo_pointery()]
 
 
-
 def automatically_clear_frame(frame, num_of_sec):
     mouse_x = root.winfo_pointerx()
     mouse_y = root.winfo_pointery()
@@ -165,7 +164,11 @@ def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
     clear_frame([employee_menu, emp_id_entry_frame, day_hours_frame, period_hours_frame])
 
     if clock_in_out:
-        emp_obj.clock_in_or_out()
+        if emp_obj.clock_in_or_out():
+            print("Successful!")
+        else:
+            print("Must wait at least 10 minutes before previous clock out.")
+
 
     if day == datetime.today():
         Label(day_hours_frame, text="Today's", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=5)
@@ -203,27 +206,39 @@ def view_hours(emp_obj: Employee, day=datetime.today(), clock_in_out=False):
     Label(middle_greeting_frame, text=" ").grid(row=1, column=0)
     Label(middle_greeting_frame, text=" ").grid(row=2, column=0)
     Label(middle_greeting_frame, text=" ").grid(row=3, column=0)
-    backward = Button(middle_greeting_frame, text="<", width=5, font=("Arial", 20, "bold"),
+    backward = Button(middle_greeting_frame, text="<", font=("Arial", 20, "bold"),
                       command=lambda: view_hours(emp_obj, day=day - timedelta(days=1), clock_in_out=False))
     backward.grid(row=4, column=0)
-    forward = Button(middle_greeting_frame, text=">", width=5, font=("Arial", 20, "bold"),
+    forward = Button(middle_greeting_frame, text=">", font=("Arial", 20, "bold"),
+                     state=DISABLED if day + timedelta(days=1) >= datetime.today() else NORMAL,
                      command=lambda: view_hours(emp_obj, day=day + timedelta(days=1), clock_in_out=False))
     forward.grid(row=4, column=1)
 
-    if day == datetime.today():
-        print("Disabled")
-        forward.config(state=DISABLED)
-    else:
-        print("Normal")
-        forward.config(state=NORMAL)
+    # if day == datetime.today():
+    #     print("Disabled")
+    #     forward.config(state=DISABLED)
+    # else:
+    #     print("Normal")
+    #     forward.config(state=NORMAL)
 
-    Label(middle_greeting_frame).grid(row=5, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=5, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=6, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=7, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=8, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=9, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=10, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=11, column=0, columnspan=2)
+    Label(middle_greeting_frame, text=" ").grid(row=12, column=0, columnspan=2)
 
-    Button(middle_greeting_frame,
-           text="Back to Menu",
-           font=("Arial", 20, "bold"),
-           command=lambda: show_employee_menu(emp_obj)
-           ).grid(row=6, column=0, columnspan=2)
+    # Button(middle_greeting_frame,
+    #        text="Back to Menu",
+    #        font=("Arial", 20),
+    #        command=lambda: show_employee_menu(emp_obj)
+    #        ).grid(row=13, column=0, columnspan=2)
+
+    back_button = Button(middle_greeting_frame, text="Back to Menu", font=("Arial", 10))
+    back_button.grid(row=13, column=0, columnspan=2)
+    back_button["command"] = lambda: show_employee_menu(emp_obj)
 
     if day.strftime("%m/%d/%y") in getPeriodFromDateString(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
         Label(period_hours_frame, text="Current", font=("Arial", 20, "underline")).grid(row=0, column=0, columnspan=7)
@@ -259,7 +274,7 @@ def show_employee_menu(emp: Employee):
     global day_hours_frame
     global middle_greeting_frame
     global period_hours_frame
-    clear_frame([day_hours_frame, period_hours_frame, middle_greeting_frame])
+    clear_frame([day_hours_frame, period_hours_frame, middle_greeting_frame, employee_menu])
     Label(employee_menu, text=f"Hello \n{emp.first} {emp.last}", fg="green", font=("Arial", 25)).grid(row=0,
                                                                                                       column=0)
     Label(employee_menu).grid(row=1, column=0)
@@ -283,7 +298,75 @@ def show_employee_menu(emp: Employee):
     Label(employee_menu).grid(row=8, column=0)
     Button(employee_menu, text="View Time Off", font=font_tuple).grid(row=9, column=0)
     Label(employee_menu).grid(row=10, column=0)
-    Button(employee_menu, text="Request Vacation", font=font_tuple).grid(row=11, column=0)
+    Button(employee_menu, text="Request Vacation", font=font_tuple, command=lambda: request_vacation(emp)).grid(row=11,
+                                                                                                                column=0)
+
+
+def request_vacation(emp_obj: Employee):
+    clear_frame([employee_menu, emp_id_entry_frame])
+    Label(employee_menu, text=f"Vacation Request for\n{emp_obj.first} {emp_obj.last}", fg="green",
+          font=("Arial", 25)).grid(row=0, column=0, columnspan=4)
+    Label(employee_menu, text=" ").grid(row=1, column=0, columnspan=4)
+    Label(employee_menu, text=" ").grid(row=2, column=0, columnspan=4)
+    Label(employee_menu, text=" ").grid(row=3, column=0, columnspan=4)
+
+    Label(employee_menu, text="Starting", font=("Arial", 15)).grid(row=4, column=0, columnspan=2)
+    from_entry_box = Entry(employee_menu, justify="center")
+    from_entry_box.insert(0, "mm/dd/yyyy")
+    from_entry_box.grid(row=5, column=0, columnspan=2, ipady=3)
+
+    Label(employee_menu, text="Ending", font=("Arial", 15)).grid(row=4, column=2, columnspan=2)
+    to_entry_box = Entry(employee_menu, justify="center")
+    to_entry_box.insert(0, "mm/dd/yyyy")
+    to_entry_box.grid(row=5, column=2, columnspan=2, ipady=3)
+
+    Label(employee_menu, text=" ").grid(row=6, column=0, columnspan=4)
+
+    Button(employee_menu, text="Enter",
+           command=lambda: confirm_request_window(emp_obj, from_entry_box.get(), to_entry_box.get())).grid(row=7,
+                                                                                                           column=1,
+                                                                                                           columnspan=2)
+
+    Label(employee_menu, text=" ").grid(row=8, column=0, columnspan=4)
+    Label(employee_menu, text=" ").grid(row=9, column=0, columnspan=4)
+
+    Button(employee_menu, text="Back to Menu",
+           command=lambda: show_employee_menu(emp_obj)).grid(row=10,
+                                                             column=1,
+                                                             columnspan=2)
+
+
+def confirm_request_window(emp_obj, starting_date, ending_date):
+    if validate_timestamp(starting_date, "%m/%d/%Y") and validate_timestamp(ending_date, "%m/%d/%Y"):
+        from_date = datetime.strptime(starting_date, "%m/%d/%Y")
+        to_date = datetime.strptime(ending_date, "%m/%d/%Y")
+        if to_date >= from_date and from_date > datetime.today():
+            response = messagebox.askyesno("Are you sure?",
+                        f"Confirm vacation request\n        from {starting_date}\n            to {ending_date}. ")
+            if response:
+                body = f"""
+{emp_obj.first} {emp_obj.last} has made a vacation request from {starting_date} to {ending_date}.
+Please reply with your approval or denial to the employee's email address {emp_obj.email}.
+
+Thank you,
+ZTimeClock
+                """
+                # Sending email as a thread since this takes time and we don't want the user to wait and think program has stopped responding.
+                Thread(target=lambda: send_email("chemtrolalerts@gmail.com", "sbcs1976",
+                                                 ["nschweyk@sbcontrol.com", "mrtaquito04@gmail.com"], body,
+                                                 "Employee Vacation Request", "")).start()
+
+                messagebox.showinfo("Confirmed",
+                                    "Vacation request sent to management for review.\nPlease monitor your email for request status.")
+                show_employee_menu(emp_obj)
+        else:
+            messagebox.showerror("Error",
+                                 "Make sure starting date is after today\nand ending date is after starting date.")
+    else:
+        messagebox.showerror("Error", "Incorrect date(s) format.")
+
+
+# 12/15/2021
 
 
 def enter():
