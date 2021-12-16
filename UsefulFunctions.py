@@ -1,9 +1,5 @@
-import mimetypes
-import smtplib
 from calendar import monthrange
 from datetime import date, datetime, timedelta
-from email.message import EmailMessage
-
 from dateutil.relativedelta import relativedelta
 import time
 
@@ -98,7 +94,6 @@ def getPeriodFromDateString(date_string, format):
             result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
     return result_array_of_str_dates
 
-
 # Checks if a given date is a payday. Note: 15th or last day of the month = end_of_pay_period. It will return True if the date is a weekday and the end_of_pay_period, a Friday but the end_of_pay_period is on the following weekend (1 or 2 days after it), or a Thursday and the end_of_pay_period is a Saturday.
 def is_this_a_pay_day(date_in, format):
     date_in = datetime.strptime(date_in, format)
@@ -115,7 +110,6 @@ def is_this_a_pay_day(date_in, format):
         else:
             return False
 
-
 # Creates and returns list of dates in the interval [start, end], both inclusive, as a string array.
 def getArrayOfDates(start, end, entered_format, result_format):
     start_date = datetime.strptime(start, entered_format)
@@ -125,7 +119,6 @@ def getArrayOfDates(start, end, entered_format, result_format):
         start_date += timedelta(days=1)
         result_array.append(start_date.strftime(result_format))
     return result_array
-
 
 # This function returns the period days of a certain period. It passes in a number and generates the period days, both displayed and calculated as a tuple.
 # For instance, if the argument = 0, it will fetch the period days of today's period. If the argument = 1, it will fetch the period days of the period after the current one.
@@ -188,38 +181,4 @@ def get_period_days(num):
                                                    :3] + last_day_of_calculated_period_days + end_of_period.strftime(
             "%m/%d/%Y")[5:], "%m/%d/%Y", "%m/%d/%y")))
 
-
-# A standalone function that checks if a given timestamp in a given format is valid. Returns a boolean.
-def validate_timestamp(time_string, format):
-    try:
-        datetime.strptime(time_string, format)
-    except ValueError:
-        return False
-    else:
-        return True
-
-
-# Sends an email from a gmail account, and provides the option to include a file to attach to the email. If the file_path parameter is an emtpy string, no file will be attached.
-def send_email(sender, password, recipients, body, subject, file_path):
-    # Make file_path = "" if you don't want to send an attachment.
-    for recipient in recipients:
-        message = EmailMessage()
-        message['From'] = sender
-        message['To'] = recipient
-        message['Subject'] = subject
-        message.set_content(body)
-
-        if file_path != "":
-            mime_type, _ = mimetypes.guess_type(file_path)
-            mime_type, mime_subtype = mime_type.split('/')
-            with open(file_path, 'rb') as file:
-                message.add_attachment(file.read(),
-                                       maintype=mime_type,
-                                       subtype=mime_subtype,
-                                       filename=file_path.split("\\")[-1])
-
-        mail_server = smtplib.SMTP_SSL('smtp.gmail.com')
-        mail_server.set_debuglevel(1)
-        mail_server.login(sender, password)
-        mail_server.send_message(message)
-        mail_server.quit()
+# print(getPeriodFromDateString("12/13/2021", "%m/%d/%Y"))

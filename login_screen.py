@@ -1,0 +1,82 @@
+import employee_menu_screen as employee_menu_screen
+
+from my_import_statements import *
+
+c = ZSqlite("employee_time_clock.db")
+
+class LoginScreen(Screen):
+    day_and_date_label = ObjectProperty(None)
+    time_label = ObjectProperty(None)
+    quote_of_the_day = ObjectProperty(None)
+    greeting_label = ObjectProperty(None)
+    emp_id = ObjectProperty(None)
+
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        self.display_quote_of_the_day("")
+        self.update_clock("")
+        Clock.schedule_interval(self.display_quote_of_the_day, 60 * 60 * 24)
+        Clock.schedule_interval(self.update_clock, 1)
+        Clock.schedule_interval(self.keep_entry_focused, 2)
+
+        Window.bind(on_key_down=self.enter)
+
+    def keep_entry_focused(self, t):
+        self.emp_id.focus = True
+        self.emp_id.hint_text = "Enter Employee ID"
+
+    def enter(self, instance, keyboard, keycode, text, modifiers):
+        if self.emp_id.focus and keycode == 40 or keycode == 88:
+            try:
+                if self.emp_id.text != c.exec_sql(
+                        "SELECT FieldValue from admin_information WHERE FieldProperty = 'AdminPassword';",
+                        fetch_str="one")[0]:
+                    if len(self.emp_id.text) != 0:
+                        if self.emp_id.text[0] == "e":
+                            entered_id = "E" + self.emp_id.text[1:]
+                        elif self.emp_id.text[0] != "E":
+                            entered_id = "E" + self.emp_id.text
+                        else:
+                            entered_id = self.emp_id.text
+                    else:
+                        entered_id = ""
+
+                    emp_obj = Employee(entered_id)
+                    employee_menu_screen.EmployeeMenuScreen.emp_obj = emp_obj
+            except:
+                self.emp_id.text = ""
+                self.emp_id.hint_text = "Incorrect Password"
+                # self.emp_id.hint_text = "Enter Employee ID"
+                return
+            self.emp_id.text = ""
+            self.emp_id.hint_text = "Enter Employee ID"
+            MDApp.get_running_app().sm.current = "employee menu"
+
+                
+
+    def display_quote_of_the_day(self, t):
+        with open("quotes.txt", "r", encoding="utf8") as f:
+            list_of_quotes = f.readlines()
+            rand_index = random.randint(0, len(list_of_quotes) - 1)
+            new_str = []
+            for index, word in enumerate(list_of_quotes[rand_index].split()):
+                new_str.append(word)
+                if len(new_str) == 15:
+                    new_str[-1] += "\n"
+
+            self.quote_of_the_day.text = " ".join(new_str)
+
+
+    def update_clock(self, t):
+        now = datetime.now()
+        self.day_and_date_label.text = self.week_days[now.weekday()][:3] + " " + now.strftime("%m/%d/%Y")
+        self.time_label.text = now.strftime("%I:%M:%S %p")
+        if now.hour < 12:
+            self.greeting_label.text = "Good Morning"
+        elif now.hour < 17:
+            self.greeting_label.text = "Good Afternoon"
+        else:
+            self.greeting_label.text = "Good Evening"
+

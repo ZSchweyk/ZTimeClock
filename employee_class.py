@@ -41,14 +41,6 @@ class Employee:
         self.ot_allowed = self.ot_allowed.lower()
         self.emp_id = emp_id
 
-    def get_employee_type(self):
-        if self.hourly.lower() == "salary":
-            return "Salary"
-        elif self.part_time.lower() == "ptime":
-            return "Part Time"
-        else:
-            return "Full Time"
-
     def get_raw_day_hours(self, entered_date, format):
         """
         Grabs an employees raw employee hours for a certain date.
@@ -210,7 +202,7 @@ class Employee:
             return total_hours_possible_on_payday
 
     # Selects an employee's task on a given date.
-    def select_task(self, task_date, format="%m/%d/%Y"):
+    def select_task(self, task_date, format):
         task = self.c.exec_sql("SELECT task FROM employee_tasks WHERE employee_id = ? AND task_date = ?;",
                                param=(self.emp_id, datetime.strptime(task_date, format).strftime("%m/%d/%Y")),
                                fetch_str="one")
@@ -250,7 +242,7 @@ class Employee:
                 param=(self.emp_id,),
                 fetch_str="all")[1][0]
             clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
-            if (datetime.now() - clock_out).seconds >= 10 * 60:
+            if (datetime.now() - clock_out).seconds >= 10 * 600:
                 self.c.exec_sql(
                     "INSERT INTO time_clock_entries(empID, ClockIn) VALUES(?, DateTime('now', 'localtime'))",
                     param=(self.emp_id,),
@@ -407,7 +399,7 @@ class Employee:
         }
 
 
-emp = Employee("E1341")
+# emp = Employee("E1341")
 # print(emp.get_records_and_daily_hours_for_period("12/13/2021", "%m/%d/%Y"))
 # d = emp.get_vac_and_sick()
 # print("Sick:", d["SickAccrued"])
