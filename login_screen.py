@@ -1,4 +1,4 @@
-import employee_menu_screen as employee_menu_screen
+import employee_menu_screen
 
 from my_import_statements import *
 
@@ -52,7 +52,12 @@ class LoginScreen(Screen):
                 return
             self.emp_id.text = ""
             self.emp_id.hint_text = "Enter Employee ID"
-            MDApp.get_running_app().sm.current = "employee menu"
+            self.go_to_employee_menu_screen()
+
+    @staticmethod
+    def go_to_employee_menu_screen():
+        MDApp.get_running_app().sm.transition.direction = "left"
+        MDApp.get_running_app().sm.current = "employee menu"
 
                 
 
