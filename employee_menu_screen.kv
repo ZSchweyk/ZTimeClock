@@ -1,6 +1,6 @@
 <EmployeeMenuScreen>
     name_label: name_label
-    clock_in_or_out: clock_in_or_out
+    clock_in_or_out_label: clock_in_or_out_label
     MDLabel:
         id: name_label
         text: ""
@@ -10,10 +10,10 @@
         color: "yellow"
 
     MDRoundFlatButton:
-        id: clock_in_or_out
+        id: clock_in_or_out_label
         pos_hint: {"center_x": .5, "center_y": .6}
         font_size: 30
-        on_release: root.view_hours(clock_in_out=True)
+        on_release: root.clock_in_or_out()
 
     MDRoundFlatButton:
         id: view_hours_button
