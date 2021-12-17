@@ -1,4 +1,6 @@
 import kivy
+from kivy.config import Config
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 import kivymd
 from kivy.config import Config
 
@@ -20,10 +22,10 @@ from employee_menu_screen import EmployeeMenuScreen
 from view_hours import ViewHours
 from back_button import BackButton
 
-Window.size = (1250, 800)
+Window.size = (1280, 800)
 
 
-class ZTimeClock(MDApp):
+class zTimeClock(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
         Builder.load_file("login_screen.kv")
@@ -38,4 +40,4 @@ class ZTimeClock(MDApp):
 
 
 if __name__ == "__main__":
-    ZTimeClock().run()
+    zTimeClock().run()

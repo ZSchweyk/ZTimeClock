@@ -41,6 +41,14 @@ class Employee:
         self.ot_allowed = self.ot_allowed.lower()
         self.emp_id = emp_id
 
+    def get_type(self):
+        if self.hourly.lower() == "salary":
+            return "Salary"
+        elif self.part_time.lower() == "ptime":
+            return "Hourly PT"
+        else:
+            return "Hourly FT"
+
     def get_raw_day_hours(self, entered_date, format):
         """
         Grabs an employees raw employee hours for a certain date.
@@ -225,31 +233,40 @@ class Employee:
             # They are clocked in.
             return True
 
-    def clock_in_or_out(self):
-        if self.get_status() and False:
+    def clock_in_or_out(self, min_wait_seconds=10*60):
+        if self.get_status():
             # Clock them out
             row_to_insert = self.c.exec_sql(
                 "SELECT row FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
                 param=(self.emp_id,),
-                fetch_str="one")
+                fetch_str="one")[0]
             self.c.exec_sql("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = ?",
-                            param=(row_to_insert,),
+                            param=(row_to_insert,)
                             )
         else:
             # Clock them in
-            clock_out = self.c.exec_sql(
-                "SELECT ClockOut FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 2;",
-                param=(self.emp_id,),
-                fetch_str="all")[1][0]
-            clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
-            if (datetime.now() - clock_out).seconds >= 10 * 600:
+            if self.can_clock_in(min_wait_seconds=min_wait_seconds):
                 self.c.exec_sql(
                     "INSERT INTO time_clock_entries(empID, ClockIn) VALUES(?, DateTime('now', 'localtime'))",
-                    param=(self.emp_id,),
+                    param=(self.emp_id,)
                     )
+                return True
             else:
                 return False
         return True
+
+    def can_clock_in(self, min_wait_seconds=10*60):
+        if not self.get_status():
+            clock_out = self.c.exec_sql(
+"SELECT ClockOut FROM time_clock_entries WHERE empID = ? AND ClockIn != '' AND ClockOut != '' ORDER BY row DESC LIMIT 1;",
+                param=(self.emp_id,),
+                fetch_str="one")[0]
+            clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
+            if (datetime.now() - clock_out).seconds >= min_wait_seconds:
+                return True
+            else:
+                return False
+
 
     def get_records_and_hours_for_day(self, desired_date, format):
         desired_date = datetime.strptime(desired_date, format).strftime("%Y-%m-%d")

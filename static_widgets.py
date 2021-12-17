@@ -25,11 +25,12 @@ class StaticWidgets(Screen):
             self.greeting_label.text = "Good Evening"
 
     def back_button(self, back_to_text="Return to Main Menu", back_to_screen="employee menu", direction="right"):
-        b = MDRoundFlatButton(text=back_to_text,
-                              pos_hint={"center_x": .5, "center_y": .1},
+        b = MDFillRoundFlatButton(text="Back",
+                              pos_hint={"center_x": .05, "center_y": .05},
                               on_release=lambda x: self.change_screen(back_to_screen, direction),
                               text_color=(1, 0, 1, 1),
-                              line_color=(1, 0, 1, 1)
+                              md_bg_color=(1,1,1,1),
+                              font_size=30
                               )
         self.add_widget(b)
 
