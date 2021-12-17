@@ -2,25 +2,19 @@ import employee_menu_screen
 
 from my_import_statements import *
 
+from static_widgets import StaticWidgets
+
 c = ZSqlite("employee_time_clock.db")
 
-class LoginScreen(Screen):
-    day_and_date_label = ObjectProperty(None)
-    time_label = ObjectProperty(None)
+class LoginScreen(StaticWidgets):
     quote_of_the_day = ObjectProperty(None)
-    greeting_label = ObjectProperty(None)
     emp_id = ObjectProperty(None)
-
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         self.display_quote_of_the_day("")
-        self.update_clock("")
         Clock.schedule_interval(self.display_quote_of_the_day, 60 * 60 * 24)
-        Clock.schedule_interval(self.update_clock, 1)
         Clock.schedule_interval(self.keep_entry_focused, 2)
-
         Window.bind(on_key_down=self.enter)
 
     def keep_entry_focused(self, t):
@@ -72,16 +66,4 @@ class LoginScreen(Screen):
                     new_str[-1] += "\n"
 
             self.quote_of_the_day.text = " ".join(new_str)
-
-
-    def update_clock(self, t):
-        now = datetime.now()
-        self.day_and_date_label.text = self.week_days[now.weekday()][:3] + " " + now.strftime("%m/%d/%Y")
-        self.time_label.text = now.strftime("%I:%M:%S %p")
-        if now.hour < 12:
-            self.greeting_label.text = "Good Morning"
-        elif now.hour < 17:
-            self.greeting_label.text = "Good Afternoon"
-        else:
-            self.greeting_label.text = "Good Evening"
 

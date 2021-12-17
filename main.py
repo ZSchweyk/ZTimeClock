@@ -14,6 +14,7 @@ from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager
 
+from static_widgets import StaticWidgets
 from login_screen import LoginScreen
 from employee_menu_screen import EmployeeMenuScreen
 from view_hours import ViewHours
@@ -27,6 +28,7 @@ class ZTimeClock(MDApp):
         self.theme_cls.theme_style = "Dark"
         Builder.load_file("login_screen.kv")
         self.sm = ScreenManager()
+        self.sm.add_widget(StaticWidgets(name="static widgets"))
         self.sm.add_widget(LoginScreen(name="login"))
         self.sm.add_widget(EmployeeMenuScreen(name="employee menu"))
         self.sm.add_widget(ViewHours(name="view hours"))

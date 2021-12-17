@@ -1,9 +1,9 @@
 from my_import_statements import *
-from back_button import BackButton
+from static_widgets import StaticWidgets
 
 Builder.load_file("view_hours.kv")
 
-class ViewHours(BackButton):
+class ViewHours(StaticWidgets):
     emp_obj: Employee = None
 
     def __init__(self, **kw):

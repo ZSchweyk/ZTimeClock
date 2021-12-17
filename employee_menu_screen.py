@@ -1,10 +1,10 @@
 from my_import_statements import *
-from back_button import BackButton
+from static_widgets import StaticWidgets
 import view_hours
 
 Builder.load_file("employee_menu_screen.kv")
 
-class EmployeeMenuScreen(BackButton):
+class EmployeeMenuScreen(StaticWidgets):
     emp_obj: Employee = None
     greeting = ObjectProperty(None)
 
