@@ -1,5 +1,3 @@
-from kivy.metrics import dp
-
 from my_import_statements import *
 from static_widgets import StaticWidgets
 
@@ -19,7 +17,7 @@ class ClockInOrOut(StaticWidgets):
     def show_day_totals(self, day):
         daily_records, total_day_hours = \
             self.emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
-        self.date_and_total_day_hours.text = f"{day.strftime('%m/%d/%y')}\nTotal Hours: {round(total_day_hours, 2)}"
+        self.date_and_total_day_hours.text = f"Today's\nTotal Hours: {round(total_day_hours, 2)}"
 
         self.time_in.text = "Time In\n" + "-" * 25 + "\n"
         self.time_out.text = "Time Out\n" + "-" * 25 + "\n"
