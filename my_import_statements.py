@@ -2,6 +2,8 @@ import kivy
 import kivymd
 from kivy.config import Config
 
+from kivy.uix.label import Label
+
 from kivymd.app import MDApp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.textfield import MDTextField
