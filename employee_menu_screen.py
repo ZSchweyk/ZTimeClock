@@ -10,6 +10,7 @@ Builder.load_file("employee_menu_screen.kv")
 class EmployeeMenuScreen(StaticWidgets):
     emp_obj: Employee = None
     name_label = ObjectProperty(None)
+
     # clock_in_or_out_button = ObjectProperty(None)
 
     def __init__(self, **kw):
@@ -105,15 +106,19 @@ class EmployeeMenuScreen(StaticWidgets):
         self.back_button(back_to_text="Login Screen", back_to_screen="login", direction="right")
 
     def clock_in_or_out(self):
-        if self.emp_obj.get_type() == "Salary":
+        # self.emp_obj.min_wait_time = 60 * 10 by default. Change it HERE if necessary.
+        self.emp_obj.min_wait_time = 60 * 10  # Just for testing.
+
+        # if self.emp_obj.get_type() == "Salary":
+        #     dialog = MDDialog(
+        #         text="                               Unapplicable for Salaried employees.",
+        #         radius=[20, 7, 20, 7]
+        #     )
+        #     dialog.open()
+
+        if not self.emp_obj.get_status() and not self.emp_obj.can_clock_in(min_wait_seconds=self.emp_obj.min_wait_time):
             dialog = MDDialog(
-                text="                               Unapplicable for Salaried employees.",
-                radius=[20, 7, 20, 7]
-            )
-            dialog.open()
-        elif not self.emp_obj.get_status() and not self.emp_obj.can_clock_in(min_wait_seconds=0):
-            dialog = MDDialog(
-                text=" " * 15 + "Must wait at least 10 minutes before clocking in again.",
+                text=" " * 15 + f"Must wait at least {self.emp_obj.min_wait_time / 60} minutes before clocking in again.",
                 radius=[20, 7, 20, 7]
             )
             dialog.open()
