@@ -4,6 +4,12 @@ from static_widgets import StaticWidgets
 Builder.load_file("clock_in_or_out.kv")
 
 
+class OneLineListItemAligned(OneLineListItem):
+    def __init__(self, halign, **kwargs):
+        super(OneLineListItemAligned, self).__init__(**kwargs)
+        self.ids._lbl_primary.halign = halign
+
+
 class ClockInOrOut(StaticWidgets):
     emp_obj: Employee = None
 
@@ -28,27 +34,33 @@ class ClockInOrOut(StaticWidgets):
         self.sv.add_widget(self.ml)
         item = None
         for rec in daily_records:
-            item = OneLineListItem(text=f"      {rec[0]}     {rec[1]}     {rec[2]}")
+            item = OneLineListItem(text=f"       {rec[0]}     {rec[1]}     {rec[2]}")
             self.ml.add_widget(item)
-        self.sv.scroll_to(item, animate=True)
+        if len(daily_records) >= 6:
+            self.sv.do_scroll = True
+            self.sv.scroll_to(item, animate=True)
+        else:
+            self.sv.do_scroll = False
 
     def on_leave(self, *args):
         Thread(target=self.z_clear_widgets())
 
     def z_clear_widgets(self):
         try:
-            self.clear_widgets([self.sv, self.ml, self.date_and_total_day_hours, self.name_and_status])
-
-            # for item in self.widgets:
-            #     self.clear_widgets([item])
+            self.clear_widgets([
+                self.sv,
+                self.ml,
+                self.date_and_total_day_hours,
+                self.name_and_status,
+                self.time_in,
+                self.time_out,
+                self.duration
+            ])
         except:
             pass
 
     def show_period_totals(self):
         pass
-
-    def on_enter(self, *args):
-        Thread(target=lambda: self.show_day_totals(datetime.today())).start()
 
     def on_pre_enter(self, *args):
         self.name_and_status = Label(
@@ -57,7 +69,6 @@ class ClockInOrOut(StaticWidgets):
             font_size=30
         )
         self.add_widget(self.name_and_status)
-
 
         self.back_button()
 
@@ -84,28 +95,31 @@ class ClockInOrOut(StaticWidgets):
                 font_size=27
             )
             self.add_widget(self.date_and_total_day_hours)
-            #
-            # self.time_in = Label(
-            #     pos_hint={"center_x": .4, "center_y": .4},
-            #     halign="center"
-            # )
-            # self.add_widget(self.time_in)
-            #
-            # self.time_out = Label(
-            #     pos_hint={"center_y": .4},
-            #     halign="center"
-            # )
-            # self.add_widget(self.time_out)
-            #
-            # self.duration = Label(
-            #     pos_hint={"center_x": .6, "center_y": .4},
-            #     halign="center"
-            # )
-            # self.add_widget(self.duration)
+
+            self.time_in = Label(
+                pos_hint={"center_x": .42, "center_y": .43},
+                halign="center",
+                text="In\n----------------------"
+            )
+            self.add_widget(self.time_in)
+
+            self.time_out = Label(
+                pos_hint={"center_x": .505, "center_y": .43},
+                halign="center",
+                text="Out\n----------------------"
+            )
+            self.add_widget(self.time_out)
+
+            self.duration = Label(
+                pos_hint={"center_x": .58025, "center_y": .43},
+                halign="center",
+                text="Duration\n---------------"
+            )
+            self.add_widget(self.duration)
 
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last + \
                                         f"\nYou're clocked {'IN' if self.emp_obj.get_status() else 'OUT'}"
-            # Thread(target=lambda: self.show_day_totals(datetime.today())).start()
+            Thread(target=lambda: self.show_day_totals(datetime.today())).start()
         else:
             # self.clear_widgets([self.date_and_total_day_hours, self.time_in, self.time_out, self.duration])
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last
@@ -135,7 +149,8 @@ class ClockInOrOut(StaticWidgets):
             if self.pick_time_text_box.text != "":
                 default_time = datetime.strptime(self.pick_time_text_box.text, "%I:%M %p").time()
             else:
-                clock_in = c.exec_sql("SELECT ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+                clock_in = \
+                c.exec_sql("SELECT ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
                            param=(self.emp_obj.emp_id,),
                            fetch_str="one"
                            )[0][11:]
@@ -147,5 +162,3 @@ class ClockInOrOut(StaticWidgets):
 
     def get_time(self, instance, t):
         self.pick_time_text_box.text = t.strftime("%I:%M %p")
-
-
