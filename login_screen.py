@@ -4,8 +4,6 @@ from my_import_statements import *
 
 from static_widgets import StaticWidgets
 
-c = ZSqlite("employee_time_clock.db")
-
 class LoginScreen(StaticWidgets):
     quote_of_the_day = ObjectProperty(None)
     emp_id = ObjectProperty(None)
@@ -37,8 +35,10 @@ class LoginScreen(StaticWidgets):
                     else:
                         entered_id = ""
 
-                    emp_obj = Employee(entered_id)
+                    emp_obj = Employee(entered_id, db_path)
                     employee_menu_screen.EmployeeMenuScreen.emp_obj = emp_obj
+                    # del emp_obj
+
             except:
                 self.emp_id.text = ""
                 self.emp_id.hint_text = "Incorrect Password"

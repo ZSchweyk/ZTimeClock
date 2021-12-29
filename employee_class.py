@@ -28,18 +28,17 @@ class ZSqlite:
         return query
 
 
-class Employee:
-    db_path = "employee_time_clock.db"
-
-    def __init__(self, emp_id):
-        self.c = ZSqlite(self.db_path)
-        data = self.c.exec_sql(
+class Employee(ZSqlite):
+    def __init__(self, emp_id, db_path):
+        super().__init__(db_path)
+        data = self.exec_sql(
             "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours, HireDate, TermDate, Hourly, PartTime, Birthday, EMail, CellNum FROM employees WHERE ID = ?;",
             param=(emp_id,), fetch_str="one")
         if data is None: raise Exception(f"Invalid Employee ID: \"{emp_id}\"")
         self.first, self.last, self.department, self.hourly_pay, self.ot_allowed, self.max_daily_hours, self.hire_date, self.term_date, self.hourly, self.part_time, self.birthday, self.email, self.cell_num = data
         self.ot_allowed = self.ot_allowed.lower()
         self.emp_id = emp_id
+        self.min_wait_time = 10 * 60
 
     def get_type(self):
         if self.hourly.lower() == "salary":
@@ -57,7 +56,7 @@ class Employee:
 
         """
 
-        time_in_out_records = self.c.exec_sql(
+        time_in_out_records = self.exec_sql(
             "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND ClockIn LIKE ?;",
             param=(self.emp_id, "%" + datetime.strptime(entered_date, format).strftime("%Y-%m-%d") + "%"),
             fetch_str="all")
@@ -90,7 +89,7 @@ class Employee:
 
         formatted_entered_date = str(datetime.strptime(entered_date, format).strftime("%Y-%m-%d"))
 
-        time_in_out_records = self.c.exec_sql(
+        time_in_out_records = self.exec_sql(
             "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND ClockIn LIKE ?;",
             param=(self.emp_id, f"%{formatted_entered_date}%"), fetch_str="all")
 
@@ -211,7 +210,7 @@ class Employee:
 
     # Selects an employee's task on a given date.
     def select_task(self, task_date, format):
-        task = self.c.exec_sql("SELECT task FROM employee_tasks WHERE employee_id = ? AND task_date = ?;",
+        task = self.exec_sql("SELECT task FROM employee_tasks WHERE employee_id = ? AND task_date = ?;",
                                param=(self.emp_id, datetime.strptime(task_date, format).strftime("%m/%d/%Y")),
                                fetch_str="one")
         if task is not None:
@@ -221,7 +220,7 @@ class Employee:
 
     def get_status(self):
         # "SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;"
-        last_record = self.c.exec_sql(
+        last_record = self.exec_sql(
             "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
             param=(self.emp_id,),
             fetch_str="one")
@@ -233,31 +232,34 @@ class Employee:
             # They are clocked in.
             return True
 
-    def clock_in_or_out(self, min_wait_seconds=10*60):
+    def clock_in_or_out(self):
         if self.get_status():
             # Clock them out
-            row_to_insert = self.c.exec_sql(
-                "SELECT row FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+            row_to_insert, clock_in = self.exec_sql(
+                "SELECT row, ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
                 param=(self.emp_id,),
-                fetch_str="one")[0]
-            self.c.exec_sql("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = ?",
-                            param=(row_to_insert,)
-                            )
+                fetch_str="one")
+            if datetime.today() == datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S"):
+                self.exec_sql("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = ?",
+                                param=(row_to_insert,)
+                )
+                return True
+            else:
+                return False
         else:
             # Clock them in
-            if self.can_clock_in(min_wait_seconds=min_wait_seconds):
-                self.c.exec_sql(
+            if self.can_clock_in(min_wait_seconds=self.min_wait_time):
+                self.exec_sql(
                     "INSERT INTO time_clock_entries(empID, ClockIn) VALUES(?, DateTime('now', 'localtime'))",
                     param=(self.emp_id,)
                     )
                 return True
             else:
                 return False
-        return True
 
-    def can_clock_in(self, min_wait_seconds=10*60):
+    def can_clock_in(self, min_wait_seconds=0):
         if not self.get_status():
-            clock_out = self.c.exec_sql(
+            clock_out = self.exec_sql(
 "SELECT ClockOut FROM time_clock_entries WHERE empID = ? AND ClockIn != '' AND ClockOut != '' ORDER BY row DESC LIMIT 1;",
                 param=(self.emp_id,),
                 fetch_str="one")[0]
@@ -270,7 +272,7 @@ class Employee:
 
     def get_records_and_hours_for_day(self, desired_date, format):
         desired_date = datetime.strptime(desired_date, format).strftime("%Y-%m-%d")
-        records = self.c.exec_sql(
+        records = self.exec_sql(
             "SELECT ClockIn, ClockOut FROM time_clock_entries WHERE empID = ? AND date(ClockIn) = ?;",
             param=(self.emp_id, desired_date), fetch_str="all")
         clockin_clockout_duration = []
@@ -311,7 +313,7 @@ class Employee:
         print(to_date.strftime("%m/%d/%Y"))
 
         unique_dates_array = [t[0] for t in
-                              list(set(self.c.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))]
+                              list(set(self.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))]
         # unique_dates_array.append("1/1/3000")
 
         sorted_unique_dates_array = sorted([datetime.strptime(d, "%m/%d/%Y") for d in unique_dates_array])
@@ -343,7 +345,7 @@ class Employee:
             tier_date = tier_date.strftime("%m/%d/%Y")
 
             tier_array = sorted([tier[0] for tier in
-                                 self.c.exec_sql("SELECT Tier FROM vac_sick_rates WHERE Date = ?;", param=(tier_date,),
+                                 self.exec_sql("SELECT Tier FROM vac_sick_rates WHERE Date = ?;", param=(tier_date,),
                                                  fetch_str="all")])
 
             total_work_duration = ((loop_date - since).days / 365)
@@ -359,7 +361,7 @@ class Employee:
                 if index == len(tier_array) - 1:
                     final_tier = tier_array[index]
 
-            tier_record = self.c.exec_sql(
+            tier_record = self.exec_sql(
                 "SELECT SickGracePeriod, VacGracePeriod, MonthlySickRate, MonthlyVacRate FROM vac_sick_rates WHERE Date = ? AND Tier = ?",
                 param=(tier_date, final_tier), fetch_str="one")
             # print(tier_record)
@@ -389,23 +391,23 @@ class Employee:
     def get_time_off(self, period="", period_format="%m/%d/%Y"):
         flast = (self.first[0] + self.last).upper()
         if period == "":
-            total_vact = self.c.exec_sql(
+            total_vact = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
                 param=(flast,),
                 fetch_str="all"
             )
-            total_sick = self.c.exec_sql(
+            total_sick = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
                 param=(flast,),
                 fetch_str="all"
             )
         else:
-            total_vact = self.c.exec_sql(
+            total_vact = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
                 param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
                 fetch_str="all"
             )
-            total_sick = self.c.exec_sql(
+            total_sick = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
                 param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
                 fetch_str="all"
@@ -415,22 +417,3 @@ class Employee:
             "Sick": total_sick[0][0]
         }
 
-
-# emp = Employee("E1341")
-# print(emp.get_records_and_daily_hours_for_period("12/13/2021", "%m/%d/%Y"))
-# d = emp.get_vac_and_sick()
-# print("Sick:", d["SickAccrued"])
-# print("Vacation:", d["VacAccrued"])
-
-# print(emp.first)
-# print(emp.last)
-# print(emp.department)
-# print(emp.hourly_pay)
-# print(emp.ot_allowed)
-# print(emp.max_daily_hours)
-# print(emp.get_raw_day_hours("11/9/21", "%m/%d/%y"))
-# print("Total Hours:", emp.get_range_hours_accounting_for_breaks("11/1/21", "11/15/21", "%m/%d/%y")[0])
-# print("Hours and Pay:", emp.get_hours_and_pay("11/1/21", "11/15/21", "%m/%d/%y"))
-# print("Max Hours Allowed on Payday:", emp.max_hours_allowed_on_payday())
-# print("Task:", emp.select_task("11/1/21", "%m/%d/%y"))
-# print("Status:", emp.get_status())

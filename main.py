@@ -20,7 +20,7 @@ from static_widgets import StaticWidgets
 from login_screen import LoginScreen
 from employee_menu_screen import EmployeeMenuScreen
 from clock_in_or_out import ClockInOrOut
-from back_button import BackButton
+from view_hours import ViewHours
 
 Window.size = (1280, 800)
 
@@ -34,7 +34,7 @@ class zTimeClock(MDApp):
         self.sm.add_widget(LoginScreen(name="login"))
         self.sm.add_widget(EmployeeMenuScreen(name="employee menu"))
         self.sm.add_widget(ClockInOrOut(name="clock in or out"))
-        self.sm.add_widget(BackButton(name="back button"))
+        self.sm.add_widget(ViewHours(name="view hours"))
         self.sm.current = "login"
         return self.sm
 
