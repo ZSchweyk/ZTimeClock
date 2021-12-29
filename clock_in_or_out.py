@@ -90,7 +90,7 @@ class ClockInOrOut(StaticWidgets):
             self.add_widget(self.sv)
 
             self.date_and_total_day_hours = Label(
-                pos_hint={"center_y": .5},
+                pos_hint={"center_y": .55},
                 halign="center",
                 font_size=27
             )
