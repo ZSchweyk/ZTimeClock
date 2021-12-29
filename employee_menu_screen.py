@@ -107,7 +107,7 @@ class EmployeeMenuScreen(StaticWidgets):
 
     def clock_in_or_out(self):
         # self.emp_obj.min_wait_time = 60 * 10 by default. Change it HERE if necessary.
-        self.emp_obj.min_wait_time = 60 * 10  # Just for testing.
+        self.emp_obj.min_wait_time = 0  # Just for testing.
 
         # if self.emp_obj.get_type() == "Salary":
         #     dialog = MDDialog(

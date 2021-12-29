@@ -21,33 +21,34 @@ class ClockInOrOut(StaticWidgets):
             self.emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
         self.date_and_total_day_hours.text = f"Today's\nTotal Hours: {round(total_day_hours, 2)}"
 
-        self.time_in.text = "Time In\n" + "-" * 25 + "\n"
-        self.time_out.text = "Time Out\n" + "-" * 25 + "\n"
-        self.duration.text = "Duration\n" + "-" * 25 + "\n"
-        y_pos = .37
+
         self.widgets = []
+        self.widgets.append([self.sv])
+        self.ml = MDList()
+        self.sv.add_widget(self.ml)
+        item = None
         for rec in daily_records:
-            time_in = Label(text=rec[0], pos_hint={"center_x": .4, "center_y": y_pos}, halign="center")
-            time_out = Label(text=rec[1], pos_hint={"center_x": .5, "center_y": y_pos}, halign="center")
-            duration = Label(text=rec[2], pos_hint={"center_x": .6, "center_y": y_pos}, halign="center")
-            self.widgets.append([time_in, time_out, duration])
-            self.add_widget(time_in)
-            self.add_widget(time_out)
-            self.add_widget(duration)
-            y_pos -= .03
+            item = OneLineListItem(text=f"      {rec[0]}     {rec[1]}     {rec[2]}")
+            self.ml.add_widget(item)
+        self.sv.scroll_to(item, animate=True)
 
     def on_leave(self, *args):
         Thread(target=self.z_clear_widgets())
 
     def z_clear_widgets(self):
         try:
-            for time_in, time_out, duration in self.widgets:
-                self.clear_widgets([time_in, time_out, duration])
+            self.clear_widgets([self.sv, self.ml, self.date_and_total_day_hours, self.name_and_status])
+
+            # for item in self.widgets:
+            #     self.clear_widgets([item])
         except:
             pass
 
     def show_period_totals(self):
         pass
+
+    def on_enter(self, *args):
+        Thread(target=lambda: self.show_day_totals(datetime.today())).start()
 
     def on_pre_enter(self, *args):
         self.name_and_status = Label(
@@ -71,6 +72,11 @@ class ClockInOrOut(StaticWidgets):
         # The test in the clock_in_or_out method in the employee_menu_screen will make sure that #1 passes
         if self.emp_obj.clock_in_or_out():
 
+            self.sv = ScrollView(
+                pos_hint={"center_x": .5, "top": .4},
+                size_hint=(.3, .3),
+            )
+            self.add_widget(self.sv)
 
             self.date_and_total_day_hours = Label(
                 pos_hint={"center_y": .5},
@@ -78,28 +84,28 @@ class ClockInOrOut(StaticWidgets):
                 font_size=27
             )
             self.add_widget(self.date_and_total_day_hours)
-
-            self.time_in = Label(
-                pos_hint={"center_x": .4, "center_y": .4},
-                halign="center"
-            )
-            self.add_widget(self.time_in)
-
-            self.time_out = Label(
-                pos_hint={"center_y": .4},
-                halign="center"
-            )
-            self.add_widget(self.time_out)
-
-            self.duration = Label(
-                pos_hint={"center_x": .6, "center_y": .4},
-                halign="center"
-            )
-            self.add_widget(self.duration)
+            #
+            # self.time_in = Label(
+            #     pos_hint={"center_x": .4, "center_y": .4},
+            #     halign="center"
+            # )
+            # self.add_widget(self.time_in)
+            #
+            # self.time_out = Label(
+            #     pos_hint={"center_y": .4},
+            #     halign="center"
+            # )
+            # self.add_widget(self.time_out)
+            #
+            # self.duration = Label(
+            #     pos_hint={"center_x": .6, "center_y": .4},
+            #     halign="center"
+            # )
+            # self.add_widget(self.duration)
 
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last + \
                                         f"\nYou're clocked {'IN' if self.emp_obj.get_status() else 'OUT'}"
-            Thread(target=lambda: self.show_day_totals(datetime.today())).start()
+            # Thread(target=lambda: self.show_day_totals(datetime.today())).start()
         else:
             # self.clear_widgets([self.date_and_total_day_hours, self.time_in, self.time_out, self.duration])
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last

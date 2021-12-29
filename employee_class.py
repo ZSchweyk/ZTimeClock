@@ -239,7 +239,7 @@ class Employee(ZSqlite):
                 "SELECT row, ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
                 param=(self.emp_id,),
                 fetch_str="one")
-            if datetime.today() == datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S"):
+            if datetime.today().date() == datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").date():
                 self.exec_sql("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = ?",
                                 param=(row_to_insert,)
                 )
