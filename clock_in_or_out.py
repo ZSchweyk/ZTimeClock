@@ -50,8 +50,13 @@ class ClockInOrOut(StaticWidgets):
                 self.time_out,
                 self.duration
             ])
+
         except:
-            pass
+            self.clear_widgets([
+                self.pick_time_text_box,
+                self.instructions
+            ])
+        self.clear_widgets([self.name_and_status])
 
     def show_period_totals(self):
         pass
@@ -118,14 +123,15 @@ class ClockInOrOut(StaticWidgets):
             # self.clear_widgets([self.date_and_total_day_hours, self.time_in, self.time_out, self.duration])
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last
             last_entry = datetime.strptime(self.emp_obj.get_last_entry(), "%Y-%m-%d %H:%M:%S")
-            instructions = Label(
-                text=f"On your last workday on {last_entry.strftime('%m/%d/%y')}, "
+            week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            self.instructions = Label(
+                text=f"On your last workday, {week_days[last_entry.weekday()]} {last_entry.strftime('%m/%d/%y')}, "
                      f"you clocked in at {last_entry.strftime('%I:%M:%S')} and forgot to clock out.\n"
                      "Please select the time you left work on that day.",
                 pos_hint={"center_y": .6},
                 halign="center"
             )
-            self.add_widget(instructions)
+            self.add_widget(self.instructions)
 
             self.pick_time_text_box = MDTextField(
                 hint_text="HH:MM am/pm",
