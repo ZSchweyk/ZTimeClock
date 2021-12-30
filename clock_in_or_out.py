@@ -13,12 +13,6 @@ class OneLineListItemAligned(OneLineListItem):
 class ClockInOrOut(StaticWidgets):
     emp_obj: Employee = None
 
-    # name_and_status = ObjectProperty(None)
-    # date_and_total_day_hours = ObjectProperty(None)
-    # time_in = ObjectProperty(None)
-    # time_out = ObjectProperty(None)
-    # duration = ObjectProperty(None)
-
     def __init__(self, **kw):
         super().__init__(**kw)
 
@@ -123,9 +117,10 @@ class ClockInOrOut(StaticWidgets):
         else:
             # self.clear_widgets([self.date_and_total_day_hours, self.time_in, self.time_out, self.duration])
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last
-            # c.exec_sql()
+            last_entry = datetime.strptime(self.emp_obj.get_last_entry(), "%Y-%m-%d %H:%M:%S")
             instructions = Label(
-                text="On your last workday on 12/12/12, you clocked in at TIME and forgot to clock out.\n"
+                text=f"On your last workday on {last_entry.strftime('%m/%d/%y')}, "
+                     f"you clocked in at {last_entry.strftime('%I:%M:%S')} and forgot to clock out.\n"
                      "Please select the time you left work on that day.",
                 pos_hint={"center_y": .6},
                 halign="center"

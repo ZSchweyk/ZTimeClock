@@ -218,6 +218,12 @@ class Employee(ZSqlite):
         else:
             return "You don't have any tasks!"
 
+    def get_last_entry(self):
+        return self.exec_sql(
+            "SELECT ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+            param=(self.emp_id,),
+            fetch_str="one")[0]
+
     def get_status(self):
         # "SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;"
         last_record = self.exec_sql(
