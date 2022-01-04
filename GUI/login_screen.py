@@ -45,15 +45,13 @@ class LoginScreen(StaticWidgets):
                 # self.emp_id.hint_text = "Enter Employee ID"
                 return
             self.emp_id.text = ""
-            self.emp_id.hint_text = "Enter Employee ID"
+            # self.emp_id.hint_text = "Enter Employee ID"
             self.go_to_employee_menu_screen()
 
     @staticmethod
     def go_to_employee_menu_screen():
         MDApp.get_running_app().sm.transition.direction = "left"
         MDApp.get_running_app().sm.current = "employee menu"
-
-                
 
     def display_quote_of_the_day(self, t):
         with open("quotes.txt", "r", encoding="utf8") as f:

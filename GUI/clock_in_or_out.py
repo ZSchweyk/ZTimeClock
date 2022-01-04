@@ -21,7 +21,6 @@ class ClockInOrOut(StaticWidgets):
             self.emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
         self.date_and_total_day_hours.text = f"Today's\nTotal Hours: {round(total_day_hours, 2)}"
 
-
         self.widgets = []
         self.widgets.append([self.sv])
         self.ml = MDList()
@@ -120,14 +119,15 @@ class ClockInOrOut(StaticWidgets):
                                         f"\nYou're clocked {'IN' if self.emp_obj.get_status() else 'OUT'}"
             Thread(target=lambda: self.show_day_totals(datetime.today())).start()
         else:
+            # self.z_clear_widgets()
             # self.clear_widgets([self.date_and_total_day_hours, self.time_in, self.time_out, self.duration])
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last
             last_entry = datetime.strptime(self.emp_obj.get_last_entry(), "%Y-%m-%d %H:%M:%S")
             week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             self.instructions = Label(
                 text=f"On your last workday, {week_days[last_entry.weekday()]} {last_entry.strftime('%m/%d/%y')}, "
-                     f"you clocked in at {last_entry.strftime('%I:%M:%S')} and forgot to clock out.\n"
-                     "Please select the time you left work on that day.",
+                     f"you clocked in at {last_entry.strftime('%I:%M:%S %p')} and forgot to clock out.\n"
+                     "Please enter the time you left work on that day.",
                 pos_hint={"center_y": .6},
                 halign="center"
             )
@@ -138,28 +138,49 @@ class ClockInOrOut(StaticWidgets):
                 font_size=25,
                 pos_hint={"center_y": .5, "center_x": .5},
                 size_hint=(.15, .085),
-                on_touch_down=lambda x, y: self.open_time_picker(x, y)
+                # on_touch_down=lambda x, y: self.open_time_picker(x, y)
             )
+            Clock.schedule_interval(self.keep_entry_focused, .01)
             self.add_widget(self.pick_time_text_box)
+
+            b = MDFillRoundFlatButton(text="Submit",
+                                      pos_hint={"center_x": .5, "center_y": .4},
+                                      on_release=self.enter_request(self.pick_time_text_box.text, "%I:%M %p"),
+                                      text_color=(1, 0, 1, 1),
+                                      md_bg_color=(1, 1, 1, 1),
+                                      font_size=30
+                                      )
+            self.add_widget(b)
 
             return
 
-    def open_time_picker(self, x, y):
-        if self.pick_time_text_box.collide_point(*y.pos):
-            time_picker_dialog = MDTimePicker()
-            if self.pick_time_text_box.text != "":
-                default_time = datetime.strptime(self.pick_time_text_box.text, "%I:%M %p").time()
-            else:
-                clock_in = \
-                c.exec_sql("SELECT ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
-                           param=(self.emp_obj.emp_id,),
-                           fetch_str="one"
-                           )[0][11:]
-                default_time = (datetime.strptime(clock_in, "%H:%M:%S") + timedelta(minutes=1)).time()
-            time_picker_dialog.set_time(default_time)
-            time_picker_dialog.bind(on_save=self.get_time)
-            time_picker_dialog.open()
-            # self.pick_time_text_box.text = time_picker_dialog.hour + ":" + time_picker_dialog.minute
+    def keep_entry_focused(self, t):
+        self.pick_time_text_box.focus = True
 
-    def get_time(self, instance, t):
-        self.pick_time_text_box.text = t.strftime("%I:%M %p")
+    def enter_request(self, timestamp, format):
+        if validate_timestamp(timestamp, format):
+            # continue if chain
+            pass
+
+        self.change_screen("employee menu", "right")
+
+
+    # def open_time_picker(self, x, y):
+    #     if self.pick_time_text_box.collide_point(*y.pos):
+    #         time_picker_dialog = MDTimePicker()
+    #         if self.pick_time_text_box.text != "":
+    #             default_time = datetime.strptime(self.pick_time_text_box.text, "%I:%M %p").time()
+    #         else:
+    #             clock_in = \
+    #             c.exec_sql("SELECT ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+    #                        param=(self.emp_obj.emp_id,),
+    #                        fetch_str="one"
+    #                        )[0][11:]
+    #             default_time = (datetime.strptime(clock_in, "%H:%M:%S") + timedelta(minutes=1)).time()
+    #         time_picker_dialog.set_time(default_time)
+    #         time_picker_dialog.bind(on_save=self.get_time)
+    #         time_picker_dialog.open()
+    #         # self.pick_time_text_box.text = time_picker_dialog.hour + ":" + time_picker_dialog.minute
+    #
+    # def get_time(self, instance, t):
+    #     self.pick_time_text_box.text = t.strftime("%I:%M %p")

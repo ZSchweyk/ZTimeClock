@@ -201,3 +201,11 @@ def get_opposite_direction(direction):
 
 def pick_rand_direction():
     return random.choice(["up", "down", "left", "right"])
+
+
+def validate_timestamp(time_stamp, format):
+    try:
+        datetime.strptime(time_stamp, format)
+    except:
+        return False
+    return True
