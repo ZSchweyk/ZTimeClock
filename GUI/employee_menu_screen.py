@@ -3,6 +3,7 @@ import time
 from my_import_statements import *
 from static_widgets import StaticWidgets
 import clock_in_or_out
+import view_hours
 
 Builder.load_file("employee_menu_screen.kv")
 
@@ -28,7 +29,6 @@ class EmployeeMenuScreen(StaticWidgets):
                 pos_hint={"center_x": .5, "center_y": .6},
                 font_size=30,
                 on_release=lambda x: self.clock_in_or_out()
-                # might need lambda
             )
             clock_in_or_out_button.text = "Clock Out" if self.emp_obj.get_status() else "Clock In"
             self.add_widget(clock_in_or_out_button)
@@ -36,7 +36,8 @@ class EmployeeMenuScreen(StaticWidgets):
             view_hours_button = MDRoundFlatButton(
                 text="View Hours",
                 pos_hint={"center_x": .5, "center_y": .5},
-                font_size=30
+                font_size=30,
+                on_release=lambda x: self.view_hours()
             )
             self.add_widget(view_hours_button)
 
@@ -66,7 +67,6 @@ class EmployeeMenuScreen(StaticWidgets):
                 pos_hint={"center_x": .5, "center_y": .6},
                 font_size=30,
                 on_release=lambda x: self.clock_in_or_out()
-                # might need lambda
             )
             clock_in_or_out_button.text = "Clock Out" if self.emp_obj.get_status() else "Clock In"
             self.add_widget(clock_in_or_out_button)
@@ -109,13 +109,6 @@ class EmployeeMenuScreen(StaticWidgets):
         # self.emp_obj.min_wait_time = 60 * 10 by default. Change it HERE if necessary.
         self.emp_obj.min_wait_time = 0  # Just for testing.
 
-        # if self.emp_obj.get_type() == "Salary":
-        #     dialog = MDDialog(
-        #         text="                               Unapplicable for Salaried employees.",
-        #         radius=[20, 7, 20, 7]
-        #     )
-        #     dialog.open()
-
         if not self.emp_obj.get_status() and not self.emp_obj.can_clock_in(min_wait_seconds=self.emp_obj.min_wait_time):
             dialog = MDDialog(
                 text=" " * 15 + f"Must wait at least {self.emp_obj.min_wait_time / 60} minutes before clocking in again.",
@@ -124,5 +117,8 @@ class EmployeeMenuScreen(StaticWidgets):
             dialog.open()
         else:
             clock_in_or_out.ClockInOrOut.emp_obj = self.emp_obj
-            MDApp.get_running_app().sm.transition.direction = "left"
-            MDApp.get_running_app().sm.current = "clock in or out"
+            self.change_screen("clock in or out", "left")
+
+    def view_hours(self):
+        view_hours.ViewHours.emp_obj = self.emp_obj
+        self.change_screen("view hours", "left")

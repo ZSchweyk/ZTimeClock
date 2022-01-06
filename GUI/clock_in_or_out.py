@@ -137,15 +137,14 @@ class ClockInOrOut(StaticWidgets):
                 hint_text="HH:MM am/pm",
                 font_size=25,
                 pos_hint={"center_y": .5, "center_x": .5},
-                size_hint=(.15, .085),
-                # on_touch_down=lambda x, y: self.open_time_picker(x, y)
+                size_hint=(.15, .085)
             )
-            Clock.schedule_interval(self.keep_entry_focused, .01)
+            Clock.schedule_interval(lambda x: setattr(self.pick_time_text_box, "focus", True), .01)
             self.add_widget(self.pick_time_text_box)
 
             b = MDFillRoundFlatButton(text="Submit",
                                       pos_hint={"center_x": .5, "center_y": .4},
-                                      on_release=self.enter_request(self.pick_time_text_box.text, "%I:%M %p"),
+                                      on_release=lambda btn: self.enter_request(self.pick_time_text_box.text, "%I:%M %p"),
                                       text_color=(1, 0, 1, 1),
                                       md_bg_color=(1, 1, 1, 1),
                                       font_size=30
@@ -154,15 +153,45 @@ class ClockInOrOut(StaticWidgets):
 
             return
 
-    def keep_entry_focused(self, t):
-        self.pick_time_text_box.focus = True
-
     def enter_request(self, timestamp, format):
         if validate_timestamp(timestamp, format):
-            # continue if chain
-            pass
+            clock_in = datetime.strptime(self.emp_obj.get_last_entry(), "%Y-%m-%d %H:%M:%S")
+            clock_out = datetime.strptime(timestamp, format)
 
-        self.change_screen("employee menu", "right")
+            if clock_out.time() > clock_in.time():
+                formatted_clock_out_time = clock_out.strftime("%I:%M:%S %p")
+                self.emp_obj.manually_clock_out(formatted_clock_out_time)
+
+                dialog = MDDialog(
+                    text="Thank You. " +
+                        f"Your timestamp request of \"{timestamp}\" has been sent to management for approval. " +
+                        "Be sure to clock in again for today, if you're starting your shift.",
+                    radius=[20, 7, 20, 7]
+                )
+                send_back_to_menu = True
+            else:
+                dialog = MDDialog(
+                    text="Error. Please type in a time greater than when you clocked in.",
+                    radius=[20, 7, 20, 7]
+                )
+                send_back_to_menu = False
+        else:
+            dialog = MDDialog(
+                text="Wrong Time Format. Enter timestamp in the format of \"HH:MM am/pm\"",
+                radius=[20, 7, 20, 7],
+                # buttons=[
+                #     MDFlatButton(
+                #         text="OKAY",
+                #     )
+                # ]
+            )
+            send_back_to_menu = False
+
+        dialog.open()
+        if send_back_to_menu:
+            self.change_screen("employee menu", "right")
+        return
+
 
 
     # def open_time_picker(self, x, y):

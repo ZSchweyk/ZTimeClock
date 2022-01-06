@@ -219,10 +219,16 @@ class Employee(ZSqlite):
             return "You don't have any tasks!"
 
     def get_last_entry(self):
+        if self.get_status():
+            column = "ClockIn"
+        else:
+            column = "ClockOut"
         return self.exec_sql(
-            "SELECT ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+            f"SELECT {column} FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
             param=(self.emp_id,),
-            fetch_str="one")[0]
+            fetch_str="one"
+        )[0]
+
 
     def get_status(self):
         # "SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;"
@@ -237,6 +243,23 @@ class Employee(ZSqlite):
         elif last_record[0] is not None and last_record[1] is None:
             # They are clocked in.
             return True
+
+    def manually_clock_out(self, timestamp, format="%I:%M:%S %p"):
+        print(timestamp)
+        print(datetime.strptime(timestamp, format).strftime("%H:%M:%S"))
+        if self.get_status():
+            row_to_insert, clock_in = self.exec_sql(
+                "SELECT row, ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
+                param=(self.emp_id,),
+                fetch_str="one")
+            date_to_insert = clock_in[:11] + datetime.strptime(timestamp, format).strftime("%H:%M:%S")
+            self.exec_sql(
+                "UPDATE time_clock_entries SET ClockOut = ? WHERE row = ?",
+                param=(date_to_insert, row_to_insert,)
+            )
+            return True
+        else:
+            return False
 
     def clock_in_or_out(self):
         if self.get_status():
