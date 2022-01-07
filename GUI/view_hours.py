@@ -11,17 +11,22 @@ class ViewHours(StaticWidgets):
 
     def __init__(self, **kw):
         super().__init__(**kw)
+        self.back_button()
+
+    def on_leave(self, *args):
+        self.z_clear_widgets()
+        self.clear_widgets([self.name_and_status])
 
     def day_totals(self, day):
         daily_records, total_day_hours = \
             self.emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
 
-        if day == datetime.today() - timedelta(days=1):
+        if day + timedelta(days=1) > datetime.today():
             self.next_day.disabled = True
         else:
             self.next_day.disabled = False
 
-        if day == datetime.today():
+        if day.date() == datetime.today():
             self.date_and_total_day_hours.text = f"Today's\nTotal Hours: {round(total_day_hours, 2)}"
         else:
             self.date_and_total_day_hours.text = f"{day.strftime('%m/%d/%y')}\nTotal Hours: {round(total_day_hours, 2)}"
@@ -35,26 +40,23 @@ class ViewHours(StaticWidgets):
         else:
             self.day_sv.do_scroll = False
 
+
+
     def period_totals(self, day):
         pass
 
     def z_clear_widgets(self):
-        self.clear_widgets([
-            self.day_sv,
-            # self.day_list,
-            self.period_sv,
-            # self.period_list
-        ])
+        self.day_list.clear_widgets()
+        self.period_list.clear_widgets()
 
     def change_day(self, inc):
-        self.z_clear_widgets()
+        if inc != 0:
+            self.z_clear_widgets()
         self.current_day += timedelta(days=inc)
         self.day_totals(self.current_day)
         self.period_totals(self.current_day)
 
     def on_pre_enter(self, *args):
-        self.back_button()
-
         self.name_and_status = Label(
             pos_hint={"center_x": .5, "center_y": .6},
             halign="center",
@@ -66,7 +68,7 @@ class ViewHours(StaticWidgets):
 
         # Setup the day totals
         self.day_sv = ScrollView(
-            pos_hint={"center_x": .16, "top": .5},
+            pos_hint={"center_x": .16, "top": .55},
             size_hint=(.3, .3)
         )
         self.add_widget(self.day_sv)
