@@ -192,24 +192,3 @@ class ClockInOrOut(StaticWidgets):
             self.change_screen("employee menu", "right")
         return
 
-
-
-    # def open_time_picker(self, x, y):
-    #     if self.pick_time_text_box.collide_point(*y.pos):
-    #         time_picker_dialog = MDTimePicker()
-    #         if self.pick_time_text_box.text != "":
-    #             default_time = datetime.strptime(self.pick_time_text_box.text, "%I:%M %p").time()
-    #         else:
-    #             clock_in = \
-    #             c.exec_sql("SELECT ClockIn FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
-    #                        param=(self.emp_obj.emp_id,),
-    #                        fetch_str="one"
-    #                        )[0][11:]
-    #             default_time = (datetime.strptime(clock_in, "%H:%M:%S") + timedelta(minutes=1)).time()
-    #         time_picker_dialog.set_time(default_time)
-    #         time_picker_dialog.bind(on_save=self.get_time)
-    #         time_picker_dialog.open()
-    #         # self.pick_time_text_box.text = time_picker_dialog.hour + ":" + time_picker_dialog.minute
-    #
-    # def get_time(self, instance, t):
-    #     self.pick_time_text_box.text = t.strftime("%I:%M %p")

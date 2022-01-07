@@ -23,7 +23,8 @@ from clock_in_or_out import ClockInOrOut
 from view_hours import ViewHours
 
 Window.size = (1280, 800)
-
+Window.top = 350
+Window.left = 600
 
 class zTimeClock(MDApp):
     def build(self):
