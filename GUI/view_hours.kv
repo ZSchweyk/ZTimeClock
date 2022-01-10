@@ -1,5 +1,6 @@
 <ViewHours>
     date_and_total_day_hours: date_and_total_day_hours
+    period_and_total_period_hours: period_and_total_period_hours
     next_day: next_day
 
     Label:
@@ -9,16 +10,16 @@
         font_size: 30
 
     Label:
-        text: 'Time In'
-        pos_hint: {"center_x": .06, "center_y": .6}
+        text: 'In\n----------------------'
+        pos_hint: {"center_x": .08, "center_y": .6}
         halign: "center"
     Label:
-        text: 'Time Out'
-        pos_hint: {"center_x": .16, "center_y": .6}
+        text: 'Out\n----------------------'
+        pos_hint: {"center_x": .165, "center_y": .6}
         halign: "center"
     Label:
-        text: 'Duration'
-        pos_hint: {"center_x": .26, "center_y": .6}
+        text: 'Duration\n---------------'
+        pos_hint: {"center_x": .24025, "center_y": .6}
         halign: "center"
 
 
@@ -41,12 +42,21 @@
         font_size: 30
 
 
+
     Label:
-        text: 'Date'
-        pos_hint: {"center_x": .785, "center_y": .6}
+        id: period_and_total_period_hours
+        pos_hint: {"center_x": .84, "center_y": .7}
+        halign: "center"
+        font_size: 30
+
+
+
+    Label:
+        text: 'Date\n------------------'
+        pos_hint: {"center_x": .795, "center_y": .6}
         halign: "center"
     Label:
-        text: 'Total Hours'
-        pos_hint: {"center_x": .885, "center_y": .6}
+        text: 'Total Hours\n--------------------'
+        pos_hint: {"center_x": .887, "center_y": .6}
         halign: "center"
 

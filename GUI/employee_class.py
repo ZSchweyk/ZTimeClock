@@ -218,11 +218,12 @@ class Employee(ZSqlite):
         else:
             return "You don't have any tasks!"
 
-    def get_last_entry(self):
+    def get_last_entry(self, desired_column=""):
         if self.get_status():
             column = "ClockIn"
         else:
             column = "ClockOut"
+        column = desired_column if desired_column == "ClockIn" or desired_column == "ClockOut" else column
         return self.exec_sql(
             f"SELECT {column} FROM time_clock_entries WHERE empID = ? ORDER BY row DESC LIMIT 1;",
             param=(self.emp_id,),
@@ -244,7 +245,7 @@ class Employee(ZSqlite):
             # They are clocked in.
             return True
 
-    def manually_clock_out(self, timestamp, format="%I:%M:%S %p"):
+    def request_clock_out(self, timestamp, format="%I:%M:%S %p"):
         print(timestamp)
         print(datetime.strptime(timestamp, format).strftime("%H:%M:%S"))
         if self.get_status():
@@ -254,7 +255,7 @@ class Employee(ZSqlite):
                 fetch_str="one")
             date_to_insert = clock_in[:11] + datetime.strptime(timestamp, format).strftime("%H:%M:%S")
             self.exec_sql(
-                "UPDATE time_clock_entries SET ClockOut = ? WHERE row = ?",
+                "UPDATE time_clock_entries SET ClockOut = 'FORGOT', Request = ? WHERE row = ?;",
                 param=(date_to_insert, row_to_insert,)
             )
             return True
@@ -292,11 +293,12 @@ class Employee(ZSqlite):
 "SELECT ClockOut FROM time_clock_entries WHERE empID = ? AND ClockIn != '' AND ClockOut != '' ORDER BY row DESC LIMIT 1;",
                 param=(self.emp_id,),
                 fetch_str="one")[0]
+            if clock_out == "FORGOT":
+                return True
             clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
             if (datetime.now() - clock_out).seconds >= min_wait_seconds:
                 return True
-            else:
-                return False
+            return False
 
 
     def get_records_and_hours_for_day(self, desired_date, format):
@@ -309,12 +311,18 @@ class Employee(ZSqlite):
         for clock_in, clock_out in records:
             clock_in = datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S")
             if clock_out is not None:
-                clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
-                seconds += clock_out.timestamp() - clock_in.timestamp()
-                clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"),
-                                                  clock_out.strftime("%I:%M:%S %p"),
-                                                  format_seconds_to_hhmmss(clock_out.timestamp() - clock_in.timestamp())
-                                                  ])
+                if clock_out == "FORGOT":
+                    clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"),
+                                                      "FORGOT",
+                                                      ""
+                                                      ])
+                else:
+                    clock_out = datetime.strptime(clock_out, "%Y-%m-%d %H:%M:%S")
+                    seconds += clock_out.timestamp() - clock_in.timestamp()
+                    clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"),
+                                                      clock_out.strftime("%I:%M:%S %p"),
+                                                      format_seconds_to_hhmmss(clock_out.timestamp() - clock_in.timestamp())
+                                                      ])
             else:
                 clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"), "", ""])
 

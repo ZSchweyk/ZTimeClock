@@ -95,7 +95,6 @@ def getPeriodFromDateString(date_string, format):
             result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
     return result_array_of_str_dates
 
-
 # Checks if a given date is a payday. Note: 15th or last day of the month = end_of_pay_period. It will return True if the date is a weekday and the end_of_pay_period, a Friday but the end_of_pay_period is on the following weekend (1 or 2 days after it), or a Thursday and the end_of_pay_period is a Saturday.
 def is_this_a_pay_day(date_in, format):
     date_in = datetime.strptime(date_in, format)

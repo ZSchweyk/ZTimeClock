@@ -53,7 +53,8 @@ class ClockInOrOut(StaticWidgets):
         except:
             self.clear_widgets([
                 self.pick_time_text_box,
-                self.instructions
+                self.instructions,
+                self.submit_button
             ])
         self.clear_widgets([self.name_and_status])
 
@@ -142,14 +143,14 @@ class ClockInOrOut(StaticWidgets):
             Clock.schedule_interval(lambda x: setattr(self.pick_time_text_box, "focus", True), .01)
             self.add_widget(self.pick_time_text_box)
 
-            b = MDFillRoundFlatButton(text="Submit",
+            self.submit_button = MDFillRoundFlatButton(text="Submit",
                                       pos_hint={"center_x": .5, "center_y": .4},
                                       on_release=lambda btn: self.enter_request(self.pick_time_text_box.text, "%I:%M %p"),
                                       text_color=(1, 0, 1, 1),
                                       md_bg_color=(1, 1, 1, 1),
                                       font_size=30
                                       )
-            self.add_widget(b)
+            self.add_widget(self.submit_button)
 
             return
 
@@ -160,7 +161,7 @@ class ClockInOrOut(StaticWidgets):
 
             if clock_out.time() > clock_in.time():
                 formatted_clock_out_time = clock_out.strftime("%I:%M:%S %p")
-                self.emp_obj.manually_clock_out(formatted_clock_out_time)
+                self.emp_obj.request_clock_out(formatted_clock_out_time)
 
                 dialog = MDDialog(
                     text="Thank You. " +
