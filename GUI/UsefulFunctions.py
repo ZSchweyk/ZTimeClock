@@ -95,6 +95,22 @@ def getPeriodFromDateString(date_string, format):
             result_array_of_str_dates.append(month + "/" + str(i) + "/" + year)
     return result_array_of_str_dates
 
+def is_given_day_in_given_period(day_obj: datetime, period_of_day_obj: datetime):
+    if 1 <= period_of_day_obj.day <= 15:
+        starting_day = 1
+        ending_day = 15
+    else:
+        starting_day = 16
+        ending_day = monthrange(period_of_day_obj.year, period_of_day_obj.month)[1]
+
+    current_day = datetime.strptime(f"{period_of_day_obj.month}/{starting_day}/{period_of_day_obj.year}", "%m/%d/%Y")
+    dates_in_period = []
+    while current_day.date() <= datetime.strptime(f"{period_of_day_obj.month}/{ending_day}/{period_of_day_obj.year}", "%m/%d/%Y").date():
+        dates_in_period.append(current_day)
+        current_day += timedelta(days=1)
+
+    return day_obj in dates_in_period
+
 # Checks if a given date is a payday. Note: 15th or last day of the month = end_of_pay_period. It will return True if the date is a weekday and the end_of_pay_period, a Friday but the end_of_pay_period is on the following weekend (1 or 2 days after it), or a Thursday and the end_of_pay_period is a Saturday.
 def is_this_a_pay_day(date_in, format):
     date_in = datetime.strptime(date_in, format)
@@ -131,7 +147,7 @@ def getArrayOfDates(start, end, entered_format, result_format):
 # take into account for whether or not the last day of the period is a weekday or not. If the last day of the period lands on a weekend, the displayed period days will
 # end at the last weekday before the end of the period. The displayed period days are useful when displaying the period days in a report, and the calculated period days are useful when
 # looping through every single day in a period from the 1st - 15th or the 16th - last_day_of_month to do payroll calculations.
-def get_period_days(num):
+def get_period_days_with_num(num):
     today = datetime.today()
     day = ""
     additional_months = 0

@@ -12,6 +12,7 @@ class ViewHours(StaticWidgets):
 
     def __init__(self, **kw):
         super().__init__(**kw)
+
         self.back_button()
 
     def on_leave(self, *args):
@@ -22,12 +23,9 @@ class ViewHours(StaticWidgets):
         daily_records, total_day_hours = \
             self.emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
 
-        if day + timedelta(days=1) > self.last_clock_in:
-            self.next_day.disabled = True
-        else:
-            self.next_day.disabled = False
 
-        if day.date() == datetime.today():
+
+        if day.date() == datetime.today().date():
             self.date_and_total_day_hours.text = f"Today's\nTotal Hours: {round(total_day_hours, 2)}"
         else:
             self.date_and_total_day_hours.text = f"{day.strftime('%m/%d/%y')}\nTotal Hours: {round(total_day_hours, 2)}"
@@ -61,13 +59,25 @@ class ViewHours(StaticWidgets):
                 item = OneLineListItem(text=f" {day}                {str_duration}")
 
             self.period_list.add_widget(item)
-
-        if 1 <= day_obj.day <= 15:
-            last_day_of_period = 15
+        if len(day_records) >= 8:
+            self.period_sv.do_scroll = True
+            self.period_sv.scroll_to(item)
         else:
-            last_day_of_period = monthrange(day_obj.year, day_obj.month)
+            self.period_sv.do_scroll = False
+            self.period_sv.scroll_y = 1
 
-        self.period_and_total_period_hours.text = day_obj.strftime(f"%m/{last_day_of_period}/%y") + f"\n Total: {round(total_period_hours, 2)}"
+        if is_given_day_in_given_period(day_obj, datetime.today()):
+            self.period_and_total_period_hours.text = f"Current\n Period's Total Hours: {round(total_period_hours, 2)}"
+        else:
+            if 1 <= day_obj.day <= 15:
+                last_day_of_period = 15
+            else:
+                last_day_of_period = monthrange(day_obj.year, day_obj.month)[1]
+
+            self.period_and_total_period_hours.text = day_obj.strftime(
+                f"%m/{last_day_of_period}/%y") + f"\n Period's Total Hours: {round(total_period_hours, 2)}"
+
+
 
     def z_clear_widgets(self):
         self.day_list.clear_widgets()
@@ -79,6 +89,12 @@ class ViewHours(StaticWidgets):
         self.current_day += timedelta(days=inc)
         self.day_totals(self.current_day)
         self.period_totals(self.current_day)
+
+    def keyboard_btn(self, instance, keyboard, keycode, text, modifiers):
+        if keycode == 80:
+            self.change_day(-1)
+        elif keycode == 79 and (self.current_day + timedelta(days=1)).date() <= self.last_clock_in.date():
+            self.change_day(1)
 
     def on_pre_enter(self, *args):
         self.name_and_status = Label(
@@ -102,7 +118,7 @@ class ViewHours(StaticWidgets):
         # Setup the period totals
         self.period_sv = ScrollView(
             pos_hint={"center_x": .853, "top": .55},
-            size_hint=(.2, .4)
+            size_hint=(.19, .43)
         )
         self.add_widget(self.period_sv)
         self.period_list = MDList()
@@ -110,4 +126,5 @@ class ViewHours(StaticWidgets):
 
         self.last_clock_in = datetime.strptime(self.emp_obj.get_last_entry(desired_column="ClockIn")[:10], "%Y-%m-%d")
         self.current_day = self.last_clock_in
+        Window.bind(on_key_down=self.keyboard_btn)
         self.change_day(0)
