@@ -4,6 +4,7 @@ from my_import_statements import *
 from static_widgets import StaticWidgets
 import clock_in_or_out
 import view_hours
+import request_vacation
 
 Builder.load_file("employee_menu_screen.kv")
 
@@ -51,7 +52,8 @@ class EmployeeMenuScreen(StaticWidgets):
             request_vacation_button = MDRoundFlatButton(
                 text="Request Vacation",
                 pos_hint={"center_x": .5, "center_y": .3},
-                font_size=30
+                font_size=30,
+                on_release=lambda x: self.request_vacation()
             )
             self.add_widget(request_vacation_button)
 
@@ -74,7 +76,8 @@ class EmployeeMenuScreen(StaticWidgets):
             view_hours_button = MDRoundFlatButton(
                 text="View Hours",
                 pos_hint={"center_x": .5, "center_y": .5},
-                font_size=30
+                font_size=30,
+                on_release=lambda x: self.view_hours()
             )
             self.add_widget(view_hours_button)
 
@@ -87,14 +90,16 @@ class EmployeeMenuScreen(StaticWidgets):
             view_time_off_button = MDRoundFlatButton(
                 text="View Time Off",
                 pos_hint={"center_x": .5, "center_y": .6},
-                font_size=30
+                font_size=30,
+                on_release=lambda x: self.view_hours()
             )
             self.add_widget(view_time_off_button)
 
             request_vacation_button = MDRoundFlatButton(
                 text="Request Vacation",
                 pos_hint={"center_x": .5, "center_y": .5},
-                font_size=30
+                font_size=30,
+                on_release=lambda x: self.request_vacation()
             )
             self.add_widget(request_vacation_button)
 
@@ -122,3 +127,7 @@ class EmployeeMenuScreen(StaticWidgets):
     def view_hours(self):
         view_hours.ViewHours.emp_obj = self.emp_obj
         self.change_screen("view hours", "left")
+
+    def request_vacation(self):
+        request_vacation.RequestVacation.emp_obj = self.emp_obj
+        self.change_screen("request vacation", "left")

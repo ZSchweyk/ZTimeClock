@@ -1,0 +1,21 @@
+#:import MyTextInput MyTextInput
+
+<RequestVacation>
+    from_field: from_field
+    to_field: to_field
+
+    <MyTextInput>:
+        MDTextField:
+            id: from_field
+            hint_text: "From"
+            font_size: 25
+            pos_hint: {"center_x": .4, "center_y": .5}
+            size_hint: .15, .085
+
+    MDTextField:
+        id: to_field
+        hint_text: "To"
+        font_size: 25
+        pos_hint: {"center_x": .6, "center_y": .5}
+        size_hint: .15, .085
+        focus: True

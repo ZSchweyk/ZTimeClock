@@ -21,6 +21,7 @@ from login_screen import LoginScreen
 from employee_menu_screen import EmployeeMenuScreen
 from clock_in_or_out import ClockInOrOut
 from view_hours import ViewHours
+from request_vacation import RequestVacation
 
 Window.size = (1280, 800)
 Window.top = 350
@@ -36,6 +37,7 @@ class zTimeClock(MDApp):
         self.sm.add_widget(EmployeeMenuScreen(name="employee menu"))
         self.sm.add_widget(ClockInOrOut(name="clock in or out"))
         self.sm.add_widget(ViewHours(name="view hours"))
+        self.sm.add_widget(RequestVacation(name="request vacation"))
         self.sm.current = "login"
         return self.sm
 
