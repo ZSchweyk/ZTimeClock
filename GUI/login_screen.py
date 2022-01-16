@@ -11,6 +11,7 @@ class LoginScreen(StaticWidgets):
     def __init__(self, **kw):
         super().__init__(**kw)
         self.display_quote_of_the_day()
+        # 60 * 60 * 24
         Clock.schedule_interval(lambda x: self.display_quote_of_the_day, 60 * 60 * 24)
         Clock.schedule_interval(self.keep_entry_focused, 2)
         Window.bind(on_key_down=self.enter)
