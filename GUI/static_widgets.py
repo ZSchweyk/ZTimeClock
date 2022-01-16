@@ -10,13 +10,13 @@ class StaticWidgets(Screen):
     def __init__(self, **kw):
         super().__init__(**kw)
         self.week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        self.update_clock("")
-        Clock.schedule_interval(self.update_clock, 1)
+        Clock.schedule_interval(lambda x: self.update_clock(), 1)
 
-    def update_clock(self, t):
+    def update_clock(self):
         now = datetime.now()
         self.day_and_date_label.text = self.week_days[now.weekday()][:3] + " " + now.strftime("%m/%d/%Y")
         self.time_label.text = now.strftime("%I:%M:%S %p")
+
         if now.hour < 12:
             self.greeting_label.text = "Good Morning"
         elif now.hour < 17:

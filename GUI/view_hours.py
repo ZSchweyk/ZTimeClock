@@ -23,7 +23,11 @@ class ViewHours(StaticWidgets):
         daily_records, total_day_hours = \
             self.emp_obj.get_records_and_hours_for_day(day.strftime("%m/%d/%y"), "%m/%d/%y")
 
-
+        if (self.current_day + timedelta(days=1)).date() <= self.last_clock_in.date():
+            self.next_day.disabled = False
+            self.next_day.md_bg_color = (1,1,1,1)
+        else:
+            self.next_day.disabled = True
 
         if day.date() == datetime.today().date():
             self.date_and_total_day_hours.text = f"Today's\nTotal Hours: {round(total_day_hours, 2)}"
