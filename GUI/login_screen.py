@@ -10,8 +10,8 @@ class LoginScreen(StaticWidgets):
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.display_quote_of_the_day("")
-        Clock.schedule_interval(self.display_quote_of_the_day, 60 * 60 * 24)
+        self.display_quote_of_the_day()
+        Clock.schedule_interval(lambda x: self.display_quote_of_the_day, 60 * 60 * 24)
         Clock.schedule_interval(self.keep_entry_focused, 2)
         Window.bind(on_key_down=self.enter)
 
@@ -51,7 +51,7 @@ class LoginScreen(StaticWidgets):
     #     MDApp.get_running_app().sm.transition.direction = "left"
     #     MDApp.get_running_app().sm.current = "employee menu"
 
-    def display_quote_of_the_day(self, t):
+    def display_quote_of_the_day(self):
         with open("quotes.txt", "r", encoding="utf8") as f:
             list_of_quotes = f.readlines()
             rand_index = random.randint(0, len(list_of_quotes) - 1)

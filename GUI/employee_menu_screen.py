@@ -103,7 +103,7 @@ class EmployeeMenuScreen(StaticWidgets):
                 request_vacation_button
             ]
 
-        self.back_button(back_to_text="Login Screen", back_to_screen="login", direction="right")
+        self.back_button(back_to_screen="login", direction="right")
 
     def clock_in_or_out(self):
         # self.emp_obj.min_wait_time = 60 * 10 by default. Change it HERE if necessary.

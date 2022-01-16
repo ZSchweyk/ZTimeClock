@@ -25,7 +25,7 @@ class ViewHours(StaticWidgets):
 
         if (self.current_day + timedelta(days=1)).date() <= self.last_clock_in.date():
             self.next_day.disabled = False
-            self.next_day.md_bg_color = (1,1,1,1)
+            # self.next_day.md_bg_color = (1,1,1,1)
         else:
             self.next_day.disabled = True
 
