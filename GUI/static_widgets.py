@@ -6,11 +6,29 @@ class StaticWidgets(Screen):
     day_and_date_label = ObjectProperty(None)
     time_label = ObjectProperty(None)
     greeting_label = ObjectProperty(None)
+    employee_status: bool = False
+    last_mouse_move: datetime = None
 
     def __init__(self, **kw):
         super().__init__(**kw)
         self.week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         Clock.schedule_interval(lambda x: self.update_clock(), 1)
+        self.screen_clear = Clock.schedule_interval(lambda x: self.automatic_screen_clear(10), .1)
+        Window.bind(mouse_pos=self.on_mouse_pos)
+
+    def on_mouse_pos(self, window_obj, pos):
+        self.last_mouse_move = datetime.now()
+
+    def automatic_screen_clear(self, min_num_sec):
+        if self.employee_status:
+            # print("Employee is logged in")
+            # print("Seconds:", (datetime.now().timestamp() - self.last_mouse_move.timestamp()))
+            if datetime.now().timestamp() - self.last_mouse_move.timestamp() >= min_num_sec:
+                print("Changing screens")
+                self.change_screen("login", "right")
+                self.employee_status = False
+
+
 
     def update_clock(self):
         now = datetime.now()
@@ -37,4 +55,14 @@ class StaticWidgets(Screen):
     def change_screen(self, back_to_screen, direction):
         MDApp.get_running_app().sm.transition.direction = direction
         MDApp.get_running_app().sm.current = back_to_screen
+
+    @staticmethod
+    def hide_widget(wid, dohide=True):
+        if hasattr(wid, 'saved_attrs'):
+            if not dohide:
+                wid.height, wid.size_hint_y, wid.opacity, wid.disabled = wid.saved_attrs
+                del wid.saved_attrs
+        elif dohide:
+            wid.saved_attrs = wid.height, wid.size_hint_y, wid.opacity, wid.disabled
+            wid.height, wid.size_hint_y, wid.opacity, wid.disabled = 0, None, 0, True
 

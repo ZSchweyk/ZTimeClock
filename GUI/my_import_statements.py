@@ -30,6 +30,6 @@ from threading import Thread
 
 
 
-db_path = "../employee_time_clock.db"
+db_path = "employee_time_clock.db"
 c = ZSqlite(db_path)
 

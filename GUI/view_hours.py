@@ -25,9 +25,11 @@ class ViewHours(StaticWidgets):
 
         if (self.current_day + timedelta(days=1)).date() <= self.last_clock_in.date():
             self.next_day.disabled = False
+            self.hide_widget(self.next_day, dohide=False)
             # self.next_day.md_bg_color = (1,1,1,1)
         else:
-            self.next_day.disabled = True
+            self.hide_widget(self.next_day)
+            # self.next_day.disabled = True
 
         if day.date() == datetime.today().date():
             self.date_and_total_day_hours.text = f"Today's\nTotal Hours: {round(total_day_hours, 2)}"
