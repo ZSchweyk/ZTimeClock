@@ -3,6 +3,7 @@ import employee_menu_screen
 from my_import_statements import *
 
 from static_widgets import StaticWidgets
+from kivy.animation import Animation
 
 class LoginScreen(StaticWidgets):
     quote_of_the_day = ObjectProperty(None)
@@ -10,9 +11,9 @@ class LoginScreen(StaticWidgets):
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.display_quote_of_the_day()
+        self.display_quote_of_the_day("")
         # 60 * 60 * 24
-        Clock.schedule_interval(lambda x: self.display_quote_of_the_day, 60 * 60 * 24)
+        Clock.schedule_interval(self.display_quote_of_the_day, 60 * 10)
         Clock.schedule_interval(self.keep_entry_focused, 2)
         Window.bind(on_key_down=self.enter)
 
@@ -52,7 +53,7 @@ class LoginScreen(StaticWidgets):
     #     MDApp.get_running_app().sm.transition.direction = "left"
     #     MDApp.get_running_app().sm.current = "employee menu"
 
-    def display_quote_of_the_day(self):
+    def display_quote_of_the_day(self, t):
         with open("quotes.txt", "r", encoding="utf8") as f:
             list_of_quotes = f.readlines()
             rand_index = random.randint(0, len(list_of_quotes) - 1)
@@ -63,4 +64,6 @@ class LoginScreen(StaticWidgets):
                     new_str[-1] += "\n"
 
             self.quote_of_the_day.text = " ".join(new_str)
+
+
 

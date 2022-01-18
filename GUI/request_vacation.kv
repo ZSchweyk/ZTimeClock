@@ -1,19 +1,37 @@
 <RequestVacation>:
-    from_field: from_field
-    to_field: to_field
+    confirmation_label: confirmation_label
+    send_request_btn: send_request_btn
+    cancel_request_btn: cancel_request_btn
 
-    MDTextField:
-        id: from_field
-        hint_text: "From"
-        font_size: 25
-        pos_hint: {"center_x": .4, "center_y": .5}
-        size_hint: .15, .085
-        focus: True
+    Label:
+        text: "Please choose the date range for your intended vacation."
+        font_size: 15
+        halign: "center"
+        pos_hint: {"center_x": .5, "center_y": .6}
 
-    MDTextField:
-        id: to_field
-        hint_text: "To"
-        font_size: 25
-        pos_hint: {"center_x": .6, "center_y": .5}
-        size_hint: .15, .085
-        focus: True
+
+    MDRoundFlatButton:
+        text: "Open Calendar"
+        pos_hint: {"center_x": .5, "center_y": .5}
+        on_release: root.open_calendar()
+        font_size: 30
+
+    Label:
+        id: confirmation_label
+        font_size: 15
+        pos_hint: {"center_x": .5, "center_y": .4}
+        halign: "center"
+
+    MDRoundFlatButton:
+        id: send_request_btn
+        text: "Send"
+        pos_hint: {"center_x": .45, "center_y": .3}
+        on_release: root.send_request()
+        font_size: 30
+
+    MDRoundFlatButton:
+        id: cancel_request_btn
+        text: "Cancel"
+        pos_hint: {"center_x": .55, "center_y": .3}
+        on_release: root.cancel_request()
+        font_size: 30
