@@ -75,7 +75,7 @@ ZTimeClock
 
 
 """
-        send_email_with_db_attachment("ChemtrolAlerts@gmail.com", "sbcs1976", "zschweyk@gmail.com", body, f"Vacation Request from {self.emp_obj.first} {self.emp_obj.last} on {now.strftime('%m/%d/%Y')} at {now.strftime('%I:%M %p')}", "")
+        send_email_with_db_attachment("ChemtrolAlerts@gmail.com", "", "zschweyk@gmail.com", body, f"Vacation Request from {self.emp_obj.first} {self.emp_obj.last} on {now.strftime('%m/%d/%Y')} at {now.strftime('%I:%M %p')}", "")
         dialog = MDDialog(
             text=f"Request sent. A reply will be emailed to you within one week.",
             radius=[20, 7, 20, 7],
