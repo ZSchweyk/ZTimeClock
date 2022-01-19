@@ -84,6 +84,13 @@ def str_fraction_to_num(fraction: str):
     num, den = fraction.split("/")
     return float(num) / float(den)
 
+def is_the_last_day_of_period(date_str, format):
+    given_date = datetime.strptime(date_str, format)
+    if given_date.day == 15 or given_date.day == monthrange(given_date.year, given_date.month)[1]:
+        return True
+    else:
+        return False
+
 
 # Returns an array of dates in a period depending on what period a given date is in.
 def getPeriodFromDateString(date_string, format):
@@ -155,7 +162,9 @@ def getArrayOfDates(start, end, entered_format, result_format):
 # take into account for whether or not the last day of the period is a weekday or not. If the last day of the period lands on a weekend, the displayed period days will
 # end at the last weekday before the end of the period. The displayed period days are useful when displaying the period days in a report, and the calculated period days are useful when
 # looping through every single day in a period from the 1st - 15th or the 16th - last_day_of_month to do payroll calculations.
-def get_period_days_with_num(num):
+# last_day_of_period_function should be a function that accepts a date and its format, and determines whether or not it is the last day of a period.
+# This is important because it depends on how I'd like to classify the last day of the period; is_this_a_pay_day or is_the_last_day_of_period
+def get_period_days_with_num(num, last_day_of_period_function=is_the_last_day_of_period):
     today = datetime.today()
     day = ""
     additional_months = 0
@@ -189,7 +198,7 @@ def get_period_days_with_num(num):
     beginning_of_period = temporary_date[:3] + day + temporary_date[5:]
 
     end_of_period = datetime.strptime(beginning_of_period, "%m/%d/%Y")
-    while not is_this_a_pay_day(end_of_period.strftime("%m/%d/%Y"), "%m/%d/%Y"):
+    while not last_day_of_period_function(end_of_period.strftime("%m/%d/%Y"), "%m/%d/%Y"):
         end_of_period += timedelta(days=1)
 
     last_day_of_calculated_period_days = 0

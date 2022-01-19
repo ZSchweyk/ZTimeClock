@@ -440,17 +440,17 @@ class Employee(ZSqlite):
             )
         else:
             total_vact = self.exec_sql(
-                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
+                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? AND UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
                 param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
                 fetch_str="all"
             )
             total_sick = self.exec_sql(
-                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
+                "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? AND UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
                 param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
                 fetch_str="all"
             )
         return {
-            "Vact": total_vact[0][0],
+            "Vacation": total_vact[0][0],
             "Sick": total_sick[0][0]
         }
 
