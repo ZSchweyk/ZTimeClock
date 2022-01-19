@@ -5,6 +5,7 @@ from static_widgets import StaticWidgets
 import clock_in_or_out
 import view_hours
 import request_vacation
+import view_time_off
 
 Builder.load_file("employee_menu_screen.kv")
 
@@ -45,7 +46,8 @@ class EmployeeMenuScreen(StaticWidgets):
             view_time_off_button = MDRoundFlatButton(
                 text="View Time Off",
                 pos_hint={"center_x": .5, "center_y": .4},
-                font_size=30
+                font_size=30,
+                on_release = lambda x: self.view_time_off()
             )
             self.add_widget(view_time_off_button)
 
@@ -91,7 +93,7 @@ class EmployeeMenuScreen(StaticWidgets):
                 text="View Time Off",
                 pos_hint={"center_x": .5, "center_y": .6},
                 font_size=30,
-                on_release=lambda x: self.view_hours()
+                on_release = lambda x: self.view_time_off()
             )
             self.add_widget(view_time_off_button)
 
@@ -127,6 +129,10 @@ class EmployeeMenuScreen(StaticWidgets):
     def view_hours(self):
         view_hours.ViewHours.emp_obj = self.emp_obj
         self.change_screen("view hours", "left")
+
+    def view_time_off(self):
+        view_time_off.ViewTimeOff.emp_obj = self.emp_obj
+        self.change_screen("view time off", "left")
 
     def request_vacation(self):
         request_vacation.RequestVacation.emp_obj = self.emp_obj

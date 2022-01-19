@@ -1,0 +1,24 @@
+<ViewTimeOff>:
+    MDRoundFlatButton:
+        id: previous_period
+        text: "<"
+        pos_hint: {"center_x": .35, "center_y": .7}
+        # on_release: root.change_period(-1)
+        font_size: 30
+
+    Label:
+        id: period_label
+        pos_hint: {"center_x": .5, "center_y": .7}
+        halign: "center"
+
+    MDRoundFlatButton:
+        id: next_period
+        text: ">"
+        pos_hint: {"center_x": .65, "center_y": .7}
+        # on_release: root.change_period(1)
+        font_size: 30
+
+    MDSeparator:
+        orientation: 'vertical'
+        height: ".5dp"
+        pos_hint: {"center_x": .3, "top": .55}
