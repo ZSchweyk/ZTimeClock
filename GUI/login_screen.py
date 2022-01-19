@@ -44,8 +44,6 @@ class LoginScreen(StaticWidgets):
                 self.emp_id.hint_text = "Incorrect Password"
                 return
             self.emp_id.text = ""
-            self.employee_status = True
-            self.last_mouse_move = datetime.now()
             self.change_screen("employee menu", "left")
 
     def display_quote_of_the_day(self, t):

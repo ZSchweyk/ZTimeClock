@@ -6,7 +6,6 @@ class StaticWidgets(Screen):
     day_and_date_label = ObjectProperty(None)
     time_label = ObjectProperty(None)
     greeting_label = ObjectProperty(None)
-    employee_status: bool = False
     last_mouse_move: datetime = None
 
     def __init__(self, **kw):
@@ -20,14 +19,12 @@ class StaticWidgets(Screen):
         self.last_mouse_move = datetime.now()
 
     def automatic_screen_clear(self, min_num_sec):
-        if self.employee_status:
-            print(datetime.now().timestamp() - self.last_mouse_move.timestamp())
+        if MDApp.get_running_app().sm.current != "login":
+            # print(datetime.now().timestamp() - self.last_mouse_move.timestamp())
             if datetime.now().timestamp() - self.last_mouse_move.timestamp() >= min_num_sec:
-                print("Changing screens")
                 self.change_screen("login", "right")
-                self.employee_status = False
-
-
+        else:
+            self.last_mouse_move = datetime.now()
 
     def update_clock(self):
         now = datetime.now()

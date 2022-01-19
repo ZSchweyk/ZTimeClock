@@ -97,12 +97,11 @@ class ViewHours(StaticWidgets):
         self.period_totals(self.current_day)
 
     def keyboard_btn(self, instance, keyboard, keycode, text, modifiers):
-        print("Updated self.last_mouse_move")
         if keycode == 80:
             self.change_day(-1)
         elif keycode == 79 and (self.current_day + timedelta(days=1)).date() <= self.last_clock_in.date():
             self.change_day(1)
-        self.last_mouse_move = datetime.now()
+
 
     def on_pre_enter(self, *args):
         self.name_and_status = Label(
