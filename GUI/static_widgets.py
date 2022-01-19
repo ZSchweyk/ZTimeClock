@@ -21,8 +21,7 @@ class StaticWidgets(Screen):
 
     def automatic_screen_clear(self, min_num_sec):
         if self.employee_status:
-            # print("Employee is logged in")
-            # print("Seconds:", (datetime.now().timestamp() - self.last_mouse_move.timestamp()))
+            print(datetime.now().timestamp() - self.last_mouse_move.timestamp())
             if datetime.now().timestamp() - self.last_mouse_move.timestamp() >= min_num_sec:
                 print("Changing screens")
                 self.change_screen("login", "right")
