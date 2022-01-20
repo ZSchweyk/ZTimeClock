@@ -212,10 +212,10 @@ def get_period_days_with_num(num, last_day_of_period_function=is_the_last_day_of
     # (displayed_period_boundaries, calculated_pay_days_from_1_to_15)
 
     return (
-        (datetime.strptime(beginning_of_period, "%m/%d/%Y").strftime("%m/%d/%y"), end_of_period.strftime("%m/%d/%y")),
+        (datetime.strptime(beginning_of_period, "%m/%d/%Y").strftime("%m/%d/%Y"), end_of_period.strftime("%m/%d/%Y")),
         tuple(getArrayOfDates(beginning_of_period, end_of_period.strftime("%m/%d/%Y")[
                                                    :3] + last_day_of_calculated_period_days + end_of_period.strftime(
-            "%m/%d/%Y")[5:], "%m/%d/%Y", "%m/%d/%y")))
+            "%m/%d/%Y")[5:], "%m/%d/%Y", "%m/%d/%Y")))
 
 
 # print(getPeriodFromDateString("12/13/2021", "%m/%d/%Y"))

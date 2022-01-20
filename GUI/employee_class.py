@@ -415,10 +415,10 @@ class Employee(ZSqlite):
             loop_counter += 1
 
             #   if loop_date.day == from_date.day:
-            print(loop_date.strftime("%m/%d/%Y"), end=" ")
-            print("sick_rate:", sick_daily_rate, end=" ")
-            print("vac_rate:", vac_daily_rate, end=" ")
-            print("Sick:", total_sick_accrued, "  Vac:", total_vac_accrued)
+            # print(loop_date.strftime("%m/%d/%Y"), end=" ")
+            # print("sick_rate:", sick_daily_rate, end=" ")
+            # print("vac_rate:", vac_daily_rate, end=" ")
+            # print("Sick:", total_sick_accrued, "  Vac:", total_vac_accrued)
             loop_date += timedelta(days=1)
         return {
             "SickAccrued": total_sick_accrued,
@@ -431,26 +431,26 @@ class Employee(ZSqlite):
             total_vact = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
                 param=(flast,),
-                fetch_str="all"
+                fetch_str="one"
             )
             total_sick = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
                 param=(flast,),
-                fetch_str="all"
+                fetch_str="one"
             )
         else:
             total_vact = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? AND UPPER(EmpID) = ? AND UPPER(LeaveType) = 'VACT'",
-                param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
-                fetch_str="all"
+                param=(datetime.strptime(period, period_format).strftime("%m/%d/%y"), flast),
+                fetch_str="one"
             )
             total_sick = self.exec_sql(
                 "SELECT SUM(LeaveHours) FROM time_off_taken WHERE PeriodEnd = ? AND UPPER(EmpID) = ? AND UPPER(LeaveType) = 'SICK'",
-                param=(flast, datetime.strptime(period, period_format).strftime("%m/%d/%Y")),
-                fetch_str="all"
+                param=(datetime.strptime(period, period_format).strftime("%m/%d/%y"), flast),
+                fetch_str="one"
             )
         return {
-            "Vacation": total_vact[0][0],
-            "Sick": total_sick[0][0]
+            "Vacation": total_vact[0] if total_vact[0] is not None else 0,
+            "Sick": total_sick[0] if total_sick[0] is not None else 0
         }
 
