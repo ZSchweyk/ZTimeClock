@@ -31,7 +31,6 @@ import time
 from threading import Thread
 
 
-
-db_path = "employee_time_clock.db"
-c = ZSqlite(db_path)
+Employee.db_path = "employee_time_clock.db"
+c = ZSqlite(Employee.db_path)
 

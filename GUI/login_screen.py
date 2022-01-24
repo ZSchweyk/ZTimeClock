@@ -37,7 +37,7 @@ class LoginScreen(StaticWidgets):
                     else:
                         entered_id = ""
 
-                    emp_obj = Employee(entered_id, db_path)
+                    emp_obj = Employee(entered_id)
                     employee_menu_screen.EmployeeMenuScreen.emp_obj = emp_obj
             except:
                 self.emp_id.text = ""

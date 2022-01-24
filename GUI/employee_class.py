@@ -29,8 +29,9 @@ class ZSqlite:
 
 
 class Employee(ZSqlite):
-    def __init__(self, emp_id, db_path):
-        super().__init__(db_path)
+    db_path: str = None
+    def __init__(self, emp_id):
+        super().__init__(self.db_path)
         data = self.exec_sql(
             "SELECT FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours, HireDate, TermDate, Hourly, PartTime, Birthday, EMail, CellNum FROM employees WHERE ID = ?;",
             param=(emp_id,), fetch_str="one")
@@ -39,6 +40,9 @@ class Employee(ZSqlite):
         self.ot_allowed = self.ot_allowed.lower()
         self.emp_id = emp_id
         self.min_wait_time = 10 * 60
+
+    def __repr__(self):
+        return f"Employee({self.emp_id})"
 
     def get_type(self):
         if self.hourly.lower() == "salary":
