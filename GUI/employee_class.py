@@ -234,6 +234,14 @@ class Employee(ZSqlite):
             fetch_str="one"
         )[0]
 
+    def came_to_work_on(self, day: datetime):
+        query = self.exec_sql(
+            "SELECT ClockIn FROM time_clock_entries WHERE ClockIn LIKE ? LIMIT 1;",
+            param=(day.strftime("%Y-%m-%d%%"),),
+            fetch_str="one"
+        )
+        return query is not None
+
 
     def get_status(self):
         # "SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;"

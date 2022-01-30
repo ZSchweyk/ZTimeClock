@@ -13,13 +13,18 @@ class Employees(ZSqlite):
     def all(cls):
         return cls([Employee(emp_tuple[0]) for emp_tuple in ZSqlite(Employee.db_path).exec_sql("SELECT ID FROM employees;", fetch_str="all")])
 
-    def get_status(self, boolean):
-        return [employee for employee in self.employees if employee.get_status() == boolean]
+    def get_employees_based_on_status(self, status=True):
+        return [employee for employee in self.employees if employee.get_status() == status]
+
+    def get_employees_based_on_if_they_came_to_work(self, day: datetime, did_they_come=True):
+        return [employee for employee in self.employees if employee.came_to_work_on(day) == did_they_come]
+
+
 
 
 
 
 
 all_emps = Employees.all()
-print(all_emps.employees)
+print(Employee("E1").came_to_work_on(datetime.strptime("1/24/2022", "%m/%d/%Y")))
 
