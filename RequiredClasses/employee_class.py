@@ -1,9 +1,11 @@
-from UsefulFunctions import *
+from .UsefulFunctions import *
 from calendar import monthrange
-from zsqlite_class import ZSqlite
+from .zsqlite_class import ZSqlite
+
 
 class Employee(ZSqlite):
     db_path: str = None
+
     def __init__(self, emp_id):
         super().__init__(self.db_path)
         data = self.exec_sql(
@@ -189,8 +191,8 @@ class Employee(ZSqlite):
     # Selects an employee's task on a given date.
     def select_task(self, task_date, format):
         task = self.exec_sql("SELECT task FROM employee_tasks WHERE employee_id = ? AND task_date = ?;",
-                               param=(self.emp_id, datetime.strptime(task_date, format).strftime("%m/%d/%Y")),
-                               fetch_str="one")
+                             param=(self.emp_id, datetime.strptime(task_date, format).strftime("%m/%d/%Y")),
+                             fetch_str="one")
         if task is not None:
             return task[0]
         else:
@@ -215,7 +217,6 @@ class Employee(ZSqlite):
             fetch_str="one"
         )
         return query is not None
-
 
     def get_status(self):
         # "SELECT row, ClockIn, ClockOut FROM time_clock_entries WHERE empID = '" + entered_id + "' ORDER BY row DESC LIMIT 1;"
@@ -257,8 +258,8 @@ class Employee(ZSqlite):
                 fetch_str="one")
             if datetime.today().date() == datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S").date():
                 self.exec_sql("UPDATE time_clock_entries SET ClockOut = DateTime('now', 'localtime') WHERE row = ?",
-                                param=(row_to_insert,)
-                )
+                              param=(row_to_insert,)
+                              )
                 return True
             else:
                 return False
@@ -268,7 +269,7 @@ class Employee(ZSqlite):
                 self.exec_sql(
                     "INSERT INTO time_clock_entries(empID, ClockIn) VALUES(?, DateTime('now', 'localtime'))",
                     param=(self.emp_id,)
-                    )
+                )
                 return True
             else:
                 return False
@@ -276,7 +277,7 @@ class Employee(ZSqlite):
     def can_clock_in(self, min_wait_seconds=0):
         if not self.get_status():
             clock_out = self.exec_sql(
-"SELECT ClockOut FROM time_clock_entries WHERE empID = ? AND ClockIn != '' AND ClockOut != '' ORDER BY row DESC LIMIT 1;",
+                "SELECT ClockOut FROM time_clock_entries WHERE empID = ? AND ClockIn != '' AND ClockOut != '' ORDER BY row DESC LIMIT 1;",
                 param=(self.emp_id,),
                 fetch_str="one")[0]
             if clock_out == "FORGOT":
@@ -285,7 +286,6 @@ class Employee(ZSqlite):
             if (datetime.now() - clock_out).seconds >= min_wait_seconds:
                 return True
             return False
-
 
     def get_records_and_hours_for_day(self, desired_date, format):
         desired_date = datetime.strptime(desired_date, format).strftime("%Y-%m-%d")
@@ -307,7 +307,8 @@ class Employee(ZSqlite):
                     seconds += clock_out.timestamp() - clock_in.timestamp()
                     clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"),
                                                       clock_out.strftime("%I:%M:%S %p"),
-                                                      format_seconds_to_hhmmss(clock_out.timestamp() - clock_in.timestamp())
+                                                      format_seconds_to_hhmmss(
+                                                          clock_out.timestamp() - clock_in.timestamp())
                                                       ])
             else:
                 clockin_clockout_duration.append([clock_in.strftime("%I:%M:%S %p"), "", ""])
@@ -323,7 +324,6 @@ class Employee(ZSqlite):
             total_hours += r_and_h[1]
             daily_hours.append([day, r_and_h[1]])
         return daily_hours, total_hours
-
 
     def get_vac_and_sick(self, from_date="", to_date=datetime.today().strftime("%m/%d/%Y"),
                          dates_format="%m/%d/%Y"):
@@ -369,7 +369,7 @@ class Employee(ZSqlite):
 
             tier_array = sorted([tier[0] for tier in
                                  self.exec_sql("SELECT Tier FROM vac_sick_rates WHERE Date = ?;", param=(tier_date,),
-                                                 fetch_str="all")])
+                                               fetch_str="all")])
 
             total_work_duration = ((loop_date - since).days / 365)
             for index, tier_num in enumerate(tier_array):
@@ -439,4 +439,3 @@ class Employee(ZSqlite):
             "Vacation": total_vact[0] if total_vact[0] is not None else 0,
             "Sick": total_sick[0] if total_sick[0] is not None else 0
         }
-

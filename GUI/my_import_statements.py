@@ -24,14 +24,13 @@ from datetime import datetime
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager, Screen
-from employee_class import Employee
-from zsqlite_class import ZSqlite
-from UsefulFunctions import *
+from RequiredClasses.employee_class import Employee
+from RequiredClasses.zsqlite_class import ZSqlite
+from RequiredClasses.UsefulFunctions import *
 import random
 import time
 from threading import Thread
 
-
-Employee.db_path = "employee_time_clock.db"
+Employee.db_path = "../employee_time_clock.db"
 c = ZSqlite(Employee.db_path)
 

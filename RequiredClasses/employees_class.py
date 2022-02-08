@@ -1,4 +1,7 @@
-from my_import_statements import *
+from datetime import datetime
+from employee_class import Employee
+from zsqlite_class import ZSqlite
+
 
 class Employees(ZSqlite):
     def __init__(self, emp_list: list):
