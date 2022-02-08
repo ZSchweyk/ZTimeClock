@@ -1,4 +1,3 @@
-from employee_class import ZSqlite, Employee
 from my_import_statements import *
 
 class Employees(ZSqlite):

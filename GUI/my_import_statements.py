@@ -24,7 +24,8 @@ from datetime import datetime
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager, Screen
-from employee_class import Employee, ZSqlite
+from employee_class import Employee
+from zsqlite_class import ZSqlite
 from UsefulFunctions import *
 import random
 import time
