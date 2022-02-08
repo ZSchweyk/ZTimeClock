@@ -1,0 +1,2 @@
+Run a Python file by double clicking a .vbs file. Alternative to .exe (.exe becomes tricky with KivyMD & multiple files)
+https://stackoverflow.com/questions/1689015/run-python-script-without-windows-console-appearing#:~:text=This%20will%20work%20on%20all%20Windows%20Versions%3A
