@@ -1,4 +1,4 @@
 @echo off
 cd GUI
-python -m main.py
-python
+python main.py
+

@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "..")
+
 import kivy
 import kivymd
 from kivy.config import Config
