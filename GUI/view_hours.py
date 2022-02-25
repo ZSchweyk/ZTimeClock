@@ -49,10 +49,9 @@ class ViewHours(StaticWidgets):
             self.day_sv.do_scroll = False
             self.day_sv.scroll_y = 1
 
-
-
     def period_totals(self, day_obj):
-        day_records, total_period_hours = self.emp_obj.get_records_and_daily_hours_for_period(day_obj.strftime("%m/%d/%y"), "%m/%d/%y")
+        day_records, total_period_hours = self.emp_obj.get_records_and_daily_hours_for_period(
+            day_obj.strftime("%m/%d/%y"), "%m/%d/%y")
         for day, day_hours in day_records:
             str_duration = str(round(day_hours, 2))
             if str_duration == "0.0":
@@ -83,8 +82,6 @@ class ViewHours(StaticWidgets):
             self.period_and_total_period_hours.text = day_obj.strftime(
                 f"%m/{last_day_of_period}/%y") + f"\n Period's Total Hours: {round(total_period_hours, 2)}"
 
-
-
     def z_clear_widgets(self):
         self.day_list.clear_widgets()
         self.period_list.clear_widgets()
@@ -101,7 +98,6 @@ class ViewHours(StaticWidgets):
             self.change_day(-1)
         elif keycode == 79 and (self.current_day + timedelta(days=1)).date() <= self.last_clock_in.date():
             self.change_day(1)
-
 
     def on_pre_enter(self, *args):
         self.name_and_status = Label(
