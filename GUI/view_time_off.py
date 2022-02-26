@@ -12,7 +12,16 @@ class ViewTimeOff(StaticWidgets):
         self.back_button()
         self.period = 0
 
+    def keyboard_btn(self, instance, keyboard, keycode, text, modifiers):
+        # print(keycode)
+        if keycode == 80:
+            self.change_period(-1)
+        elif keycode == 79:
+            self.change_period(1)
+
     def change_period(self, increment):
+        if self.period == 0 and increment == 1:
+            return
         self.period += increment
         last_day_of_period = get_period_days_with_num(self.period)[0][1]
         self.period_label.text = last_day_of_period
@@ -53,3 +62,4 @@ class ViewTimeOff(StaticWidgets):
         )
         self.change_period(0)
         self.add_widget(self.table)
+        Window.bind(on_key_down=self.keyboard_btn)
