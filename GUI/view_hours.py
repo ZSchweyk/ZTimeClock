@@ -1,6 +1,5 @@
 from my_import_statements import *
 from static_widgets import StaticWidgets
-
 Builder.load_file("view_hours.kv")
 
 
