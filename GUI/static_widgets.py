@@ -12,7 +12,7 @@ class StaticWidgets(Screen):
         super().__init__(**kw)
         self.week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         Clock.schedule_interval(lambda x: self.update_clock(), 1)
-        self.screen_clear = Clock.schedule_interval(lambda x: self.automatic_screen_clear(120), .1)
+        self.screen_clear = Clock.schedule_interval(lambda x: self.automatic_screen_clear(60), .1)
         Window.bind(mouse_pos=self.on_mouse_pos)
 
     def on_mouse_pos(self, window_obj, pos):
