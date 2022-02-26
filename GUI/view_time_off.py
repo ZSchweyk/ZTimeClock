@@ -60,6 +60,7 @@ class ViewTimeOff(StaticWidgets):
                           ("Total Balance", dp(30))
             ]
         )
+        self.period = 0
         self.change_period(0)
         self.add_widget(self.table)
         Window.bind(on_key_down=self.keyboard_btn)

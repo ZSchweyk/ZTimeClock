@@ -332,8 +332,8 @@ class Employee(ZSqlite):
         else:
             from_date = datetime.strptime(from_date, dates_format)
         to_date = datetime.strptime(to_date, dates_format)
-        print(from_date.strftime("%m/%d/%Y"))
-        print(to_date.strftime("%m/%d/%Y"))
+        # print(from_date.strftime("%m/%d/%Y"))
+        # print(to_date.strftime("%m/%d/%Y"))
 
         unique_dates_array = [t[0] for t in
                               list(set(self.exec_sql("SELECT Date FROM vac_sick_rates;", fetch_str="all")))]
