@@ -47,7 +47,7 @@ class EmployeeMenuScreen(StaticWidgets):
                 text="View Time Off",
                 pos_hint={"center_x": .5, "center_y": .4},
                 font_size=30,
-                on_release = lambda x: self.view_time_off()
+                on_release=lambda x: self.view_time_off()
             )
             self.add_widget(view_time_off_button)
 
@@ -93,7 +93,7 @@ class EmployeeMenuScreen(StaticWidgets):
                 text="View Time Off",
                 pos_hint={"center_x": .5, "center_y": .6},
                 font_size=30,
-                on_release = lambda x: self.view_time_off()
+                on_release=lambda x: self.view_time_off()
             )
             self.add_widget(view_time_off_button)
 
@@ -113,8 +113,7 @@ class EmployeeMenuScreen(StaticWidgets):
         self.back_button(back_to_screen="login", direction="right")
 
     def clock_in_or_out(self):
-        # self.emp_obj.min_wait_time = 60 * 10 by default. Change it HERE if necessary.
-        self.emp_obj.min_wait_time = 0  # Just for testing.
+        self.emp_obj.min_wait_time = MIN_WAIT_TIME_IN_SECONDS_BEFORE_BEING_ABLE_TO_CLOCK_IN_AGAIN
 
         if not self.emp_obj.get_status() and not self.emp_obj.can_clock_in(min_wait_seconds=self.emp_obj.min_wait_time):
             dialog = MDDialog(
