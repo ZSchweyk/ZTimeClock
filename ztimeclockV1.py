@@ -1,3 +1,5 @@
+# Last updated on 03/14/2022 with rounding
+
 from ast import Index
 from sqlite3.dbapi2 import Error, PARSE_DECLTYPES
 from tkinter import *
@@ -27,6 +29,7 @@ import sys
 
 sys.stderr = sys.stdout
 
+
 def passable():
     pass
 
@@ -34,7 +37,7 @@ def passable():
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = r"C:\Users\ZSchw\Documents\MyProjects\ZTimeClock\\"
+program_files_path = r"C:\Users\Dad\Documents\MyProjects\ZTimeClock\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 
@@ -411,6 +414,25 @@ def change_date_format(entered_date, input_format, output_format):
     return new_format
 
 
+def round_to(num, nrst, limit):
+    """
+    Rounds a number to the nearest tenth, quarter..., and makes sure to not exceed a given limit.
+    """
+    round_to_x_dec = 15
+
+    dec = num - int(num)
+    dec_remainder = round(dec % nrst, round_to_x_dec)
+
+    if dec_remainder == 0:
+        return num
+    if dec_remainder >= round(nrst / 2, round_to_x_dec):
+        rounded_up = int(num) + (dec - dec_remainder) + nrst
+        if rounded_up <= limit:
+            return round(rounded_up, round_to_x_dec)
+    rounded_down = int(num) + (dec - dec_remainder)
+    return round(rounded_down if rounded_down <= limit else limit, round_to_x_dec)
+
+
 # This function is enabled when an employee (or admin) clicks the submit button to clock in or clock out. It serves as the main function to display all the employee
 # and admin info that pops up on the screen. Also, this function deals with the logic to clock in or clock out, or display the message that an employee forgot to clock out
 # and modifies the database accordingly. It also selects a random greeting message every time an employee clocks out or in.
@@ -483,29 +505,68 @@ def enter():
 
                 # If time just clocked in is on payday, then automatically clock them out.
                 if is_this_a_pay_day(datetime.today().strftime("%m/%d/%Y"), "%m/%d/%Y"):
-                    clock_in = c.execute(
+                    clock_in, row = c.execute(
                         "SELECT ClockIn, row FROM time_clock_entries WHERE empID = @0 ORDER BY row DESC LIMIT 1",
                         (entered_id,)).fetchone()
-                    if employee_max_hours_allowed_on_payday(entered_id) >= 8:
-                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(
-                            hours=employee_max_hours_allowed_on_payday(entered_id) + .5)
-                    else:
-                        clock_out = datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S") + timedelta(
-                            hours=employee_max_hours_allowed_on_payday(entered_id))
+                    clock_in = datetime.strptime(clock_in, "%Y-%m-%d %H:%M:%S")
 
-                    if clock_out.day != datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").day:
+                    shift_end_time = c.execute(
+                        "SELECT ShiftEndTime FROM employees WHERE ID = @0",
+                        (entered_id,)
+                    ).fetchone()[0]
+                    shift_end_time = datetime.strptime(shift_end_time + " " + datetime.today().strftime("%m/%d/%Y"),
+                                                       "%H:%M:%S %m/%d/%Y"
+                                                       )
+
+                    if employee_max_hours_allowed_on_payday(entered_id) >= 8:
+                        hours_to_work = employee_max_hours_allowed_on_payday(entered_id) + .5
+                        print("hours_to_work:", hours_to_work)
+                    else:
+                        hours_to_work = employee_max_hours_allowed_on_payday(entered_id)
+                        print("hours_to_work:", hours_to_work)
+
+                    # If calculated # hours needed on payday to complete total period hours surpasses midnight,
+                    # cap it to 11:59pm.
+                    if (clock_in + timedelta(hours=hours_to_work)).day != clock_in.day:
                         c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1", (
-                            datetime.strptime(clock_in[0], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d") + " 23:59:59",
-                            clock_in[1]))
+                            clock_in.strftime("%Y-%m-%d") + " 23:59:59",
+                            row))
                         conn.commit()
                         print("Next Day!")
                         return
+
+                    if clock_in + timedelta(hours=hours_to_work) > shift_end_time:
+                        hours_to_work = (shift_end_time - clock_in).total_seconds() / 3600
+                        print("hours_to_work:", hours_to_work)
+
+                    total_period_hrs_including_payday = get_emp_hours_worked_for_period(entered_id) + hours_to_work
+                    rounded_total_period_hrs_including_payday = round_to(total_period_hrs_including_payday, .25, 1000)
+
+                    difference = rounded_total_period_hrs_including_payday - total_period_hrs_including_payday
+
+                    if difference > 0:
+                        print("difference", print(hours_to_work))
+                        temp_clock_out_time = clock_in + timedelta(hours=hours_to_work + difference)
+                        if temp_clock_out_time > shift_end_time:
+                            temp_clock_out_time = temp_clock_out_time - timedelta(hours=.25)
+                            print("temp_clock_out_time:", temp_clock_out_time)
+                        hours_to_work = (temp_clock_out_time - clock_in).total_seconds() / 3600
+                        print("hours_to_work:", hours_to_work)
+                    else:
+                        hours_to_work = hours_to_work - difference
+                        print("hours_to_work:", hours_to_work)
+
+                    clock_out = clock_in + timedelta(
+                        hours=hours_to_work)
+
                     c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1",
-                              (clock_out.strftime("%Y-%m-%d %H:%M:%S"), clock_in[1]))
+                              (clock_out.strftime("%Y-%m-%d %H:%M:%S"), row))
                     conn.commit()
 
+
                     greeting.config(
-                        text=name + "\n\nHappy Payday\n\nThe system logged you In AND Out today\nfor the max period hours possible.\n\nPLEASE END YOUR SHIFT AT " + clock_out.strftime(
+                        text=name + "\n\nHappy Payday\n\nThe system logged you In AND Out today\nfor the max period "
+                                    "hours possible.\n\nPLEASE END YOUR SHIFT AT " + clock_out.strftime(
                             "%I:%M:%S %p"), fg="green")
 
                     conn.close()
@@ -570,7 +631,11 @@ def enter():
         else:
             greeting.config(text="Incorrect Password", fg="red")
 
-        conn.commit()
+        try:
+            conn.commit()
+        except sqlite3.ProgrammingError:
+            pass
+
         conn.close()
     else:
         id_field.delete(0, END)
@@ -612,10 +677,15 @@ def fetch_and_display_task(id):
     return
 
 
+def get_emp_hours_worked_for_period(id):
+    current_period_dates = getPeriodDays()
+    return calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
+
+
 def employee_max_hours_allowed_on_payday(id):
     current_period_dates = getPeriodDays()
     emp_worked_hours_for_period = \
-    calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
+        calculate_employee_pay(current_period_dates[0], current_period_dates[-1], "%m/%d/%y", id)["Regular Hours"]
     conn = sqlite3.connect(database_file)
     c = conn.cursor()
     print("ID:", id)
@@ -1855,7 +1925,9 @@ def employee_codes__edit__edit_button(id, return_button):
     c = conn.cursor()
 
     try:
-        emp_info = c.execute(f"SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = @0;", (id,)).fetchone()
+        emp_info = c.execute(
+            f"SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = @0;",
+            (id,)).fetchone()
     except Exception as e:
         # error_message.destroy()
         return_button.grid(row=10, column=0, columnspan=2, pady=10)
@@ -2003,7 +2075,8 @@ def employee_codes__edit__edit_button__commit_changes(old_id, new_id, new_first,
 
     current_time = hour + ":" + minute + ":" + second + " " + am_pm
 
-    emp_info = c.execute("SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = '" + old_id + "';").fetchone()
+    emp_info = c.execute(
+        "SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees WHERE ID = '" + old_id + "';").fetchone()
 
     # if new_id == "" or new_first == "" or new_last == "" or new_hourly_pay == "":
     #     confirmation_message.config(text="Missing 'Id', 'First Name', 'Last Name', or 'Hourly Pay'")
@@ -2201,7 +2274,8 @@ def employee_codes__view_function__view_employees():
     max_daily_hours = "Max Daily Hours\n-------------\n\n"
     master_field_array = [id, first_name, last_name, department, hourly_pay, ot_allowed, max_daily_hours]
 
-    data = c.execute("SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees").fetchall()
+    data = c.execute(
+        "SELECT ID, FirstName, LastName, Department, HourlyPay, OTAllowed, MaxDailyHours FROM employees").fetchall()
 
     for record in data:
         for item, db_fields_counter in zip(record, range(len(record))):
@@ -2576,7 +2650,7 @@ Label(root,
 
 clock()
 # root.after(1000, clock)
-#greeting_time()
+# greeting_time()
 send_report_if_pay_day()
 
 header = Label(root, text="SBCS\nEmployee Time Clock", font=("Times New Roman", 25, "bold"), pady=22.5)
