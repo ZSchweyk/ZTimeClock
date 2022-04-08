@@ -29,13 +29,13 @@ def round_down_to(num, nrst):
         return num
     return int(num) + (dec - dec_remainder)
 
+
 def is_rounded_to(num, nrst):
     num_times = int(1 / nrst)
     for i in range(num_times):
         if num == int(num) + i * nrst:
             return True
     return False
-
 
 
 def calculate_leave_time(clock_in: datetime, shift_end: datetime, max_day_hours, current_period_hours,
@@ -63,14 +63,12 @@ def calculate_leave_time(clock_in: datetime, shift_end: datetime, max_day_hours,
         max_day_hours += difference
         print(f"max_day_hours: {max_day_hours}")
 
-
     temp_clock_out = clock_in + timedelta(hours=max_day_hours)
     print(f"temp_clock_out: {temp_clock_out}")
     if temp_clock_out > shift_end:
         print("ENTERED CONDITION")
         max_day_hours -= (temp_clock_out - shift_end).seconds / 3600
         print(f"max_day_hours: {max_day_hours}")
-
 
     final_clock_out = clock_in + timedelta(hours=max_day_hours)
 
@@ -87,10 +85,10 @@ def calculate_leave_time(clock_in: datetime, shift_end: datetime, max_day_hours,
 clock_in = datetime.strptime("6:00:00 am", "%I:%M:%S %p")
 shift_end = datetime.strptime("3:30:00 pm", "%I:%M:%S %p")
 max_day_hours = 8
-current_period_hours = 71.15
+current_period_hours = 71.16
 max_period_hours = 80
 
-# calculated_clock_out = calculate_leave_time(clock_in, shift_end, max_day_hours, current_period_hours, max_period_hours)
-#
-# print()
-# print(f"Calculated Clock Out: {calculated_clock_out}")
+calculated_clock_out = calculate_leave_time(clock_in, shift_end, max_day_hours, current_period_hours, max_period_hours)
+
+print()
+print(f"Calculated Clock Out: {calculated_clock_out}")
