@@ -85,7 +85,7 @@ def calculate_leave_time(clock_in: datetime, shift_end: datetime, max_day_hours,
 clock_in = datetime.strptime("6:00:00 am", "%I:%M:%S %p")
 shift_end = datetime.strptime("3:30:00 pm", "%I:%M:%S %p")
 max_day_hours = 8
-current_period_hours = 71.16
+current_period_hours = 71.76
 max_period_hours = 80
 
 calculated_clock_out = calculate_leave_time(clock_in, shift_end, max_day_hours, current_period_hours, max_period_hours)
