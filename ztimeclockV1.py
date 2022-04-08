@@ -433,6 +433,83 @@ def round_to(num, nrst, limit):
     return round(rounded_down if rounded_down <= limit else limit, round_to_x_dec)
 
 
+def round_down_to(num, nrst):
+    round_to_x_dec = 15
+    dec = num - int(num)
+    dec_remainder = round(dec % nrst, round_to_x_dec)
+
+    if dec_remainder == 0:
+        return num
+    return int(num) + (dec - dec_remainder)
+
+
+def is_rounded_to(num, nrst):
+    num_times = int(1 / nrst)
+    for i in range(num_times):
+        if num == int(num) + i * nrst:
+            return True
+    return False
+
+
+def calculate_leave_time(clock_in: datetime, shift_end: datetime, max_day_hours, current_period_hours,
+                         max_period_hours):
+    if max_day_hours >= 6.5:
+        max_day_hours += .5
+
+    original_max_day_hours = max_day_hours
+    original_current_period_hours = current_period_hours
+
+    max_day_hours = round(max(min(max_day_hours, max_period_hours - current_period_hours), 0), 3)
+    print(f"max_day_hours: {max_day_hours}")
+    current_period_hours += max_day_hours
+    print(f"current_period_hours: {current_period_hours}")
+    rounded_total_period_hours_worked = round_to(current_period_hours, .25, 1000)
+    print(f"rounded_total_period_hours_worked: {rounded_total_period_hours_worked}")
+    difference = round(rounded_total_period_hours_worked - current_period_hours, 3)
+    print(f"difference: {difference}")
+    max_day_hours += difference
+    print(f"max_day_hours: {max_day_hours}")
+    if max_day_hours > original_max_day_hours:
+        max_day_hours = original_max_day_hours
+        print(f"max_day_hours: {max_day_hours}")
+        rounded_total_period_hours_worked = round_down_to(current_period_hours, .25)
+        print(f"rounded_total_period_hours_worked: {rounded_total_period_hours_worked}")
+        difference = round(rounded_total_period_hours_worked - current_period_hours, 3)
+        print(f"difference: {difference}")
+        max_day_hours += difference
+        print(f"max_day_hours: {max_day_hours}")
+
+    total_period_hours_worked = original_current_period_hours + max_day_hours
+
+    temp_clock_out = clock_in + timedelta(hours=max_day_hours)
+    print(f"temp_clock_out: {temp_clock_out}")
+    if temp_clock_out > shift_end:
+        print("ENTERED CONDITION")
+        max_day_hours -= (temp_clock_out - shift_end).seconds / 3600
+        print(f"max_day_hours: {max_day_hours}")
+        total_period_hours_worked = original_current_period_hours + max_day_hours
+        print(f"total_period_hours_worked: {total_period_hours_worked}")
+        rounded_down_total_period_hours_worked = round_down_to(original_current_period_hours + max_day_hours, .25)
+        print(f"rounded_down_total_period_hours_worked: {rounded_down_total_period_hours_worked}")
+        difference = total_period_hours_worked - rounded_down_total_period_hours_worked
+        print(f"difference: {difference}")
+        max_day_hours -= difference
+        print(f"max_day_hours: {max_day_hours}")
+        total_period_hours_worked = original_current_period_hours + max_day_hours
+        print(f"total_period_hours_worked: {total_period_hours_worked}")
+
+    final_clock_out = clock_in + timedelta(hours=max_day_hours)
+
+    print()
+
+    print(f"total_period_hours_worked {total_period_hours_worked}")
+
+    if not (total_period_hours_worked <= max_period_hours and is_rounded_to(total_period_hours_worked, .25)):
+        raise Exception("Something's Terribly Wrong!")
+
+    return final_clock_out
+
+
 # This function is enabled when an employee (or admin) clicks the submit button to clock in or clock out. It serves as the main function to display all the employee
 # and admin info that pops up on the screen. Also, this function deals with the logic to clock in or clock out, or display the message that an employee forgot to clock out
 # and modifies the database accordingly. It also selects a random greeting message every time an employee clocks out or in.
@@ -535,29 +612,49 @@ def enter():
                         print("Next Day!")
                         return
 
-                    if clock_in + timedelta(hours=hours_to_work) > shift_end_time:
-                        hours_to_work = (shift_end_time - clock_in).total_seconds() / 3600
-                        print("hours_to_work:", hours_to_work)
+                    # if clock_in + timedelta(hours=hours_to_work) > shift_end_time:
+                    #     hours_to_work = (shift_end_time - clock_in).total_seconds() / 3600
+                    #     print("hours_to_work:", hours_to_work)
+                    #
+                    # total_period_hrs_including_payday = get_emp_hours_worked_for_period(entered_id) + hours_to_work
+                    # rounded_total_period_hrs_including_payday = round_to(total_period_hrs_including_payday, .25, 1000)
+                    #
+                    # difference = rounded_total_period_hrs_including_payday - total_period_hrs_including_payday
+                    #
+                    # if difference > 0:
+                    #     print("difference", print(hours_to_work))
+                    #     temp_clock_out_time = clock_in + timedelta(hours=hours_to_work + difference)
+                    #     if temp_clock_out_time > shift_end_time:
+                    #         temp_clock_out_time = temp_clock_out_time - timedelta(hours=.25)
+                    #         print("temp_clock_out_time:", temp_clock_out_time)
+                    #     hours_to_work = (temp_clock_out_time - clock_in).total_seconds() / 3600
+                    #     print("hours_to_work:", hours_to_work)
+                    # else:
+                    #     hours_to_work = hours_to_work - difference
+                    #     print("hours_to_work:", hours_to_work)
+                    #
+                    # clock_out = clock_in + timedelta(
+                    #     hours=hours_to_work)
 
-                    total_period_hrs_including_payday = get_emp_hours_worked_for_period(entered_id) + hours_to_work
-                    rounded_total_period_hrs_including_payday = round_to(total_period_hrs_including_payday, .25, 1000)
+                    max_daily_hours_allowed = \
+                    c.execute("SELECT MaxDailyHours FROM employees WHERE ID = @0", (entered_id,)).fetchone()[0]
 
-                    difference = rounded_total_period_hrs_including_payday - total_period_hrs_including_payday
+                    current_period_hours = get_emp_hours_worked_for_period(entered_id)
 
-                    if difference > 0:
-                        print("difference", print(hours_to_work))
-                        temp_clock_out_time = clock_in + timedelta(hours=hours_to_work + difference)
-                        if temp_clock_out_time > shift_end_time:
-                            temp_clock_out_time = temp_clock_out_time - timedelta(hours=.25)
-                            print("temp_clock_out_time:", temp_clock_out_time)
-                        hours_to_work = (temp_clock_out_time - clock_in).total_seconds() / 3600
-                        print("hours_to_work:", hours_to_work)
-                    else:
-                        hours_to_work = hours_to_work - difference
-                        print("hours_to_work:", hours_to_work)
+                    max_period_hours_allowed = current_period_hours * len(getPeriodDays())
 
-                    clock_out = clock_in + timedelta(
-                        hours=hours_to_work)
+                    clock_out: datetime = calculate_leave_time(
+                        clock_in,
+                        shift_end_time,
+                        max_daily_hours_allowed,
+                        current_period_hours,
+                        max_period_hours_allowed
+                    )
+
+                    clock_out = datetime.strptime(
+                        datetime.today().strftime("%Y-%m-%d ") + clock_out.strftime("%H:%M:%S"),
+                        "%Y-%m-%d %H:%M:%S"
+                    )
 
                     c.execute("UPDATE time_clock_entries SET ClockOut = @0 WHERE row = @1",
                               (clock_out.strftime("%Y-%m-%d %H:%M:%S"), row))
