@@ -118,7 +118,8 @@ class ClockInOrOut(StaticWidgets):
 
             self.name_and_status.text = self.emp_obj.first + " " + self.emp_obj.last + \
                                         f"\nYou're clocked {'IN' if self.emp_obj.get_status() else 'OUT'}"
-            Thread(target=lambda: self.show_day_totals(datetime.today())).start()
+            # Thread(target=lambda: self.show_day_totals(datetime.today())).start()
+            self.show_day_totals(datetime.today())
         else:
             # self.z_clear_widgets()
             # self.clear_widgets([self.date_and_total_day_hours, self.time_in, self.time_out, self.duration])
