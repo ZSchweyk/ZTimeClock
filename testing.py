@@ -29,5 +29,5 @@ def send_email(sender, password, recipient, body, subject, file_path):
 
 
 
-send_email("mrtaquito04@gmail.com", "Gmail1215!", "zschweyk@gmail.com", "This is a test email from Mr. Taguito", "TEST", "")
+send_email("zschweyk@gmail.com", "Gmail1215!!", "zschweyk@gmail.com", "This is a test email from zschweyk", "TEST", "")
 
