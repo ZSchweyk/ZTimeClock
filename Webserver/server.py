@@ -15,9 +15,6 @@ from threading import Thread
 from flask_forms import *
 from useful_functions import *
 
-from ServerPi.conference_sand_table_class import ConferenceSandTable
-from ServerPi.main import draw_equation
-
 app = Flask(__name__)
 app.secret_key = "my super secret key that no one is supposed to know"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
@@ -29,9 +26,6 @@ db = SQLAlchemy(app)
 from models import *  # models imports db above, explaining why I have this import here. It avoids circular import
 
 # errors.
-
-print("CREATING A TABLE OBJECT!!!")
-table = ConferenceSandTable("172.17.21.2")
 
 
 @app.route("/", methods=["POST", "GET"])
