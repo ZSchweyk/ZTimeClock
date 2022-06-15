@@ -1,0 +1,8 @@
+id
+first_name
+last_name
+email_hash (to display plaintext email to user, store a cookie in their browser with an encrypted version of their email address using the email_hash as the key)
+salt (specific to each user. Make it a hash of email_hash.)
+salted_password_hash
+date_added
+

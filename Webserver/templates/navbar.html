@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand">Conference Sand Table</a>
+<!--        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">-->
+<!--            <span class="navbar-toggler-icon"></span>-->
+<!--        </button>-->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home', user_flast=session['flast']) }}">Home</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('stop_drawing', user_flast=session['flast']) }}">STOP DRAWING</a>
+                </li>
+
+<!--                <li class="nav-item">-->
+<!--                    <a class="nav-link" href="{{ url_for('equations', user_flast=session['flast']) }}">Equations</a>-->
+<!--                </li>-->
+
+<!--                <li class="nav-item">-->
+<!--                    <a class="nav-link" href="{{ url_for('profile', user_flast=session['flast']) }}">Profile</a>-->
+<!--                </li>-->
+
+<!--                <li class="nav-item">-->
+<!--                    <a class="nav-link" href="{{ url_for('restart', user_flast=session['flast']) }}">Restart</a>-->
+<!--                </li>-->
+
+            </ul>
+            <form class="d-flex" action="{{ url_for('logout', user_flast=session['flast']) }}">
+<!--                <button class="btn btn-secondary" type="submit">Log Out</button>-->
+                <li class="nav-item dropdown">
+                    <li>
+                            <button class="btn btn-secondary" type="submit">Log Out ({{ user.email }})</button>
+                    </li>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                    </ul>
+                </li>
+            </form>
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>

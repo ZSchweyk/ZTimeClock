@@ -1,0 +1,290 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+	<meta name="generator" content="Hugo 0.88.1">
+	<title>DPEA Conference Sand Table</title>
+
+<!--	<link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/sign-in/">-->
+	<link rel="icon" href="{{ url_for('static', filename='images/dpea_logo.dpg') }}" type="image/icon type">
+
+
+	<!-- Bootstrap core CSS -->
+	<link href="{{ url_for('static', filename='css/login_bootstrap.css') }}" rel="stylesheet">
+
+	<!-- Favicons -->
+<!--	<link rel="apple-touch-icon" href="{{ url_for('static', filename='images/dpea_logo.png') }}" sizes="180x180">-->
+<!--	<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">-->
+<!--	<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon-16x16.png" sizes="16x16" type="image/png">-->
+<!--	<link rel="manifest" href="/docs/5.1/assets/img/favicons/manifest.json">-->
+<!--	<link rel="mask-icon" href="/docs/5.1/assets/img/favicons/safari-pinned-tab.svg" color="#7952b3">-->
+<!--	<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon.ico">-->
+	<meta name="theme-color" content="#7952b3">
+
+
+	<style>
+		.bd-placeholder-img {
+			font-size: 1.125rem;
+			text-anchor: middle;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			user-select: none;
+		}
+
+		@media (min-width: 768px) {
+			.bd-placeholder-img-lg {
+				font-size: 3.5rem;
+			}
+		}
+	</style>
+
+
+	<!-- Custom styles for this template -->
+	<link href="{{ url_for('static', filename='css/login.css') }}" rel="stylesheet">
+</head>
+<body class="text-center">
+
+<main class="form-signin">
+	<img class="mb-4" src="{{ url_for('static', filename='images/dpea_logo.jpg') }}" alt="DPEA Logo" width="200"
+		 height="200">
+
+	<form action="/" method="POST">
+		<h1 class="h2 mb-3 fw-normal">Please login to</h1>
+		<h2 class="h4 mb-3 fw-normal">The Conference Sand Table</h2>
+		<h6 class="h6 mb-3 fw-normal">or <a href="{{ url_for('signup') }}">Create an Account</a></h6>
+
+		{% for message in get_flashed_messages() %}
+			<div class="alert alert-danger alert-dismissible fade show" role="alert">
+				<strong>{{ message }}</strong>
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+			</div>
+		{% endfor %}
+
+<!--		{{ form.csrf_token() }}-->
+		{{ form.hidden_tag() }}
+
+		<div class="form-floating">
+			{{ form.email(class="form-control", id="floatingInput") }}
+			<label>{{ form.email.label }}</label>
+		</div>
+		<div class="form-floating">
+			{{ form.password(class="form-control", id="floatingPassword") }}
+			<label>{{ form.password.label }}</label>
+		</div>
+
+		<div class="checkbox mb-3">
+			{{ form.remember_me }}
+			{{ form.remember_me.label }}
+		</div>
+		{{ form.submit(class="w-100 btn btn-lg btn-primary") }}
+<!--		<button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>-->
+<!--		<p class="mt-5 mb-3 text-muted">&copy; 2017–2021</p>-->
+	</form>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<a href="https://front.codes/" class="logo" target="_blank">-->
+<!--	<img src="https://assets.codepen.io/1462889/fcy.png" alt="">-->
+<!--</a>-->
+
+<!--<div class="section">-->
+<!--	<div class="container">-->
+<!--		<div class="row full-height justify-content-center">-->
+<!--			<div class="col-12 text-center align-self-center py-5">-->
+<!--				<div class="section pb-5 pt-5 pt-sm-2 text-center">-->
+<!--					<h6 class="mb-0 pb-3"><span>Log In </span><span>Sign Up</span></h6>-->
+<!--					<input class="checkbox" type="checkbox" id="reg-log" name="reg-log"/>-->
+<!--					<label for="reg-log"></label>-->
+<!--					<div class="card-3d-wrap mx-auto">-->
+<!--						<div class="card-3d-wrapper">-->
+<!--							<div class="card-front">-->
+<!--								<div class="center-wrap">-->
+<!--									<div class="section text-center">-->
+<!--										<h4 class="mb-4 pb-3">Log In</h4>-->
+<!--										<div class="form-group">-->
+<!--											<input type="email" name="logemail" class="form-style" placeholder="Your Email" id="logemail" autocomplete="off">-->
+<!--											<i class="input-icon uil uil-at"></i>-->
+<!--										</div>-->
+<!--										<div class="form-group mt-2">-->
+<!--											<input type="password" name="logpass" class="form-style" placeholder="Your Password" id="logpass" autocomplete="off">-->
+<!--											<i class="input-icon uil uil-lock-alt"></i>-->
+<!--										</div>-->
+<!--										<a href="#" class="btn mt-4">submit</a>-->
+<!--										<p class="mb-0 mt-4 text-center"><a href="#0" class="link">Forgot your password?</a></p>-->
+<!--									</div>-->
+<!--								</div>-->
+<!--							</div>-->
+<!--							<div class="card-back">-->
+<!--								<div class="center-wrap">-->
+<!--									<div class="section text-center">-->
+<!--										<h4 class="mb-4 pb-3">Sign Up</h4>-->
+<!--										<div class="form-group">-->
+<!--											<input type="text" name="logname" class="form-style" placeholder="Your Full Name" id="logname" autocomplete="off">-->
+<!--											<i class="input-icon uil uil-user"></i>-->
+<!--										</div>-->
+<!--										<div class="form-group mt-2">-->
+<!--											<input type="email" name="logemail" class="form-style" placeholder="Your Email" id="logemail" autocomplete="off">-->
+<!--											<i class="input-icon uil uil-at"></i>-->
+<!--										</div>-->
+<!--										<div class="form-group mt-2">-->
+<!--											<input type="password" name="logpass" class="form-style" placeholder="Your Password" id="logpass" autocomplete="off">-->
+<!--											<i class="input-icon uil uil-lock-alt"></i>-->
+<!--										</div>-->
+<!--										<a href="#" class="btn mt-4">submit</a>-->
+<!--									</div>-->
+<!--								</div>-->
+<!--							</div>-->
+<!--						</div>-->
+<!--					</div>-->
+<!--				</div>-->
+<!--			</div>-->
+<!--		</div>-->
+<!--	</div>-->
+<!--</div>-->
+
+
+
+
+
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" >-->
+<!--    <head>-->
+<!--      <meta charset="UTF-8">-->
+<!--      <title>Login Page with Background Image Example</title>-->
+<!--      <link rel="stylesheet" href="{{ url_for('static',filename='css/login.css') }}">-->
+
+<!--    </head>-->
+<!--    <body>-->
+<!--        <form class="login-form" action="{{ url_for('login') }}" method = "POST">-->
+<!--&lt;!&ndash;            <h1>Conference Sand Table</h1>&ndash;&gt;-->
+<!--          <p class="login-text">-->
+<!--            <h1 style="color: white">Conference Sand Table</h1>-->
+<!--          </p>-->
+<!--          <input type="email" name="Email" class="login-username" autofocus="true" required="true" placeholder="Email" />-->
+<!--          <input type="password" name="Password" class="login-password" required="true" placeholder="Password" />-->
+<!--          <input type="submit" name="Login" value="Login" class="login-submit" />-->
+<!--        </form>-->
+<!--        <a href="#" class="login-forgot-pass">forgot password?</a>-->
+<!--        <div class="underlay-photo"></div>-->
+<!--        <div class="underlay-black"></div>-->
+<!--    </body>-->
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<!doctype html>-->
+<!--<html lang="en">-->
+<!--  <head>-->
+<!--    <meta charset="utf-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1">-->
+<!--    <meta name="description" content="">-->
+<!--    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">-->
+<!--    <meta name="generator" content="Hugo 0.88.1">-->
+<!--    <title>Signin Template · Bootstrap v5.1</title>-->
+
+<!--    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/sign-in/">-->
+
+
+
+<!--    &lt;!&ndash; Bootstrap core CSS &ndash;&gt;-->
+<!--<link href="/docs/5.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">-->
+
+<!--    &lt;!&ndash; Favicons &ndash;&gt;-->
+<!--<link rel="apple-touch-icon" href="/docs/5.1/assets/img/favicons/apple-touch-icon.png" sizes="180x180">-->
+<!--<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">-->
+<!--<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon-16x16.png" sizes="16x16" type="image/png">-->
+<!--<link rel="manifest" href="/docs/5.1/assets/img/favicons/manifest.json">-->
+<!--<link rel="mask-icon" href="/docs/5.1/assets/img/favicons/safari-pinned-tab.svg" color="#7952b3">-->
+<!--<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon.ico">-->
+<!--<meta name="theme-color" content="#7952b3">-->
+
+
+<!--    <style>-->
+<!--      .bd-placeholder-img {-->
+<!--        font-size: 1.125rem;-->
+<!--        text-anchor: middle;-->
+<!--        -webkit-user-select: none;-->
+<!--        -moz-user-select: none;-->
+<!--        user-select: none;-->
+<!--      }-->
+
+<!--      @media (min-width: 768px) {-->
+<!--        .bd-placeholder-img-lg {-->
+<!--          font-size: 3.5rem;-->
+<!--        }-->
+<!--      }-->
+<!--    </style>-->
+
+
+<!--    &lt;!&ndash; Custom styles for this template &ndash;&gt;-->
+<!--    <link href="signin.css" rel="stylesheet">-->
+<!--  </head>-->
+<!--  <body class="text-center">-->
+
+<!--<main class="form-signin">-->
+<!--  <form>-->
+<!--    <img class="mb-4" src="/docs/5.1/assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">-->
+<!--    <h1 class="h3 mb-3 fw-normal">Please sign in!</h1>-->
+
+<!--    <div class="form-floating">-->
+<!--      <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">-->
+<!--      <label for="floatingInput">Email address</label>-->
+<!--    </div>-->
+<!--    <div class="form-floating">-->
+<!--      <input type="password" class="form-control" id="floatingPassword" placeholder="Password">-->
+<!--      <label for="floatingPassword">Password</label>-->
+<!--    </div>-->
+
+<!--    <div class="checkbox mb-3">-->
+<!--      <label>-->
+<!--        <input type="checkbox" value="remember-me"> Remember me-->
+<!--      </label>-->
+<!--    </div>-->
+<!--    <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>-->
+<!--    <p class="mt-5 mb-3 text-muted">&copy; 2017–2021</p>-->
+<!--  </form>-->
+<!--</main>-->
+
+
+
+<!--  </body>-->
+<!--</html>-->

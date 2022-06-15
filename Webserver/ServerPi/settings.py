@@ -1,0 +1,5 @@
+
+
+CAP_THETA_VELOCITY_AT = .85
+
+

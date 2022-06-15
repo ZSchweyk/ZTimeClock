@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Equations</title>
+<style>
+    h1, h2 {
+        text-align: center;
+    }
+
+    .centered {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+    {% endfor %}
+
+<!--    <h2>Name: {{ user.first_name }} {{ user.last_name }}</h2>-->
+    <h2>Equation {{ eq_num }}</h2>
+    <h1>{{ equation }}</h1>
+
+
+    <form class="centered" action="{{ url_for('equations', user_flast=session['flast'], eq_num=eq_num) }}" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-floating">
+            {{ form.theta_max(class="form-control", id="floatingInput") }}
+            <label>&theta; Range (number of &pi;s)</label>
+        </div>
+
+        <div class="form-floating">
+            {{ form.theta_speed(class="form-control", id="floatingInput") }}
+            <label>&theta; Speed Ratio (0 <= input <= 1)</label>
+        </div>
+
+        <div class="form-floating">
+            {{ form.scale_factor(class="form-control", id="floatingInput") }}
+            <label>Scale Factor (0 <= input <= 1)</label>
+        </div>
+
+        {{ form.submit(class="w-100 btn btn-lg btn-primary") }}
+    </form>
+
+
+
+
+{% endblock %}
+
+</body>
+</html>
