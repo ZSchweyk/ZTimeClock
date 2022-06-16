@@ -30,4 +30,4 @@ from tkinter.filedialog import askdirectory, asksaveasfile, asksaveasfilename
 import os
 import sys
 
-setup(windows=['ZTimeClock.py'])
+setup(windows=['ztimeclock.py'])
