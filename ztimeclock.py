@@ -1,4 +1,4 @@
-# Last updated on 03/14/2022 with rounding
+# Last updated on 03/14/2022 with rounding. Updated the version number on 06/15/2022
 
 from ast import Index
 from sqlite3.dbapi2 import Error, PARSE_DECLTYPES
@@ -703,8 +703,8 @@ def enter():
 
                     return greeting.config(text=name + "\n\n" + getWeekDayFromDate(time_clock_entries_record[1][:10],
                                                                                    "%Y-%m-%d") + " " + datetime.strptime(
-                        time_clock_entries_record[1][:10], "%Y-%m-%d").strftime(
-                        "%m/%d/%y") + "\nwas your last Clock In and you forgot to Clock Out on that day.\nfue su último reloj de entrada y se olvidó de marcar el reloj de salida ese día.\n\nPlease enter the time you clocked out on that day in this format\nIngrese la hora a la que marcó ese día en este formato\n\n HH:MM am/pm\n\n\n\n\n\n\nYour request will be sent to management for approval.\nSu solicitud se enviará a la gerencia para su aprobación.",
+                        time_clock_entries_record[1], "%Y-%m-%d %H:%M:%S").strftime(
+                        "%m/%d/%y %I:%M:%S %p") + "\nwas your last Clock In and you forgot to Clock Out on that day.\nfue su último reloj de entrada y se olvidó de marcar el reloj de salida ese día.\n\nPlease enter the time you clocked out on that day in this format\nIngrese la hora a la que marcó ese día en este formato\n\n HH:MM am/pm\n\n\n\n\n\n\nYour request will be sent to management for approval.\nSu solicitud se enviará a la gerencia para su aprobación.",
                                            fg="red")
 
             rand = random.randint(0, len(greeting_text) - 1)
@@ -2813,7 +2813,7 @@ employee_task_header_label.place(relx=.5, rely=.7, anchor=N)
 employee_task_label = Label(root, text="", font=("Arial", 13), wraplength=300, justify="center")
 employee_task_label.place(relx=.5, rely=.77, anchor=N)
 
-z_time_clock_label = Label(root, text="ZTimeClock Ver 1.01", font=("Arial", 10))
+z_time_clock_label = Label(root, text="ZTimeClock Ver 1.0.2", font=("Arial", 10))
 z_time_clock_label.place(relx=.945, rely=.97, anchor=N)
 
 # #Admin Widgets:
