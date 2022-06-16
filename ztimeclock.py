@@ -37,7 +37,7 @@ def passable():
 # Specify the location of the program files path. Note: separate directories with a double backslash in order to overide any accidental string escape characters.
 # End string with "\\"
 # C:\\Users\\Zeyn Schweyk\\Documents\\MyProjects\\ZTimeClock\\
-program_files_path = ""
+program_files_path = "C:\\Users\\Chemtrol\\Documents\\TC\\"
 database_file = program_files_path + "employee_time_clock.db"
 
 
