@@ -1,9 +1,7 @@
 import sqlite3
-from sqlite3.dbapi2 import Error
-from datetime import date, datetime, timedelta
 
 
-class ZSqlite:
+class SQLiteWrapper:
     def __init__(self, db_path):
         self.db_path = db_path
 

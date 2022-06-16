@@ -1,6 +1,6 @@
 from .UsefulFunctions import *
 from calendar import monthrange
-from .zsqlite_class import ZSqlite
+from RequiredClasses.zsqlite_class import ZSqlite
 
 
 class Employee(ZSqlite):
