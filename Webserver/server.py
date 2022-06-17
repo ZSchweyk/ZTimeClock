@@ -1,3 +1,4 @@
+import sqlite3
 import sys
 import time
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -59,6 +60,65 @@ def login():
             return redirect(url_for("home", user_flast=session["flast"]))
         # render the login page again
         return render_template("login.html", form=form)
+
+
+
+
+@app.route("/signup", methods=["POST", "GET"])
+def signup():
+    form = SignupForm()  # render the signup form
+    if form.validate_on_submit():  # if the form is submitted and all the data is valid
+        # create a new Users object, representing the user who just created an account
+        new_user = Users(
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            password=form.password1.data
+        )
+        db.session.add(new_user)  # Add that user to the db
+        try:  # try committing that change
+            db.session.commit()
+        # if there's an IntegrityError, that means that a user with the same email address exists. since the email
+        # field is the primary key, which I defined when making the model, sqlalchemy will throw an error.
+
+        except sqlalchemy.exc.IntegrityError:
+            # technically speaking, an account with that email address already exists, so print that to the console
+            # just to remind myself mostly
+            print("Account already exists")
+            # flash an error message that warns "Incorrect Credentials".
+            # don't want to explicitly inform the user that an account with the same email address already exists.
+            flash("Incorrect Credentials")
+            # render the signup page again for the user to try again
+            return render_template("signup.html", form=form)
+
+        # A new user has been succesfully created.
+
+        # clear the first name, last name, and email address fields.
+        form.first_name.data = ""
+        form.last_name.data = ""
+        form.email.data = ""
+
+        # Log the user in
+        session.permanent = True  # create a permanent session with a lifetime of app.permanent_session_lifetime
+        session["user_id"] = new_user.id  # create a cookie that stores the user's id
+        # create a cookie that stores the user's flast, mainly to just display in the url
+        session["flast"] = new_user.first_name[0].upper() + new_user.last_name[0].upper() + new_user.last_name[
+                                                                                            1:].lower()
+        # log the newly created user in, so that they don't have to retype in all their credentials to log in, after
+        # creating an account.
+        return redirect(url_for("home", user_flast=session["flast"]))
+
+    # if the form isn't submitted, render the html signup page with the signup form
+    return render_template("signup.html", form=form)
+
+
+
+@app.route("/terms_and_conditions")
+def terms_page():
+    return render_template("terms.html")
+
+
+
 
 
 
