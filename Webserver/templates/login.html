@@ -53,9 +53,9 @@
 		 height="200">
 
 	<form action="/" method="POST">
-		<h1 class="h2 mb-3 fw-normal">Please login to</h1>
-		<h2 class="h4 mb-3 fw-normal">ZTimeClock</h2>
-		<h6 class="h6 mb-3 fw-normal">or <a href="{{ url_for('signup') }}">Create an Account</a></h6>
+		<h1 class="h4 mb-3 fw-normal">Please login to</h1>
+		<h1 class="h2 mb-3 fw-normal">ZTimeClock</h1>
+<!--		<h6 class="h6 mb-3 fw-normal">or <a href="{{ url_for('signup') }}">Create an Account</a></h6>-->
 
 		{% for message in get_flashed_messages() %}
 			<div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -66,19 +66,9 @@
 
 <!--		{{ form.csrf_token() }}-->
 		{{ form.hidden_tag() }}
-
 		<div class="form-floating">
-			{{ form.email(class="form-control", id="floatingInput") }}
-			<label>{{ form.email.label }}</label>
-		</div>
-		<div class="form-floating">
-			{{ form.password(class="form-control", id="floatingPassword") }}
+			{{ form.password(class="form-control", id="floatingPassword", autofocus="autofocus") }}
 			<label>{{ form.password.label }}</label>
-		</div>
-
-		<div class="checkbox mb-3">
-			{{ form.remember_me }}
-			{{ form.remember_me.label }}
 		</div>
 		{{ form.submit(class="w-100 btn btn-lg btn-primary") }}
 <!--		<button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>-->
