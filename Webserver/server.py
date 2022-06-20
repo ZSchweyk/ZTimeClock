@@ -2,6 +2,7 @@ import sqlite3
 import sys
 import time
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
+from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime, timedelta
 from werkzeug.urls import url_encode
@@ -15,13 +16,12 @@ app.secret_key = "my super secret key that no one is supposed to know"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # removes an annoying warning message
 app.permanent_session_lifetime = timedelta(minutes=10)
 
-db = SQLiteWrapper("database.db")
+db = SQLAlchemy(app)
+from models import *
+
+
 
 trusted_ips = ["127.0.0.1"]
-
-
-
-
 @app.before_request
 def limit_remote_addr():
     if request.remote_addr not in trusted_ips:
