@@ -1,7 +1,7 @@
 import sqlite3
 import sys
 import time
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 import os
 from datetime import datetime, timedelta
 from werkzeug.urls import url_encode
@@ -17,7 +17,15 @@ app.permanent_session_lifetime = timedelta(minutes=10)
 
 db = SQLiteWrapper("database.db")
 
+trusted_ips = ["127.0.0.1"]
 
+
+
+
+@app.before_request
+def limit_remote_addr():
+    if request.remote_addr not in trusted_ips:
+        abort(404)  # Not Found
 
 
 
