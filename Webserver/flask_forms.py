@@ -24,7 +24,7 @@ class DrawEquationForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    password = PasswordField("Password", validators=[InputRequired()])
+    emp_id = PasswordField("Password", validators=[InputRequired()])
     submit = SubmitField("Login")
 
 

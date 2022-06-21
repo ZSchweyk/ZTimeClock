@@ -61,7 +61,7 @@ class TimeClockEntries(db.Model):
 
 
 class AdminInformation(db.Model):
-    admin_password = db.Column(db.String(64), nullable=False)
+    admin_password = db.Column(db.String(64), primary_key=True, nullable=False)
 
     def __init__(self, pswd):
         self.admin_password = pswd

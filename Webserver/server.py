@@ -13,6 +13,7 @@ from RequiredClasses.sqlite_wrapper import SQLiteWrapper
 
 app = Flask(__name__)
 app.secret_key = "my super secret key that no one is supposed to know"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # removes an annoying warning message
 app.permanent_session_lifetime = timedelta(minutes=10)
 
@@ -34,7 +35,7 @@ def login():
     form = LoginForm()  # render the login form
     if form.validate_on_submit():  # if all form data is valid on submit...
         # get the user object/row from the db whose email matches whatever was submitted
-        user = Users.query.filter_by(email=form.email.data.lower()).first()
+        user = Employees.query.filter_by(id=form.password.data.lower()).first()
 
         # if the user exists in the db, and the salt + input password matches what's stored in the db, log them in
         if user is not None and sha256(user.salt + form.password.data) == user.salted_password_hash:

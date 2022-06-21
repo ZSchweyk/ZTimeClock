@@ -2,9 +2,9 @@
 # ssh pi@10.1.1.135
 
 # BE SURE TO ACTIVATE THE Flask VENV!!!!!!
-source /home/pi/venvs/ZTimeClockWebApp/bin/activate  # just run the activate file on Windows
+source /c/Users/ZSchw/Documents/PythonPackages/ZTimeClockWebApp/Scripts/activate  # just run the activate file on Windows
 
-cd /home/pi/projects/ZTimeClock/Webserver
+cd /c/Users/ZSchw/Documents/MyProjects/ZTimeClock/Webserver
 export FLASK_APP=server  # use set FLASK_APP=server on Windows
 # Enable debug mode
 export FLASK_ENV=development  # use set FLASK_ENV=development on Windows
