@@ -35,16 +35,16 @@ def login():
     form = LoginForm()  # render the login form
     if form.validate_on_submit():  # if all form data is valid on submit...
         # get the user object/row from the db whose email matches whatever was submitted
-        user = Employees.query.filter_by(id=form.password.data.lower()).first()
+        employee = Employees.query.filter_by(id=form.emp_id.data).first()
 
         # if the user exists in the db, and the salt + input password matches what's stored in the db, log them in
-        if user is not None and sha256(user.salt + form.password.data) == user.salted_password_hash:
+        if employee is not None:
             # Log the user in
 
             # make the session permanent; erase session/cookies after app.permanent_session_lifetime, defined above
             session.permanent = True
             # create a cookie that stores the user's id so that switching between pages is easy
-            session["user_id"] = user.id
+            session["employee"] = employee
             # create a cookie that stores the user's flast, to ultimately display in the url. This really won't have any
             # effect, with the exception of showing in the url so that the user knows who they are. This follows
             # GitHub's convention/style, which I really like.
