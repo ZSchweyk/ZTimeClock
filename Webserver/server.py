@@ -35,8 +35,17 @@ def login():
     form = LoginForm()  # render the login form
     if form.validate_on_submit():  # if all form data is valid on submit...
         # get the user object/row from the db whose email matches whatever was submitted
-        employee = Employees.query.filter_by(id=form.emp_id.data).first()
+        entered_id = form.emp_id.data
+        if len(entered_id) != 0:
+            if entered_id[0] == "e":
+                entered_id = "E" + entered_id[1:]
+            elif entered_id != "E":
+                entered_id = "E" + entered_id
+        else:
+            entered_id = ""
 
+        employee = Employees.query.filter_by(id=entered_id).first()
+        print("employee type:", type(employee))
         # if the user exists in the db, and the salt + input password matches what's stored in the db, log them in
         if employee is not None:
             # Log the user in
@@ -44,21 +53,18 @@ def login():
             # make the session permanent; erase session/cookies after app.permanent_session_lifetime, defined above
             session.permanent = True
             # create a cookie that stores the user's id so that switching between pages is easy
-            session["employee"] = employee
             # create a cookie that stores the user's flast, to ultimately display in the url. This really won't have any
             # effect, with the exception of showing in the url so that the user knows who they are. This follows
             # GitHub's convention/style, which I really like.
-            session["flast"] = user.first_name[0].upper() + user.last_name[0].upper() + user.last_name[1:].lower()
+            session["flast"] = employee.first_name[0].lower() + employee.last_name.lower()
             # redirect the user to the home page, and pass in their flast into the url
             return redirect(url_for("home", user_flast=session["flast"]))
         else:
             # Wrong password, but I flash incorrect credentials to make them think that it also could be an incorrect
             # email address.
             flash("Incorrect Credentials")
-            # reset the form's email field to ""
-            form.email.data = ""
             # reset the form's password field to ""
-            form.password.data = ""
+            form.emp_id.data = ""
             # render the login page again, because they entered incorrect credentials
             return render_template("login.html", form=form)
     else:
@@ -69,6 +75,13 @@ def login():
             return redirect(url_for("home", user_flast=session["flast"]))
         # render the login page again
         return render_template("login.html", form=form)
+
+
+
+
+@app.route("/home", methods=["POST", "GET"])
+def home():
+    return render_template("home.html")
 
 
 

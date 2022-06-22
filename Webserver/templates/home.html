@@ -4,148 +4,58 @@
     <meta charset="UTF-8">
     <title>Home</title>
     <style>
-        h1 {
-            text-align: center;
-        }
+        body, html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
 
-        .iframe-parent{
-            width: 100vw;
-            height: 100vh;
-        }
+.container {
+  width: 100%;
+  height: 100%;
+}
 
-        /* Expand to the entire container */
-        iframe{
-            width: 50%;
-            height: 100%;
-        }
+.leftpane {
+    width: 25%;
+    height: 100%;
+    float: left;
+    /*background-color: rosybrown;*/
+    border-collapse: collapse;
+}
 
+.middlepane {
+    width: 50%;
+    height: 100%;
+    float: left;
+    /*background-color: royalblue;*/
+    border-collapse: collapse;
+}
 
+.rightpane {
+  width: 25%;
+  height: 100%;
+  position: relative;
+  float: right;
+  /*background-color: yellow;*/
+  border-collapse: collapse;
+}
 
-        /* Split the screen in half */
-        .split {
-            height: 100%;
-            width: 50%;
-            position: fixed;
-            z-index: 1;
-            overflow-x: hidden;
-            padding-top: 20px;
-        }
-
-        /* Control the left side */
-        .left {
-            left: 0;
-            background-color: white;
-        }
-
-        /* Control the right side */
-        .right {
-            right: 0;
-            background-color: white;
-            /*transform: translate(-50%);*/
-        }
-
-        /* If you want the content centered horizontally and vertically */
-        .centered {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
+.toppane {
+  width: 100%;
+  height: 100px;
+  border-collapse: collapse;
+  /*background-color: #4da6ff;*/
+}
     </style>
 </head>
-<body>
 
-{% extends 'base.html' %}
+<div class="container">
+  <div class="toppane" style="text-align: center">Test Page</div>
+  <div class="leftpane" style="text-align: center">
+    <h1>Test Page</h1></div>
+  <div class="middlepane" style="text-align: center">Test Page</div>
+  <div class="rightpane" style="text-align: center">
+    <h1>Test Page</h1></div>
+</div>
 
-{% block content %}
-
-    <h1>Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
-
-    <div class="split left">
-        <div class="centered">
-            <div class='iframe-parent'>
-                <iframe src="https://www.desmos.com/calculator/bb7igdyblo"></iframe>
-            </div>
-        </div>
-    </div>
-
-    <div class="split right">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm" style="text-align: center">
-
-                </div>
-                <div class="col-sm" style="text-align: center">
-
-
-                    {% for message in get_flashed_messages() %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>{{ message }}</strong>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-
-                    {% if form %}
-                        <form action="{{ url_for('home', user_flast=session['flast']) }}" method="POST">
-                            {{ form.hidden_tag() }}
-                            <div class="form-floating">
-                                {{ form.equation(class="form-control", id="floatingInput") }}
-                                <label>{{ form.equation.label }}</label>
-                            </div>
-
-                            {{ form.submit(class="w-100 btn btn-lg btn-primary") }}
-                        </form>
-                    {% endif %}
-
-                    <br>
-                    <h2>Your Equations</h2>
-                    <ol>
-                        {% for equation in equations %}
-                            <li>
-                                <a href="{{ url_for('equations', user_flast=session['flast'], eq_num=loop.index) }}">
-                                    <img class="mb-4" src="{{ url_for('static', filename='images/pencil_icon.jpg') }}" width="30" height="30">
-                                </a>
-
-                                <a href="{{ url_for('delete_equation', user_flast=session['flast'], eq_num=loop.index) }}">
-                                    <img class="mb-4" src="{{ url_for('static', filename='images/trash_can.jpg') }}" width="30" height="30">
-                                </a>
-
-                                r = {{ equation }}
-
-<!--                                <form id="{{ loop.index }}" method="POST" action="{{ url_for('edit_equation', user_flast=session['flast']) }}">-->
-<!--                                    <a href="javascript:;" onclick="document.getElementById('{{ loop.index }}').submit()">r = {{ equation }}</a>-->
-<!--                                </form>-->
-
-
-                            </li>
-                        {% endfor %}
-                    </ol>
-                </div>
-                <div class="col-sm" style="text-align: center">
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-<!--    <script src="https://www.desmos.com/api/v1.7/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>-->
-
-<!--    <script>-->
-<!--        var elt = document.getElementById('calculator');-->
-<!--        var calculator = Desmos.GraphingCalculator(elt);-->
-<!--        calculator.setExpression({ id: 'graph1', latex: 'y=x^2' });-->
-
-<!--    </script>-->
-
-
-
-
-
-
-
-{% endblock %}
-
-
-</body>
 </html>

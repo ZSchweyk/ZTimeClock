@@ -12,7 +12,7 @@ class Employees(db.Model):
     hourly_pay = db.Column(db.Float(), nullable=False)
     ot_allowed = db.Column(db.String(64), nullable=False)
     max_daily_hours = db.Column(db.Float(), nullable=False)
-    shift_end_time = db.Column(db.DateTime, nullable=False)
+    shift_end_time = db.Column(db.Time, nullable=False)
 
     def __init__(self, emp_id, first_name, last_name, department, hourly_pay, ot_allowed, max_daily_hours,
                  shift_end_time):
