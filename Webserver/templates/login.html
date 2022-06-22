@@ -67,7 +67,7 @@
 <!--		{{ form.csrf_token() }}-->
 		{{ form.hidden_tag() }}
 		<div class="form-floating">
-			{{ form.emp_id(class="form-control", id="floatingPassword", autofocus="autofocus") }}
+			{{ form.emp_id(class="form-control", onblur="this.focus()", id="floatingPassword", autofocus="autofocus") }}
 			<label>{{ form.emp_id.label }}</label>
 		</div>
 		{{ form.submit(class="w-100 btn btn-lg btn-primary") }}
