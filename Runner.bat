@@ -1,4 +1,4 @@
 @echo off
-C:\Users\ZSchw\Documents\PythonPackages\ZTimeClock\Scripts\activate
-python C:\Users\ZSchw\Documents\MyProjects\ZTimeClock\GUI\main.py
+"C:\Users\ZSchw\Documents\MyVirtualEnvironments\ZTimeClockKivy38\Scripts\python.exe" "C:\Users\ZSchw\Documents\MyProjects\ZTimeClock\GUI\main.py"
+pause
 

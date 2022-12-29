@@ -47,7 +47,7 @@ class LoginScreen(StaticWidgets):
             self.change_screen("employee menu", "left")
 
     def display_quote_of_the_day(self, t):
-        with open("../quotes.txt", "r", encoding="utf8") as f:
+        with open("quotes.txt", "r", encoding="utf8") as f:
             list_of_quotes = f.readlines()
             rand_index = random.randint(0, len(list_of_quotes) - 1)
             new_str = []
